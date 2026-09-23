@@ -34,15 +34,16 @@ export default function Preview({ asset, settings, clip, playhead, onPlayheadCha
     media.playbackRate = Math.max(0.25, Math.min(4, clip.speed ?? 1));
     media.volume = Math.max(0, Math.min(1, clip.volume ?? 1));
 
-    if (!media.paused) return;
-
     const speed = clip.speed ?? 1;
     const sourceIn = clip.sourceIn ?? 0;
     const sourceOut = clip.sourceOut ?? media.duration;
     const local = sourceIn + Math.max(0, playhead - clip.start) * speed;
     const safe = Math.max(sourceIn, Math.min(sourceOut, local));
 
-    if (Number.isFinite(safe) && Math.abs(media.currentTime - safe) > 0.05) {
+    // A timeline é a fonte principal quando o usuário move a agulha.
+    // Durante playback, mudanças pequenas vêm do próprio player; mudanças maiores
+    // significam scrub/seek manual e devem reposicionar o vídeo sem pausar.
+    if (Number.isFinite(safe) && Math.abs(media.currentTime - safe) > 0.12) {
       media.currentTime = safe;
       setTime(safe);
     }
