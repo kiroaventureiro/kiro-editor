@@ -1,4 +1,4 @@
-import { Scissors, Trash2 } from 'lucide-react';
+import { FolderOpen, Redo2, Save, Scissors, Trash2, Undo2 } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import type { Clip, Track } from '../editor/types';
 
@@ -6,6 +6,12 @@ interface Props {
   tracks: Track[];
   selectedClipId?: string;
   playhead: number;
+  canUndo: boolean;
+  canRedo: boolean;
+  onNewProject: () => void;
+  onSaveProject: () => void;
+  onUndo: () => void;
+  onRedo: () => void;
   onSeek: (time: number) => void;
   onSplit: () => void;
   onSelectClip: (clip: Clip) => void;
@@ -27,7 +33,25 @@ type DragState = {
   total: number;
 };
 
-export default function Timeline({ tracks, selectedClipId, playhead, onSeek, onSplit, onSelectClip, onMoveClip, onTrimClip, onEditStart, onEditEnd, onDelete }: Props) {
+export default function Timeline({
+  tracks,
+  selectedClipId,
+  playhead,
+  canUndo,
+  canRedo,
+  onNewProject,
+  onSaveProject,
+  onUndo,
+  onRedo,
+  onSeek,
+  onSplit,
+  onSelectClip,
+  onMoveClip,
+  onTrimClip,
+  onEditStart,
+  onEditEnd,
+  onDelete,
+}: Props) {
   const total = Math.max(10, ...tracks.flatMap(t => t.clips.map(c => c.start + c.duration)));
   const [pixelsPerSecond, setPixelsPerSecond] = useState(10);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -112,9 +136,19 @@ export default function Timeline({ tracks, selectedClipId, playhead, onSeek, onS
   return (
     <section className="timeline-shell">
       <div className="timeline-toolbar">
-        <button onClick={onSplit} disabled={!selectedClipId}><Scissors size={16}/> Dividir</button>
-        <button onClick={onDelete} disabled={!selectedClipId}><Trash2 size={16}/> Excluir</button>
-        <span className="timeline-time">{formatTime(playhead)} / {formatTime(total)}</span>
+        <div className="timeline-project-actions">
+          <button onClick={onNewProject}><FolderOpen size={16}/> Novo</button>
+          <button onClick={onSaveProject}><Save size={16}/> Salvar</button>
+          <button onClick={onUndo} disabled={!canUndo} title="Desfazer (Ctrl+Z)"><Undo2 size={16}/> Desfazer</button>
+          <button onClick={onRedo} disabled={!canRedo} title="Refazer (Ctrl+Y)"><Redo2 size={16}/> Refazer</button>
+        </div>
+
+        <div className="timeline-edit-actions">
+          <button onClick={onSplit} disabled={!selectedClipId}><Scissors size={16}/> Dividir</button>
+          <button onClick={onDelete} disabled={!selectedClipId}><Trash2 size={16}/> Excluir</button>
+          <span className="timeline-time">{formatTime(playhead)} / {formatTime(total)}</span>
+        </div>
+
         <label className="timeline-zoom">
           Zoom
           <input
