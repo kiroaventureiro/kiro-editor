@@ -63,7 +63,11 @@ export default function App() {
     [exportOpen, setExportOpen] = useState(false),
     [resolution, setResolution] = useState(720),
     [progress, setProgress] = useState<number | null>(null);
-  const [timelineHeight, setTimelineHeight] = useState(310),
+  const [timelineHeight, setTimelineHeight] = useState(() =>
+      typeof window === "undefined"
+        ? 280
+        : clamp(window.innerHeight * 0.38, 230, 310),
+    ),
     [libraryWidth, setLibraryWidth] = useState(260);
   const [targetTrack, setTargetTrack] = useState("video-1");
   const abort = useRef<AbortController | null>(null),
@@ -900,17 +904,26 @@ export default function App() {
           </section>
         </div>
       )}
+      {busy && (
+        <div className="modal-backdrop">
+          <div className="modal" role="status">
+            <h2>Preparando arquivos…</h2>
+            <p>Não feche a página enquanto os arquivos são armazenados.</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 function safeName(name: string) {
   return (
-    name.replace(/[^a-z0-9-_]+/gi, "-").replace(/^-+|-+$/g, "") ||
-    "kiro-projeto"
+    name
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-z0-9]+/gi, "-")
+      .replace(/^-|-$/g, "") || "kiro-editor"
   );
 }
 function error(e: unknown) {
-  return e instanceof Error
-    ? e.message
-    : "Não foi possível concluir a operação.";
+  return e instanceof Error ? e.message : "Ocorreu um erro inesperado.";
 }
