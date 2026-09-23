@@ -1,11 +1,10 @@
 /* KIRO Editor 0.5 — refinamentos de produto
-   Mantém a identidade Studio separada do universo narrativo e melhora leitura/precisão. */
+   Interface mais compacta, canvas prioritário e timeline legível. */
 :root {
   --playhead: #ff6b6b;
   --playhead-soft: rgba(255, 107, 107, 0.22);
 }
 
-/* Estrutura: projetos longos devem rolar dentro da timeline, nunca alargar o app inteiro. */
 html,
 body,
 #root {
@@ -31,12 +30,122 @@ body,
   max-width: 100%;
 }
 
+/* Produto mais compacto: painéis laterais não devem roubar o canvas. */
 .workspace {
   overflow: hidden;
+  grid-template-columns: min(var(--library-width), 238px) 4px minmax(0, 1fr) 230px;
+}
+
+.panel {
+  padding: 13px 11px;
+}
+
+.panel h2 {
+  font-size: 16px;
+  margin-bottom: 11px;
+}
+
+.topbar {
+  padding: 9px 14px;
+  gap: 14px;
+}
+
+.brand {
+  min-width: 160px;
+}
+
+.workspace-tools {
+  padding-inline: 10px;
 }
 
 .preview-wrap {
   overflow: hidden;
+  padding: 7px 11px;
+}
+
+.inspector {
+  width: 230px;
+}
+
+.inspector label {
+  margin-bottom: 9px;
+  gap: 5px;
+  font-size: 11px;
+}
+
+.inspector input,
+.inspector select,
+.inspector textarea {
+  padding: 7px;
+}
+
+.compact-heading h2 {
+  margin-bottom: 9px;
+}
+
+.inspector fieldset {
+  border: 0;
+  padding: 0;
+  margin: 0;
+}
+
+.inspector-section {
+  padding: 10px 0;
+  border-top: 1px solid var(--border);
+}
+
+.project-section {
+  border-top: 0;
+  padding-top: 2px;
+}
+
+.section-kicker {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--accent);
+  font-size: 9px;
+  font-weight: 750;
+  letter-spacing: .11em;
+}
+
+.selected-clip-name {
+  display: block;
+  margin: -2px 0 9px;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+}
+
+.inspector-section summary {
+  margin: 0;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 650;
+}
+
+.inspector-section[open] summary {
+  margin-bottom: 10px;
+}
+
+.inspector .control {
+  margin-bottom: 8px;
+}
+
+.inspector .control > span {
+  font-size: 10px;
+}
+
+.inspector .specs {
+  margin: -2px 0 4px;
+  font-size: 10px;
+}
+
+.color-control input[type="color"] {
+  width: 100%;
+  height: 31px;
+  padding: 3px;
 }
 
 .timeline-region,
@@ -52,15 +161,37 @@ body,
   contain: layout paint;
 }
 
+.timeline-toolbar {
+  padding: 6px 8px;
+  gap: 8px;
+}
+
+.timeline-toolbar button {
+  min-height: 28px;
+  padding: 5px 7px;
+}
+
+.timeline-view-tools .zoom input {
+  width: 74px;
+}
+
+.fit-timeline {
+  font-weight: 700;
+}
+
+.timeline-content {
+  min-width: 100%;
+}
+
 .topbar .project-name {
-  min-width: 120px;
+  min-width: 100px;
 }
 
 .topbar .top-actions {
   flex-shrink: 0;
 }
 
-/* Preview: o canvas precisa ser imediatamente reconhecível como área de trabalho. */
+/* Preview: área de trabalho clara e priorizada. */
 .preview-stage {
   background:
     linear-gradient(45deg, rgba(255,255,255,.018) 25%, transparent 25%) 0 0/16px 16px,
@@ -77,9 +208,9 @@ body,
   justify-content: center;
   width: 100%;
   height: 100%;
-  max-width: 96%;
-  max-height: 96%;
-  min-width: 140px;
+  max-width: 98%;
+  max-height: 98%;
+  min-width: 120px;
   min-height: 80px;
 }
 
@@ -93,29 +224,41 @@ body,
     0 0 0 1px rgba(255, 255, 255, 0.035);
 }
 
-/* Cada formato ocupa o máximo espaço útil sem deformar o vídeo. */
+.canvas-movable {
+  cursor: move;
+}
+
+.canvas-hint {
+  margin-left: 10px;
+  color: #91a0b2;
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
 .canvas-shell[data-aspect="16:9"] canvas {
-  width: min(94%, 900px);
+  width: min(98%, 980px);
   height: auto;
   max-height: 100%;
 }
 
 .canvas-shell[data-aspect="1:1"] canvas {
-  height: min(96%, 520px);
+  height: min(98%, 560px);
   width: auto;
-  max-width: 96%;
+  max-width: 98%;
 }
 
 .canvas-shell[data-aspect="4:5"] canvas,
 .canvas-shell[data-aspect="9:16"] canvas {
   height: 100%;
   width: auto;
-  max-width: 92%;
+  max-width: 96%;
   max-height: 100%;
 }
 
 .canvas-shell[data-aspect="9:16"] {
-  max-width: min(96%, 460px);
+  max-width: min(98%, 500px);
 }
 
 .canvas-label {
@@ -131,36 +274,59 @@ body,
   pointer-events: none;
 }
 
-/* Timeline: clipes maiores para leitura e manipulação mais confortáveis. */
+/* Timeline: suficiente para manipular, sem virar metade da tela. */
 .track-row {
-  height: 92px;
+  height: 78px;
 }
 
 .track-name {
-  padding: 14px 12px;
+  padding: 9px 8px;
+  display: grid;
+  grid-template-columns: 22px minmax(0,1fr);
+  align-content: center;
+  column-gap: 5px;
+}
+
+.track-name > strong {
+  margin: 0;
+  align-self: center;
+}
+
+.track-name > div {
+  grid-column: 2;
+}
+
+.layer-number {
+  grid-row: 1 / span 2;
+  align-self: center;
+  justify-self: center;
+  color: var(--accent);
+  font-size: 9px;
+  font-weight: 800;
 }
 
 .clip {
-  top: 8px;
-  height: 76px;
-  padding: 7px 10px;
+  top: 7px;
+  height: 64px;
+  padding: 6px 9px;
 }
 
 .clip small {
-  margin-top: 30px;
+  margin-top: 20px;
 }
 
 .clip-wave {
-  inset: 22px 0 0;
-  height: 47px;
+  inset: 20px 0 0;
+  height: 39px;
 }
 
 .timeline-footer {
-  min-height: 28px;
+  min-height: 24px;
   align-items: center;
+  padding-block: 4px;
 }
 
-/* A agulha precisa ser reconhecida instantaneamente sem competir com a cor da UI. */
+/* Agulha precisa, fácil de identificar e arrastar. */
 .ruler-playhead,
 .playhead {
   background: var(--playhead);
@@ -195,7 +361,6 @@ body,
   cursor: ew-resize;
 }
 
-/* Controles de edição: menos volume visual e melhor separação entre estado e ação. */
 .timeline-toolbar button,
 .workspace-tools button,
 .workspace-tools .button {
@@ -211,77 +376,70 @@ body,
   box-shadow: 0 0 0 2px rgba(168, 235, 204, 0.12);
 }
 
-/* Telas baixas: manter canvas e timeline úteis ao mesmo tempo. */
-@media (max-height: 720px) and (min-width: 851px) {
-  .app-shell {
-    grid-template-rows: 60px 44px minmax(210px, 1fr) 8px var(--timeline-height);
+@media (max-width: 1150px) and (min-width: 851px) {
+  .workspace {
+    grid-template-columns: min(var(--library-width), 205px) 4px minmax(0, 1fr) 210px;
   }
-
-  .topbar {
-    padding-block: 8px;
+  .inspector {
+    width: 210px;
   }
-
-  .preview-wrap {
-    grid-template-rows: 30px minmax(130px, 1fr) 50px;
-    padding-block: 6px;
-  }
-
-  .preview-stage {
-    padding: 6px;
-  }
-
-  .canvas-shell {
-    max-height: 100%;
-  }
-
-  .canvas-shell[data-aspect="9:16"] canvas,
-  .canvas-shell[data-aspect="4:5"] canvas {
-    height: 100%;
-  }
-
-  .track-row {
-    height: 86px;
-  }
-
-  .clip {
-    height: 70px;
+  .canvas-hint {
+    display: none;
   }
 }
 
-/* Em telas menores, preservar preview + timeline ao mesmo tempo, especialmente em 9:16. */
+@media (max-height: 720px) and (min-width: 851px) {
+  .app-shell {
+    grid-template-rows: 56px 40px minmax(210px, 1fr) 8px var(--timeline-height);
+  }
+  .topbar {
+    padding-block: 6px;
+  }
+  .preview-wrap {
+    grid-template-rows: 28px minmax(130px, 1fr) 46px;
+    padding-block: 5px;
+  }
+  .preview-stage {
+    padding: 5px;
+  }
+  .canvas-shell {
+    max-height: 100%;
+  }
+  .track-row {
+    height: 72px;
+  }
+  .clip {
+    height: 58px;
+  }
+}
+
 @media (max-width: 850px) {
   .canvas-shell {
     max-height: 98%;
     max-width: 98%;
   }
-
   .canvas-shell[data-aspect="16:9"] canvas {
     width: 98%;
   }
-
   .canvas-shell[data-aspect="9:16"] {
-    max-width: 78vw;
+    max-width: 82vw;
   }
-
   .canvas-shell[data-aspect="9:16"] canvas,
   .canvas-shell[data-aspect="4:5"] canvas {
     height: 100%;
     max-width: 100%;
   }
-
-  .canvas-label {
+  .canvas-label,
+  .canvas-hint {
     display: none;
   }
-
   .track-row {
-    height: 84px;
+    height: 72px;
   }
-
   .clip {
-    top: 7px;
-    height: 69px;
+    top: 6px;
+    height: 60px;
   }
-
   .ruler-playhead span {
     width: 15px;
     left: -7px;
@@ -294,7 +452,6 @@ body,
     height: 17px;
     left: -8px;
   }
-
   .trim-handle {
     width: 12px;
   }
