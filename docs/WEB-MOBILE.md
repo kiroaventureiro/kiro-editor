@@ -1,53 +1,11 @@
-# KIRO Editor 0.3 — Web + Mobile
+# Arquitetura web e mobile — 0.5
 
-## Objetivo
-A mesma base React deve funcionar no navegador do PC, iPhone/iPad e Android. O desktop nativo via Tauri permanece como camada adicional, não como código separado.
+`history.ts` mantém histórico puro, sem atualizações de estado dentro de reducers. `operations.ts` contém as regras de corte, velocidade, divisão, remoção e importação SRT. `storage.ts` mantém a edição e os blobs em IndexedDB; URLs temporárias são recriadas ao abrir.
 
-## Arquitetura alvo
+`engine.ts` compõe imagens, vídeos e texto em canvas e mistura o áudio com Web Audio. A mesma composição é usada pela prévia e pela exportação MediaRecorder. O relógio da timeline é independente da seleção de clipes. O navegador escolhe um formato de gravação suportado, mostrado antes de exportar.
 
-```text
-GitHub
-  └─ KIRO Editor (React + TypeScript + Vite)
-      ├─ Vercel → Web / celular / tablet
-      ├─ PWA → atalho instalável no celular
-      └─ Tauri → aplicativo Windows
-```
+A prévia permite qualidade reduzida sem alterar o tamanho do arquivo final. No desktop, biblioteca e timeline têm divisórias redimensionáveis. No celular, biblioteca e propriedades abrem como gavetas sobre a prévia.
 
-## O que esta preparação já inclui
-- Layout responsivo para telas abaixo de 1100 px.
-- Timeline com rolagem horizontal em mobile.
-- Biblioteca de mídia horizontal no celular.
-- Preview adaptável ao formato do projeto.
-- Meta tags mobile e manifest PWA.
-- `vercel.json` pronto para deploy Vite.
-- `.gitignore` e `.env.example` prontos para GitHub.
+Não há tráfego de mídia para um servidor. Limpeza do navegador ou modo privado podem remover os dados. A interface distingue cópia de projeto da exportação do vídeo final. Projetos legados sem mídia exibem reconexão explícita.
 
-## Limitação intencional
-Nesta fase os arquivos de mídia ficam no dispositivo e usam Blob URLs. Eles não são enviados automaticamente à nuvem. Isso evita custos e uploads desnecessários durante o MVP.
-
-## Próximo estágio de sincronização
-- Supabase Auth para login;
-- tabela `projects` para metadados/timeline;
-- Storage opcional para proxies/thumbs;
-- mídia original permanece local por padrão;
-- render pesado futuramente pode ir para worker/backend quando o usuário estiver no mobile.
-
-## Publicação no Vercel
-1. Repositório `kiro-editor` na branch `main`.
-2. Importar o repositório no Vercel.
-3. Framework: Vite.
-4. Build: `npm run build`.
-5. Output: `dist`.
-
-## Critérios 0.3
-- [x] Desktop browser
-- [x] Layout mobile responsivo
-- [x] Importação local via file picker
-- [x] Timeline utilizável em touch por rolagem
-- [x] Manifest PWA
-- [x] Vercel config
-- [ ] Drag/touch de clipes
-- [ ] Split no playhead
-- [ ] Trim por alças
-- [ ] Undo/redo
-- [ ] Persistência cross-device
+O código de nuvem, autenticação, pagamentos, geração de mídia e renderização remota permanece fora desta versão. Uma futura implementação deve manter a composição e o modelo de projeto como contrato compartilhado, com validação e migrações explícitas.

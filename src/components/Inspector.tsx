@@ -1,72 +1,209 @@
-import { Gauge, MonitorUp, SlidersHorizontal, Volume2 } from 'lucide-react';
-import type { Clip, MediaAsset, ProjectSettings } from '../editor/types';
-
+import type { Clip, ProjectSettings } from "../editor/types";
 interface Props {
   settings: ProjectSettings;
-  selectedAsset?: MediaAsset;
-  selectedClip?: Clip;
-  onAspectChange: (ratio: ProjectSettings['aspectRatio']) => void;
-  onClipChange: (patch: Partial<Clip>) => void;
+  clip?: Clip;
+  locked: boolean;
+  onAspect: (r: ProjectSettings["aspectRatio"]) => void;
+  onChange: (p: Partial<Clip>) => void;
+  onBegin: () => void;
+  onEnd: () => void;
 }
-
-export default function Inspector({ settings, selectedAsset, selectedClip, onAspectChange, onClipChange }: Props) {
+export default function Inspector({
+  settings,
+  clip,
+  locked,
+  onAspect,
+  onChange,
+  onBegin,
+  onEnd,
+}: Props) {
+  const range = (
+    label: string,
+    key: keyof Clip,
+    min: number,
+    max: number,
+    step: number,
+    fallback: number,
+  ) => (
+    <label className="control" key={key}>
+      <span>
+        {label}
+        <b>{Number(Number(clip?.[key] ?? fallback).toFixed(2))}</b>
+      </span>
+      <input
+        aria-label={label}
+        type="range"
+        min={min}
+        max={max}
+        step={step}
+        value={Number(clip?.[key] ?? fallback)}
+        onPointerDown={onBegin}
+        onPointerUp={onEnd}
+        onPointerCancel={onEnd}
+        onBlur={onEnd}
+        onChange={(e) => onChange({ [key]: Number(e.target.value) })}
+      />
+    </label>
+  );
   return (
     <aside className="panel inspector">
-      <div className="panel-heading inspector-heading">
-        <span className="panel-kicker">PROPRIEDADES</span>
-        <h2>Ajustes</h2>
+      <div className="panel-heading">
+        <span className="eyebrow">CONTROLE CRIATIVO</span>
+        <h2>Propriedades</h2>
       </div>
-
-      <section className="inspector-section">
-        <div className="inspector-section-title"><MonitorUp size={14}/><span>Projeto</span></div>
-        <label>Formato
-          <select value={settings.aspectRatio} onChange={e => onAspectChange(e.target.value as ProjectSettings['aspectRatio'])}>
-            <option value="16:9">YouTube · 16:9</option>
-            <option value="9:16">Shorts / Reels · 9:16</option>
-            <option value="1:1">Quadrado · 1:1</option>
-            <option value="4:5">Feed · 4:5</option>
-          </select>
-        </label>
-        <div className="project-specs">
-          <span><strong>{settings.width} × {settings.height}</strong><small>resolução</small></span>
-          <span><strong>{settings.fps}</strong><small>fps</small></span>
-        </div>
-      </section>
-
-      {selectedClip ? (
-        <section className="inspector-section inspector-section-active">
-          <div className="inspector-section-title"><SlidersHorizontal size={14}/><span>Clipe</span></div>
-          <div className="selected-item-card">
-            <strong>{selectedClip.name}</strong>
-            <span>{selectedClip.duration.toFixed(1)} s</span>
-          </div>
-
-          {(selectedClip.type === 'video' || selectedClip.type === 'audio') && (
-            <label className="control-row">
-              <span className="control-label"><Volume2 size={13}/>Volume <b>{Math.round((selectedClip.volume ?? 1) * 100)}%</b></span>
-              <input type="range" min="0" max="1" step="0.05" value={selectedClip.volume ?? 1} onChange={e => onClipChange({ volume: Number(e.target.value) })}/>
-            </label>
+      <label>
+        Formato do projeto
+        <select
+          aria-label="Formato do projeto"
+          value={settings.aspectRatio}
+          onChange={(e) =>
+            onAspect(e.target.value as ProjectSettings["aspectRatio"])
+          }
+        >
+          <option value="16:9">YouTube · 16:9</option>
+          <option value="9:16">Reels / Shorts · 9:16</option>
+          <option value="1:1">Quadrado · 1:1</option>
+          <option value="4:5">Feed · 4:5</option>
+        </select>
+      </label>
+      <p className="specs">
+        {settings.width} × {settings.height} · {settings.fps} fps
+      </p>
+      {clip ? (
+        <fieldset disabled={locked}>
+          <legend>{locked ? "Trilha bloqueada" : clip.name}</legend>
+          <label>
+            Nome da cena
+            <input
+              aria-label="Nome da cena"
+              value={clip.name}
+              onFocus={onBegin}
+              onBlur={onEnd}
+              onChange={(e) => onChange({ name: e.target.value })}
+            />
+          </label>
+          {clip.type === "text" && (
+            <>
+              <label>
+                Texto
+                <textarea
+                  aria-label="Texto do título"
+                  value={clip.text ?? ""}
+                  onFocus={onBegin}
+                  onBlur={onEnd}
+                  onChange={(e) => onChange({ text: e.target.value })}
+                />
+              </label>
+              {range("Tamanho do texto", "fontSize", 2, 20, 0.5, 6)}
+              <label>
+                Cor
+                <input
+                  aria-label="Cor do texto"
+                  type="color"
+                  value={clip.color ?? "#ffffff"}
+                  onChange={(e) => onChange({ color: e.target.value })}
+                />
+              </label>
+            </>
           )}
-
-          {selectedClip.type === 'video' && (
+          {clip.type !== "text" && range("Volume", "volume", 0, 1, 0.01, 1)}
+          {clip.assetId && (
             <label>
-              <span className="control-label"><Gauge size={13}/>Velocidade</span>
-              <select value={selectedClip.speed ?? 1} onChange={e => onClipChange({ speed: Number(e.target.value) })}>
-                <option value="0.5">0,5×</option><option value="0.75">0,75×</option><option value="1">1× normal</option><option value="1.25">1,25×</option><option value="1.5">1,5×</option><option value="2">2×</option>
+              Velocidade
+              <select
+                aria-label="Velocidade"
+                value={clip.speed ?? 1}
+                onChange={(e) => onChange({ speed: Number(e.target.value) })}
+              >
+                {[0.25, 0.5, 0.75, 1, 1.25, 1.5, 2, 4].map((n) => (
+                  <option key={n} value={n}>
+                    {n}×
+                  </option>
+                ))}
               </select>
             </label>
           )}
-        </section>
-      ) : selectedAsset ? (
-        <section className="inspector-section inspector-section-active">
-          <div className="inspector-section-title"><SlidersHorizontal size={14}/><span>Mídia</span></div>
-          <div className="selected-item-card"><strong>{selectedAsset.name}</strong><span>{selectedAsset.type}</span></div>
-        </section>
+          {clip.type !== "audio" && (
+            <details open>
+              <summary>Enquadramento</summary>
+              {range("Posição horizontal", "x", -100, 100, 1, 0)}
+              {range("Posição vertical", "y", -100, 100, 1, 0)}
+              {range("Escala", "scale", 0.1, 4, 0.05, 1)}
+              {range("Rotação", "rotation", -180, 180, 1, 0)}
+              {range("Opacidade", "opacity", 0, 1, 0.01, 1)}
+              <small>Arraste a imagem na prévia para posicionar.</small>
+            </details>
+          )}
+          <details>
+            <summary>Entradas e saídas suaves</summary>
+            {range(
+              "Entrada suave (s)",
+              "fadeIn",
+              0,
+              Math.min(5, clip.duration / 2),
+              0.1,
+              0,
+            )}
+            {range(
+              "Saída suave (s)",
+              "fadeOut",
+              0,
+              Math.min(5, clip.duration / 2),
+              0.1,
+              0,
+            )}
+          </details>
+          {clip.type !== "audio" && (
+            <details>
+              <summary>Movimento entre início e fim</summary>
+              {range("Escala final", "endScale", 0.1, 4, 0.05, clip.scale ?? 1)}
+              {range(
+                "Posição horizontal final",
+                "endX",
+                -100,
+                100,
+                1,
+                clip.x ?? 0,
+              )}
+              {range(
+                "Posição vertical final",
+                "endY",
+                -100,
+                100,
+                1,
+                clip.y ?? 0,
+              )}
+              <button
+                onClick={() =>
+                  onChange({
+                    endScale: undefined,
+                    endX: undefined,
+                    endY: undefined,
+                  })
+                }
+              >
+                Remover movimento
+              </button>
+            </details>
+          )}
+          <details>
+            <summary>Roteiro da cena</summary>
+            <textarea
+              aria-label="Roteiro da cena"
+              placeholder="Ação, narração, personagens e referências desta cena…"
+              value={clip.notes ?? ""}
+              onFocus={onBegin}
+              onBlur={onEnd}
+              onChange={(e) => onChange({ notes: e.target.value })}
+            />
+          </details>
+        </fieldset>
       ) : (
-        <div className="inspector-empty">
-          <SlidersHorizontal size={20}/>
-          <strong>Nada selecionado</strong>
-          <span>Selecione um clipe na timeline para ver os controles.</span>
+        <div className="empty-inspector">
+          <strong>Sua edição, no detalhe</strong>
+          <p>
+            Selecione uma cena na timeline para ajustar imagem, som e movimento.
+          </p>
         </div>
       )}
     </aside>

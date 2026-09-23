@@ -1,82 +1,143 @@
-import { FileAudio, FileImage, FileVideo, Plus, Upload } from 'lucide-react';
-import type { MediaAsset } from '../editor/types';
-
+import { Plus, Upload, Search, Link2 } from "lucide-react";
+import { useState } from "react";
+import type { MediaAsset, Track } from "../editor/types";
 interface Props {
+  tracks: Track[];
+  targetTrack: string;
+  onTargetTrack: (id: string) => void;
   assets: MediaAsset[];
-  selectedAssetId?: string;
   onImport: (files: FileList | null) => void;
-  onSelect: (asset: MediaAsset) => void;
   onAddToTimeline: (asset: MediaAsset) => void;
+  onRelink: (id: string, file: File) => void;
+  busy: boolean;
 }
-
-function AssetIcon({ type }: { type: MediaAsset['type'] }) {
-  if (type === 'audio') return <FileAudio size={16} />;
-  if (type === 'image') return <FileImage size={16} />;
-  return <FileVideo size={16} />;
-}
-
-export default function MediaLibrary({ assets, selectedAssetId, onImport, onSelect, onAddToTimeline }: Props) {
-  const videos = assets.filter(asset => asset.type === 'video').length;
-  const audio = assets.filter(asset => asset.type === 'audio').length;
-  const images = assets.filter(asset => asset.type === 'image').length;
-
+export default function MediaLibrary({
+  tracks,
+  targetTrack,
+  onTargetTrack,
+  assets,
+  onImport,
+  onAddToTimeline,
+  onRelink,
+  busy,
+}: Props) {
+  const [search, setSearch] = useState("");
   return (
     <aside className="panel media-panel">
-      <div className="panel-title-row">
-        <div className="panel-heading">
-          <span className="panel-kicker">ARQUIVOS</span>
-          <h2>Biblioteca</h2>
-        </div>
-        <span className="panel-count">{assets.length}</span>
+      <div className="panel-heading">
+        <span className="eyebrow">SEU MATERIAL</span>
+        <h2>
+          Biblioteca <small>{assets.length}</small>
+        </h2>
       </div>
-
-      <label className="import-button import-dropzone">
-        <span className="import-icon"><Upload size={17}/></span>
-        <span className="import-copy"><strong>Importar mídia</strong><small>Vídeo, imagem ou áudio</small></span>
-        <input hidden type="file" accept="video/*,audio/*,image/*" multiple onChange={(e) => onImport(e.target.files)} />
+      <label
+        className={`import-dropzone ${busy ? "disabled" : ""}`}
+        onDragOver={(e) => e.preventDefault()}
+        onDrop={(e) => {
+          e.preventDefault();
+          if (!busy) onImport(e.dataTransfer.files);
+        }}
+      >
+        <Upload size={24} />
+        <strong>{busy ? "Importando…" : "Importar arquivos"}</strong>
+        <span>Ou arraste vídeos, imagens e áudios</span>
+        <input
+          aria-label="Importar mídia"
+          hidden
+          type="file"
+          accept="video/*,audio/*,image/*"
+          multiple
+          disabled={busy}
+          onChange={(e) => {
+            onImport(e.target.files);
+            e.target.value = "";
+          }}
+        />
       </label>
-
-      {assets.length > 0 && (
-        <div className="library-stats" aria-label="Resumo da biblioteca">
-          <span><FileVideo size={12}/>{videos}</span>
-          <span><FileAudio size={12}/>{audio}</span>
-          <span><FileImage size={12}/>{images}</span>
-        </div>
-      )}
-
-      {assets.length === 0 ? (
-        <div className="empty-card media-empty">
-          <div className="empty-media-icon"><Upload size={20}/></div>
-          <strong>Comece pela sua mídia</strong>
-          <span>Os arquivos ficam disponíveis aqui para você montar a edição.</span>
-        </div>
-      ) : (
-        <div className="asset-list">
-          {assets.map(asset => (
-            <button
-              key={asset.id}
-              className={`asset-card ${selectedAssetId === asset.id ? 'selected' : ''}`}
-              onClick={() => onSelect(asset)}
-              onDoubleClick={() => onAddToTimeline(asset)}
-              title="Duplo clique para colocar na timeline"
+      <label className="search">
+        <Search size={16} />
+        <input
+          aria-label="Buscar mídia"
+          placeholder="Buscar na biblioteca"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
+      </label>
+      <label className="target-track">
+        Adicionar à trilha
+        <select
+          aria-label="Trilha de destino"
+          value={targetTrack}
+          onChange={(e) => onTargetTrack(e.target.value)}
+        >
+          {tracks
+            .filter((t) => !t.locked && t.type !== "text")
+            .map((t) => (
+              <option value={t.id} key={t.id}>
+                {t.name}
+              </option>
+            ))}
+        </select>
+        <small>Áudios usam uma trilha de áudio compatível.</small>
+      </label>
+      <div className="asset-list">
+        {assets
+          .filter((a) => a.name.toLowerCase().includes(search.toLowerCase()))
+          .map((a) => (
+            <article
+              className={`asset-card ${a.path ? "" : "missing"}`}
+              key={a.id}
             >
-              <span className={`asset-icon asset-icon-${asset.type}`}><AssetIcon type={asset.type}/></span>
-              <span className="asset-copy">
-                <strong>{asset.name}</strong>
-                <small>{asset.type} {asset.duration ? `· ${formatDuration(asset.duration)}` : ''}</small>
-              </span>
-              <span className="asset-plus" onClick={(e) => { e.stopPropagation(); onAddToTimeline(asset); }} title="Adicionar à timeline"><Plus size={15}/></span>
-            </button>
+              <div className="asset-thumbnail">
+                {a.thumbnail ? (
+                  <img src={a.thumbnail} alt="" />
+                ) : (
+                  <span>{a.type === "audio" ? "♫" : "▧"}</span>
+                )}
+                {a.duration && <small>{a.duration.toFixed(1)}s</small>}
+              </div>
+              <div className="asset-copy">
+                <strong title={a.name}>{a.name}</strong>
+                <small>
+                  {a.path
+                    ? { audio: "Áudio", video: "Vídeo", image: "Imagem" }[
+                        a.type
+                      ]
+                    : "Arquivo ausente"}
+                </small>
+              </div>
+              {a.path ? (
+                <button
+                  aria-label={`Adicionar ${a.name}`}
+                  onClick={() => onAddToTimeline(a)}
+                >
+                  <Plus size={18} />
+                </button>
+              ) : (
+                <label className="relink" title="Reconectar arquivo">
+                  <Link2 size={18} />
+                  <input
+                    aria-label={`Reconectar ${a.name}`}
+                    hidden
+                    type="file"
+                    accept={`${a.type}/*`}
+                    onChange={(e) => {
+                      if (e.target.files?.[0])
+                        onRelink(a.id, e.target.files[0]);
+                      e.target.value = "";
+                    }}
+                  />
+                </label>
+              )}
+            </article>
           ))}
-        </div>
+      </div>
+      {!assets.length && (
+        <p className="panel-tip">
+          Seus arquivos serão guardados neste navegador. Use uma cópia do
+          projeto e mantenha os originais para trabalhar em outro dispositivo.
+        </p>
       )}
-      <p className="panel-tip">Duplo clique ou + para enviar um arquivo à timeline.</p>
     </aside>
   );
-}
-
-function formatDuration(seconds: number) {
-  const minutes = Math.floor(seconds / 60);
-  const secs = Math.floor(seconds % 60).toString().padStart(2, '0');
-  return `${minutes}:${secs}`;
 }
