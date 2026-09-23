@@ -1,0 +1,92 @@
+/* KIRO Editor 0.5 — refinamentos de produto
+   Mantém a identidade Studio separada do universo narrativo e melhora leitura/precisão. */
+:root {
+  --playhead: #ff6b6b;
+  --playhead-soft: rgba(255, 107, 107, 0.22);
+}
+
+/* Preview: moldura mais precisa, menos aparência de protótipo. */
+.preview-stage canvas {
+  border: 1px solid #303640;
+  border-radius: 4px;
+  background: #050608;
+  box-shadow:
+    0 16px 44px rgba(0, 0, 0, 0.42),
+    0 0 0 1px rgba(255, 255, 255, 0.018);
+}
+
+/* A agulha precisa ser reconhecida instantaneamente sem competir com a cor da UI. */
+.ruler-playhead,
+.playhead {
+  background: var(--playhead);
+  width: 2px;
+  box-shadow: 0 0 0 1px var(--playhead-soft);
+}
+
+.ruler-playhead span {
+  left: -6px;
+  top: 2px;
+  width: 13px;
+  height: 15px;
+  background: var(--playhead);
+  clip-path: none;
+  border-radius: 4px 4px 7px 7px;
+  box-shadow: 0 2px 7px rgba(0, 0, 0, 0.38);
+}
+
+.ruler-playhead span::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 4px;
+  width: 3px;
+  height: 3px;
+  transform: translateX(-50%);
+  border-radius: 50%;
+  background: rgba(20, 20, 20, 0.55);
+}
+
+.ruler {
+  cursor: ew-resize;
+}
+
+/* Controles de edição: menos volume visual e melhor separação entre estado e ação. */
+.timeline-toolbar button,
+.workspace-tools button,
+.workspace-tools .button {
+  border-radius: 6px;
+}
+
+.timeline-toolbar button.active {
+  box-shadow: inset 0 0 0 1px rgba(168, 235, 204, 0.16);
+}
+
+.clip.selected {
+  outline-color: #f4f7fb;
+  box-shadow: 0 0 0 2px rgba(168, 235, 204, 0.12);
+}
+
+/* Em telas menores, preservar preview + timeline ao mesmo tempo, especialmente em 9:16. */
+@media (max-width: 850px) {
+  .preview-stage canvas {
+    max-height: 92%;
+    max-width: 94%;
+  }
+
+  .ruler-playhead span {
+    width: 15px;
+    left: -7px;
+  }
+}
+
+@media (pointer: coarse) {
+  .ruler-playhead span {
+    width: 17px;
+    height: 17px;
+    left: -8px;
+  }
+
+  .trim-handle {
+    width: 12px;
+  }
+}
