@@ -34,8 +34,6 @@ export default function Preview({ asset, settings, clip, playhead, onPlayheadCha
     media.playbackRate = Math.max(0.25, Math.min(4, clip.speed ?? 1));
     media.volume = Math.max(0, Math.min(1, clip.volume ?? 1));
 
-    // Durante reprodução, o player é a fonte do tempo. Não force o vídeo
-    // de volta ao playhead antigo, senão a agulha fica visualmente presa.
     if (!media.paused) return;
 
     const speed = clip.speed ?? 1;
@@ -126,12 +124,15 @@ export default function Preview({ asset, settings, clip, playhead, onPlayheadCha
   };
 
   const ratio = settings.aspectRatio.replace(':', ' / ');
+  const isPortrait = settings.aspectRatio === '9:16' || settings.aspectRatio === '4:5';
+  const isSquare = settings.aspectRatio === '1:1';
   const hasPlayableMedia = asset?.type === 'video' || asset?.type === 'audio';
+  const frameClass = `preview-frame ${isPortrait ? 'preview-frame-portrait' : isSquare ? 'preview-frame-square' : 'preview-frame-landscape'}`;
 
   return (
     <section className="preview-wrap">
       <div className="preview-stage">
-        <div className="preview-frame" style={{ aspectRatio: ratio }}>
+        <div className={frameClass} style={{ aspectRatio: ratio }}>
           {!asset && <div className="preview-empty"><div className="portal-glow"/><span>Importe uma mídia para começar</span></div>}
           {asset?.type === 'video' && (
             <video
