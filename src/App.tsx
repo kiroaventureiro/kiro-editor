@@ -1,4 +1,4 @@
-import { Download, FolderOpen, Redo2, Save, Sparkles, Undo2 } from 'lucide-react';
+import { Download, Sparkles } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import MediaLibrary from './components/MediaLibrary';
 import Preview from './components/Preview';
@@ -297,10 +297,6 @@ export default function App() {
         <div className="brand"><span className="brand-mark">K</span><div><strong>KIRO Editor</strong><small>0.4 · Histórico de edição</small></div></div>
         <div className="project-name"><strong>{project.name}</strong><small>{notice}</small></div>
         <div className="top-actions">
-          <button className="ghost" onClick={newProject}><FolderOpen size={17}/> Novo</button>
-          <button className="ghost" onClick={saveProject}><Save size={17}/> Salvar</button>
-          <button className="ghost" onClick={undo} disabled={!undoStack.length} title="Desfazer (Ctrl+Z)"><Undo2 size={17}/> Desfazer</button>
-          <button className="ghost" onClick={redo} disabled={!redoStack.length} title="Refazer (Ctrl+Y)"><Redo2 size={17}/> Refazer</button>
           <button className="ghost" disabled title="KIRO IA entra na fase 2"><Sparkles size={17}/> KIRO IA</button>
           <button className="primary" disabled title="Exportação real entra depois da edição base"><Download size={17}/> Exportar</button>
         </div>
@@ -316,6 +312,12 @@ export default function App() {
         tracks={project.tracks}
         selectedClipId={selectedClipId}
         playhead={playhead}
+        canUndo={undoStack.length > 0}
+        canRedo={redoStack.length > 0}
+        onNewProject={newProject}
+        onSaveProject={saveProject}
+        onUndo={undo}
+        onRedo={redo}
         onSeek={setPlayhead}
         onSplit={splitClip}
         onMoveClip={moveClip}
