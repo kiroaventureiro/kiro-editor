@@ -32,42 +32,43 @@ body,
 
 .workspace {
   overflow: hidden;
-  grid-template-columns: min(var(--library-width), 238px) 4px minmax(0, 1fr) 230px;
+  grid-template-columns: min(var(--library-width), 224px) 4px minmax(0, 1fr) 226px;
 }
 
 .panel {
-  padding: 13px 11px;
+  padding: 12px 10px;
 }
 
 .panel h2 {
-  font-size: 16px;
-  margin-bottom: 11px;
+  font-size: 15px;
+  margin-bottom: 9px;
 }
 
 .topbar {
-  padding: 9px 14px;
-  gap: 14px;
+  padding: 8px 13px;
+  gap: 12px;
 }
 
 .brand {
-  min-width: 160px;
+  min-width: 155px;
 }
 
 .workspace-tools {
-  padding-inline: 10px;
+  padding-inline: 9px;
 }
 
 .preview-wrap {
   overflow: hidden;
-  padding: 7px 11px;
+  padding: 7px 10px;
 }
 
 .inspector {
-  width: 230px;
+  width: 226px;
+  padding-inline: 9px;
 }
 
 .inspector label {
-  margin-bottom: 9px;
+  margin-bottom: 8px;
   gap: 5px;
   font-size: 11px;
 }
@@ -79,7 +80,51 @@ body,
 }
 
 .compact-heading h2 {
-  margin-bottom: 9px;
+  margin-bottom: 7px;
+}
+
+.inspector-tabs {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 3px;
+  padding: 4px;
+  margin: 0 0 8px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #111419;
+  position: sticky;
+  top: -12px;
+  z-index: 3;
+}
+
+.inspector-tabs button {
+  min-width: 0;
+  min-height: 28px;
+  padding: 5px 3px;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  color: #9ba5b5;
+  font-size: 9px;
+  font-weight: 650;
+}
+
+.inspector-tabs button:hover:not(:disabled) {
+  background: #20252c;
+}
+
+.inspector-tabs button.active {
+  background: #2a3732;
+  color: #c8f7df;
+  box-shadow: inset 0 0 0 1px rgba(168, 235, 204, 0.18);
+}
+
+.inspector-tabs button:disabled {
+  opacity: .28;
+}
+
+.inspector-tab-content {
+  min-height: 0;
 }
 
 .inspector fieldset {
@@ -89,7 +134,7 @@ body,
 }
 
 .inspector-section {
-  padding: 10px 0;
+  padding: 9px 0;
   border-top: 1px solid var(--border);
 }
 
@@ -100,7 +145,7 @@ body,
 
 .section-kicker {
   display: block;
-  margin-bottom: 8px;
+  margin-bottom: 7px;
   color: var(--accent);
   font-size: 9px;
   font-weight: 750;
@@ -109,7 +154,7 @@ body,
 
 .selected-clip-name {
   display: block;
-  margin: -2px 0 9px;
+  margin: -2px 0 8px;
   max-width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -125,11 +170,11 @@ body,
 }
 
 .inspector-section[open] summary {
-  margin-bottom: 10px;
+  margin-bottom: 9px;
 }
 
 .inspector .control {
-  margin-bottom: 8px;
+  margin-bottom: 7px;
 }
 
 .inspector .control > span {
@@ -145,6 +190,24 @@ body,
   width: 100%;
   height: 31px;
   padding: 3px;
+}
+
+.future-effects {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 10px;
+  margin-top: 8px;
+  border: 1px dashed #3a424d;
+  border-radius: 7px;
+  color: #8f9baa;
+  font-size: 10px;
+  line-height: 1.45;
+}
+
+.future-effects strong {
+  color: #c3ccd7;
+  font-size: 10px;
 }
 
 .timeline-region,
@@ -207,12 +270,11 @@ body,
 }
 
 .preview-stage {
-  background:
-    linear-gradient(45deg, rgba(255,255,255,.018) 25%, transparent 25%) 0 0/16px 16px,
-    linear-gradient(-45deg, rgba(255,255,255,.018) 25%, transparent 25%) 0 8px/16px 16px,
-    #0c0f13;
-  border-radius: 8px;
+  background: #0b0e12;
+  border: 1px solid #1d232b;
+  border-radius: 9px;
   margin: 2px 0;
+  padding: 12px 18px;
 }
 
 .canvas-shell {
@@ -220,22 +282,28 @@ body,
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 100%;
-  height: 100%;
-  max-width: 98%;
-  max-height: 98%;
-  min-width: 120px;
-  min-height: 80px;
+  width: auto;
+  height: auto;
+  min-width: 0;
+  min-height: 0;
+  padding: 7px;
+  border: 1px solid #252d36;
+  border-radius: 8px;
+  background:
+    linear-gradient(45deg, rgba(255,255,255,.018) 25%, transparent 25%) 0 0/16px 16px,
+    linear-gradient(-45deg, rgba(255,255,255,.018) 25%, transparent 25%) 0 8px/16px 16px,
+    #101419;
+  box-shadow: 0 18px 45px rgba(0,0,0,.34);
 }
 
 .canvas-shell canvas {
   display: block;
+  max-width: 100%;
+  max-height: 100%;
   border: 1px solid #48515e;
-  border-radius: 5px;
+  border-radius: 4px;
   background: #000;
-  box-shadow:
-    0 18px 50px rgba(0, 0, 0, 0.5),
-    0 0 0 1px rgba(255, 255, 255, 0.035);
+  box-shadow: 0 8px 24px rgba(0,0,0,.42);
 }
 
 .canvas-movable {
@@ -251,34 +319,46 @@ body,
   text-transform: none;
 }
 
+.canvas-shell[data-aspect="16:9"] {
+  width: min(82%, 820px);
+  aspect-ratio: 16 / 9;
+}
+
 .canvas-shell[data-aspect="16:9"] canvas {
-  width: min(98%, 980px);
-  height: auto;
-  max-height: 100%;
+  width: 100%;
+  height: 100%;
+}
+
+.canvas-shell[data-aspect="1:1"] {
+  height: min(92%, 500px);
+  aspect-ratio: 1 / 1;
 }
 
 .canvas-shell[data-aspect="1:1"] canvas {
-  height: min(98%, 560px);
-  width: auto;
-  max-width: 98%;
+  width: 100%;
+  height: 100%;
+}
+
+.canvas-shell[data-aspect="4:5"] {
+  height: min(94%, 520px);
+  aspect-ratio: 4 / 5;
+}
+
+.canvas-shell[data-aspect="9:16"] {
+  height: min(96%, 540px);
+  aspect-ratio: 9 / 16;
 }
 
 .canvas-shell[data-aspect="4:5"] canvas,
 .canvas-shell[data-aspect="9:16"] canvas {
+  width: 100%;
   height: 100%;
-  width: auto;
-  max-width: 96%;
-  max-height: 100%;
-}
-
-.canvas-shell[data-aspect="9:16"] {
-  max-width: min(98%, 500px);
 }
 
 .canvas-label {
   position: absolute;
-  left: 8px;
-  bottom: 7px;
+  left: 10px;
+  bottom: 9px;
   padding: 3px 6px;
   border-radius: 4px;
   background: rgba(5, 7, 10, .78);
@@ -390,13 +470,16 @@ body,
 
 @media (max-width: 1150px) and (min-width: 851px) {
   .workspace {
-    grid-template-columns: min(var(--library-width), 205px) 4px minmax(0, 1fr) 210px;
+    grid-template-columns: min(var(--library-width), 196px) 4px minmax(0, 1fr) 202px;
   }
   .inspector {
-    width: 210px;
+    width: 202px;
   }
   .canvas-hint {
     display: none;
+  }
+  .canvas-shell[data-aspect="16:9"] {
+    width: min(88%, 720px);
   }
 }
 
@@ -412,10 +495,13 @@ body,
     padding-block: 5px;
   }
   .preview-stage {
-    padding: 5px;
+    padding: 7px 14px;
   }
-  .canvas-shell {
-    max-height: 100%;
+  .canvas-shell[data-aspect="16:9"] {
+    width: min(76%, 680px);
+  }
+  .canvas-shell[data-aspect="9:16"] {
+    height: min(94%, 430px);
   }
   .track-row {
     height: 72px;
@@ -426,20 +512,15 @@ body,
 }
 
 @media (max-width: 850px) {
-  .canvas-shell {
-    max-height: 98%;
-    max-width: 98%;
+  .preview-stage {
+    padding: 6px;
   }
-  .canvas-shell[data-aspect="16:9"] canvas {
-    width: 98%;
+  .canvas-shell[data-aspect="16:9"] {
+    width: 94%;
   }
   .canvas-shell[data-aspect="9:16"] {
-    max-width: 82vw;
-  }
-  .canvas-shell[data-aspect="9:16"] canvas,
-  .canvas-shell[data-aspect="4:5"] canvas {
-    height: 100%;
-    max-width: 100%;
+    height: 96%;
+    max-height: 440px;
   }
   .canvas-label,
   .canvas-hint {
