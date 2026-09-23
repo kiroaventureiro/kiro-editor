@@ -5,6 +5,61 @@
   --playhead-soft: rgba(255, 107, 107, 0.22);
 }
 
+/* Estrutura: projetos longos devem rolar dentro da timeline, nunca alargar o app inteiro. */
+html,
+body,
+#root {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+.app-shell {
+  width: 100vw;
+  max-width: 100vw;
+  min-width: 0;
+}
+
+.topbar,
+.workspace-tools,
+.workspace,
+.preview-wrap,
+.timeline-region,
+.timeline-shell,
+.timeline-scroll {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.workspace {
+  overflow: hidden;
+}
+
+.preview-wrap {
+  overflow: hidden;
+}
+
+.timeline-region,
+.timeline-shell {
+  width: 100%;
+  overflow: hidden;
+}
+
+.timeline-scroll {
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: auto;
+  contain: layout paint;
+}
+
+.topbar .project-name {
+  min-width: 120px;
+}
+
+.topbar .top-actions {
+  flex-shrink: 0;
+}
+
 /* Preview: o canvas precisa ser imediatamente reconhecível como área de trabalho. */
 .preview-stage {
   background:
@@ -20,6 +75,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  width: 100%;
+  height: 100%;
   max-width: 96%;
   max-height: 96%;
   min-width: 140px;
