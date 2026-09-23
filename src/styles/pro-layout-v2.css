@@ -1,0 +1,73 @@
+/* KIRO Editor — Professional layout v2 */
+.panel-heading { display:flex; flex-direction:column; gap:2px; }
+.panel-kicker { font-size:8px; font-weight:750; letter-spacing:.13em; color:#697586; }
+.panel-title-row { align-items:flex-start !important; margin-bottom:12px; }
+.panel-count { min-width:24px; height:22px; padding:0 7px; border-radius:999px; display:grid; place-items:center; font-size:10px; font-weight:700; color:#9da8b8; background:#171c23; border:1px solid #2a313c; }
+
+.import-dropzone { display:grid !important; grid-template-columns:34px 1fr; align-items:center; justify-content:stretch !important; gap:9px !important; text-align:left; padding:9px 10px !important; }
+.import-icon { width:32px; height:32px; display:grid; place-items:center; border-radius:8px; background:rgba(91,140,255,.12); color:#8fb0ff; }
+.import-copy { display:flex; flex-direction:column; gap:2px; }
+.import-copy strong { font-size:11px; color:#dce5f6; }
+.import-copy small { font-size:9px; color:#738096; font-weight:500; }
+.library-stats { display:flex; gap:6px; margin:10px 0 2px; }
+.library-stats span { display:flex; align-items:center; gap:4px; padding:4px 7px; border-radius:6px; background:#11161d; border:1px solid #232a34; color:#7f8a99; font-size:9px; }
+.media-empty { align-items:center; text-align:center; padding:24px 14px !important; }
+.empty-media-icon { width:38px; height:38px; border-radius:10px; display:grid; place-items:center; background:#161c24; color:#6f7b8d; margin-bottom:4px; }
+.asset-icon-video { color:#9bb4ff !important; background:rgba(65,105,225,.13) !important; }
+.asset-icon-audio { color:#78d4cc !important; background:rgba(21,154,145,.12) !important; }
+.asset-icon-image { color:#e2b467 !important; background:rgba(198,139,53,.12) !important; }
+.asset-plus { border:1px solid #303947; }
+.asset-plus:hover { background:#2b3440 !important; color:#fff !important; }
+
+.inspector { gap:12px !important; }
+.inspector-heading { margin-bottom:2px; }
+.inspector-section { display:flex; flex-direction:column; gap:10px; padding:11px; border:1px solid #232a34; border-radius:10px; background:#10141a; }
+.inspector-section-active { border-color:#2e3744; }
+.inspector-section-title { display:flex; align-items:center; gap:6px; color:#8e9aab; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.07em; }
+.project-specs { display:grid; grid-template-columns:1fr 70px; gap:6px; }
+.project-specs span { padding:8px; border-radius:7px; background:#0b0f14; border:1px solid #202630; display:flex; flex-direction:column; gap:2px; }
+.project-specs strong { font-size:11px; color:#dce3ec; font-weight:650; }
+.project-specs small { font-size:8px; color:#687484; text-transform:uppercase; letter-spacing:.07em; }
+.selected-item-card { padding:9px 10px; border-radius:8px; background:#0b0f14; border:1px solid #202630; display:flex; flex-direction:column; gap:3px; min-width:0; }
+.selected-item-card strong { font-size:11px; color:#e2e8f0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.selected-item-card span { font-size:9px; color:#6f7b8a; }
+.control-label { display:flex; align-items:center; gap:5px; width:100%; }
+.control-label b { margin-left:auto; font-size:9px; color:#91a0b4; font-weight:650; }
+.inspector-empty { min-height:130px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; text-align:center; color:#5f6b7a; padding:18px 10px; }
+.inspector-empty strong { color:#8e99a8; font-size:11px; }
+.inspector-empty span { max-width:170px; font-size:9px; line-height:1.5; }
+
+/* Stronger editor hierarchy */
+.preview-stage { outline:1px solid rgba(255,255,255,.018); }
+.timeline-shell { box-shadow:0 -8px 24px rgba(0,0,0,.16); }
+.timeline-toolbar-main { border-bottom:0; }
+.timeline-toolbar-secondary { padding-top:1px; }
+.timeline-project-actions { padding-right:7px; margin-right:2px; border-right:1px solid #252c36; }
+.timeline-edit-actions button:not(:disabled) { color:#dce3ec !important; }
+.timeline-time { min-width:112px; text-align:center; }
+
+/* Playhead v2 — small precision handle */
+.playhead::before,
+.ruler-playhead::before {
+  width:10px !important;
+  height:10px !important;
+  border-radius:3px 3px 5px 5px !important;
+  top:1px !important;
+}
+.playhead::after,
+.ruler-playhead::after {
+  content:"";
+  position:absolute;
+  top:10px;
+  left:50%;
+  width:7px;
+  height:1px;
+  transform:translateX(-50%);
+  background:rgba(255,255,255,.55);
+}
+
+@media (max-width:1099px) {
+  .panel-kicker { font-size:7px; }
+  .inspector-section { padding:10px; }
+  .library-stats { overflow-x:auto; }
+}
