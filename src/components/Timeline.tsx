@@ -57,6 +57,15 @@ export default function Timeline(p: Props) {
     fitZoom = Math.max(0.25, Math.min(240, available / Math.max(1, total)));
   const tick =
     zoom >= 100 ? 1 : zoom >= 40 ? 2 : zoom >= 15 ? 5 : zoom >= 5 ? 10 : zoom >= 2 ? 30 : 60;
+  const selectedClip = p.project.tracks
+    .flatMap((t) => t.clips)
+    .find((c) => p.selected.includes(c.id));
+  const sourceTrack = selectedClip
+    ? p.project.tracks.find((t) => t.clips.some((c) => c.id === selectedClip.id))
+    : undefined;
+  const compatibleTracks = selectedClip
+    ? p.project.tracks.filter((t) => t.type === selectedClip.type && !t.locked)
+    : [];
 
   useEffect(() => {
     const element = scroll.current;
@@ -81,6 +90,19 @@ export default function Timeline(p: Props) {
   const fitAll = () => {
     setZoom(fitZoom);
     if (scroll.current) scroll.current.scrollLeft = 0;
+  };
+  const moveToLayer = (targetId: string) => {
+    if (!selectedClip || !sourceTrack || targetId === sourceTrack.id) return;
+    const target = compatibleTracks.find((t) => t.id === targetId);
+    if (!target) return;
+    p.onBegin();
+    p.onTrack(sourceTrack.id, {
+      clips: sourceTrack.clips.filter((c) => c.id !== selectedClip.id),
+    });
+    p.onTrack(target.id, {
+      clips: [...target.clips, selectedClip].sort((a, b) => a.start - b.start),
+    });
+    p.onEnd();
   };
   const candidates = [
     0,
@@ -203,6 +225,20 @@ export default function Timeline(p: Props) {
             />
             Fechar espaço
           </label>
+          {selectedClip && sourceTrack && compatibleTracks.length > 1 && (
+            <label className="layer-picker">
+              Camada
+              <select
+                aria-label="Mover para camada"
+                value={sourceTrack.id}
+                onChange={(e) => moveToLayer(e.target.value)}
+              >
+                {compatibleTracks.map((t) => (
+                  <option value={t.id} key={t.id}>{t.name}</option>
+                ))}
+              </select>
+            </label>
+          )}
         </div>
         <div className="tool-group timeline-view-tools">
           <button
@@ -244,9 +280,7 @@ export default function Timeline(p: Props) {
             className="ruler-row"
             style={{ gridTemplateColumns: `${label}px ${width}px` }}
           >
-            <div className="ruler-label">
-              {p.project.settings.fps} FPS
-            </div>
+            <div className="ruler-label">{p.project.settings.fps} FPS</div>
             <div className="ruler" {...scrubProps}>
               {Array.from(
                 { length: Math.min(2000, Math.ceil(width / zoom / tick) + 1) },
@@ -291,9 +325,7 @@ export default function Timeline(p: Props) {
               </div>
               <div className="track-lane" {...scrubProps}>
                 {t.clips.map((c) => {
-                  const asset = p.project.assets.find(
-                    (a) => a.id === c.assetId,
-                  );
+                  const asset = p.project.assets.find((a) => a.id === c.assetId);
                   return (
                     <div
                       role="button"
@@ -318,26 +350,12 @@ export default function Timeline(p: Props) {
                       }}
                     >
                       {asset?.thumbnail && (
-                        <div
-                          className="clip-film"
-                          style={{ backgroundImage: `url(${asset.thumbnail})` }}
-                        />
+                        <div className="clip-film" style={{ backgroundImage: `url(${asset.thumbnail})` }} />
                       )}
                       {asset?.peaks && (
-                        <svg
-                          className="clip-wave"
-                          viewBox="0 0 160 40"
-                          preserveAspectRatio="none"
-                          aria-hidden="true"
-                        >
+                        <svg className="clip-wave" viewBox="0 0 160 40" preserveAspectRatio="none" aria-hidden="true">
                           {asset.peaks.map((peak, i) => (
-                            <line
-                              key={i}
-                              x1={i}
-                              x2={i}
-                              y1={20 - peak * 20}
-                              y2={20 + peak * 20}
-                            />
+                            <line key={i} x1={i} x2={i} y1={20 - peak * 20} y2={20 + peak * 20} />
                           ))}
                         </svg>
                       )}
@@ -371,14 +389,8 @@ export default function Timeline(p: Props) {
         </div>
       </div>
       <div className="timeline-footer">
-        <span>
-          {p.selected.length
-            ? `${p.selected.length} selecionado(s)`
-            : "Selecione um clipe"}
-        </span>
-        <span>
-          Ver tudo enquadra o projeto inteiro · Shift: seleção múltipla · Espaço: reproduzir
-        </span>
+        <span>{p.selected.length ? `${p.selected.length} selecionado(s)` : "Selecione um clipe"}</span>
+        <span>Ver tudo enquadra o projeto inteiro · Shift: seleção múltipla · Espaço: reproduzir</span>
       </div>
     </section>
   );
