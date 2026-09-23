@@ -54,6 +54,7 @@ export default function Timeline({
   const [pixelsPerSecond, setPixelsPerSecond] = useState(10);
   const scrollRef = useRef<HTMLDivElement>(null);
   const dragRef = useRef<DragState | null>(null);
+  const scrubPointerRef = useRef<number | null>(null);
   const labelWidth = 140;
   const laneWidth = Math.max(760, total * pixelsPerSecond);
   const timelineWidth = labelWidth + laneWidth;
@@ -63,7 +64,7 @@ export default function Timeline({
 
   useEffect(() => {
     const scroller = scrollRef.current;
-    if (!scroller) return;
+    if (!scroller || scrubPointerRef.current !== null) return;
     const x = labelWidth + playheadLeft;
     const leftGuard = scroller.scrollLeft + 120;
     const rightGuard = scroller.scrollLeft + scroller.clientWidth - 120;
@@ -75,10 +76,32 @@ export default function Timeline({
     }
   }, [playheadLeft, labelWidth]);
 
-  const seekFromPointer = (event: React.PointerEvent<HTMLDivElement>) => {
-    const rect = event.currentTarget.getBoundingClientRect();
-    const localX = Math.max(0, event.clientX - rect.left);
+  const seekFromClientX = (clientX: number, element: HTMLElement) => {
+    const rect = element.getBoundingClientRect();
+    const localX = Math.max(0, Math.min(rect.width, clientX - rect.left));
     onSeek(Math.min(total, localX / pixelsPerSecond));
+  };
+
+  const beginScrub = (event: React.PointerEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    event.stopPropagation();
+    scrubPointerRef.current = event.pointerId;
+    event.currentTarget.setPointerCapture?.(event.pointerId);
+    seekFromClientX(event.clientX, event.currentTarget);
+  };
+
+  const updateScrub = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (scrubPointerRef.current !== event.pointerId) return;
+    event.preventDefault();
+    event.stopPropagation();
+    seekFromClientX(event.clientX, event.currentTarget);
+  };
+
+  const endScrub = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (scrubPointerRef.current !== event.pointerId) return;
+    seekFromClientX(event.clientX, event.currentTarget);
+    scrubPointerRef.current = null;
+    event.currentTarget.releasePointerCapture?.(event.pointerId);
   };
 
   const beginDrag = (event: React.PointerEvent<HTMLElement>, clip: Clip, mode: DragState['mode']) => {
@@ -157,7 +180,7 @@ export default function Timeline({
               onChange={(event) => setPixelsPerSecond(Number(event.target.value))}
             />
           </label>
-          <span className="timeline-hint">A agulha acompanha o vídeo · arraste para navegar</span>
+          <span className="timeline-hint">Clique, toque ou arraste a agulha livremente</span>
         </div>
       </div>
 
@@ -165,13 +188,22 @@ export default function Timeline({
         <div className="timeline-content" style={{ width: `${timelineWidth}px` }}>
           <div className="ruler-row">
             <div className="ruler-label" />
-            <div className="ruler" onPointerDown={seekFromPointer} style={{ width: `${laneWidth}px` }}>
+            <div
+              className="ruler ruler-scrub-zone"
+              onPointerDown={beginScrub}
+              onPointerMove={updateScrub}
+              onPointerUp={endScrub}
+              onPointerCancel={endScrub}
+              style={{ width: `${laneWidth}px` }}
+            >
               {ticks.map((t) => (
                 <span className="ruler-tick" key={t} style={{ left: `${t * pixelsPerSecond}px` }}>
                   {formatTime(t)}
                 </span>
               ))}
-              <div className="ruler-playhead" style={{ left: `${playheadLeft}px` }} aria-hidden="true" />
+              <div className="ruler-playhead" style={{ left: `${playheadLeft}px` }} aria-hidden="true">
+                <span className="playhead-grab-handle" />
+              </div>
             </div>
           </div>
 
@@ -179,7 +211,14 @@ export default function Timeline({
             {tracks.map(track => (
               <div className="track-row" key={track.id} style={{ gridTemplateColumns: `${labelWidth}px ${laneWidth}px` }}>
                 <div className="track-name"><strong>{track.name}</strong><small>{track.type}</small></div>
-                <div className="track-lane" onPointerDown={seekFromPointer} style={{ width: `${laneWidth}px` }}>
+                <div
+                  className="track-lane timeline-scrub-lane"
+                  onPointerDown={beginScrub}
+                  onPointerMove={updateScrub}
+                  onPointerUp={endScrub}
+                  onPointerCancel={endScrub}
+                  style={{ width: `${laneWidth}px` }}
+                >
                   <div className="playhead" style={{ left: `${playheadLeft}px` }} aria-hidden="true"><span /></div>
                   {track.clips.map(clip => (
                     <div
