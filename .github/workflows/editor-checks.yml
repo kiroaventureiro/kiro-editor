@@ -1,8 +1,11 @@
 name: Editor checks
 on:
   push:
-    branches: [main, feat/editor-studio-foundation]
+    branches: [main]
   pull_request:
+concurrency:
+  group: editor-${{ github.ref }}
+  cancel-in-progress: true
 permissions:
   contents: read
 jobs:

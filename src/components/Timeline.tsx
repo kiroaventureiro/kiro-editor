@@ -1,5 +1,7 @@
 import {
   Copy,
+  Eye,
+  EyeOff,
   Lock,
   Magnet,
   Plus,
@@ -255,10 +257,10 @@ export default function Timeline(p: Props) {
                 <strong title={t.name}>{t.name}</strong>
                 <div>
                   <button
-                    aria-label={`${t.muted ? "Ativar" : "Silenciar"} ${t.name}`}
+                    aria-label={`${t.type === "text" ? (t.muted ? "Mostrar" : "Ocultar") : (t.muted ? "Ativar" : "Silenciar")} ${t.name}`}
                     onClick={() => p.onTrack(t.id, { muted: !t.muted })}
                   >
-                    {t.muted ? <VolumeX size={13} /> : <Volume2 size={13} />}
+                    {t.type === "text" ? (t.muted ? <EyeOff size={13}/> : <Eye size={13}/>) : t.muted ? <VolumeX size={13}/> : <Volume2 size={13}/>}
                   </button>
                   <button
                     aria-label={`${t.locked ? "Desbloquear" : "Bloquear"} ${t.name}`}

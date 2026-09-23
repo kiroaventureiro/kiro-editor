@@ -133,6 +133,11 @@ try {
   );
   await page.getByRole("button", { name: "Pausar", exact: true }).click();
   console.log("Continuous playback passed");
+  await page.getByLabel("Posição em segundos").fill("0.5");
+  await page.getByRole("button", { name: "Silenciar Vídeo principal", exact: true }).click();
+  await page.waitForTimeout(150);
+  assert((await pixel())[0] > 200, "Muting video must not hide the picture");
+  await page.getByRole("button", { name: "Ativar Vídeo principal", exact: true }).click();
   await page
     .getByLabel("Importar legendas SRT")
     .setInputFiles(`${output}/legendas.srt`);

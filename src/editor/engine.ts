@@ -100,14 +100,15 @@ export class Composition {
       for (const c of track.clips) {
         const media = this.resources.get(c.id);
         if (!(media instanceof HTMLMediaElement)) continue;
-        const active = activeAt(c, time) && !track.muted;
+        const active = activeAt(c, time);
+        const audible = active && !track.muted;
         const gain = this.gains.get(c.id);
         if (gain)
-          gain.gain.value = active
+          gain.gain.value = audible
             ? clamp(c.volume ?? 1, 0, 1) * envelope(c, time)
             : 0;
         else
-          media.volume = active
+          media.volume = audible
             ? clamp(c.volume ?? 1, 0, 1) * envelope(c, time)
             : 0;
         if (!active || !playing) media.pause();
@@ -163,7 +164,7 @@ export class Composition {
     ctx.fillStyle = "#000";
     ctx.fillRect(0, 0, w, h);
     for (const track of this.project.tracks) {
-      if (track.muted) continue;
+      if (track.muted && track.type === "text") continue;
       for (const c of track.clips) {
         if (!activeAt(c, time) || c.type === "audio") continue;
         const progress = clamp((time - c.start) / c.duration, 0, 1);
