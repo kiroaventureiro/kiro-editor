@@ -1,0 +1,10 @@
+{
+  "name": "KIRO Editor",
+  "short_name": "KIRO Editor",
+  "description": "Editor de vídeo pessoal da KIRO Produções",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#08050d",
+  "theme_color": "#10051f",
+  "orientation": "any"
+}
