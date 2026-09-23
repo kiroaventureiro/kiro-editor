@@ -275,8 +275,21 @@ export default function App() {
       ...project,
       assets: project.assets.map(asset => ({ ...asset, path: '' })),
     };
+
     localStorage.setItem(STORAGE_KEY, JSON.stringify(serializable));
-    setNotice('Projeto salvo. As mídias precisarão ser reconectadas após recarregar a página.');
+
+    const blob = new Blob([JSON.stringify(serializable, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+    const safeName = (project.name || 'kiro-project').replace(/[^a-z0-9-_]+/gi, '-').replace(/^-+|-+$/g, '') || 'kiro-project';
+    anchor.href = url;
+    anchor.download = `${safeName}.kiroproj.json`;
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+    URL.revokeObjectURL(url);
+
+    setNotice('Projeto salvo e arquivo .kiroproj.json baixado. Isso ainda não exporta o vídeo final.');
   }
 
   const newProject = () => {
@@ -298,7 +311,7 @@ export default function App() {
         <div className="project-name"><strong>{project.name}</strong><small>{notice}</small></div>
         <div className="top-actions">
           <button className="ghost" disabled title="KIRO IA entra na fase 2"><Sparkles size={17}/> KIRO IA</button>
-          <button className="primary" disabled title="Exportação real entra depois da edição base"><Download size={17}/> Exportar</button>
+          <button className="primary" disabled title="A exportação do vídeo final entra no próximo marco"><Download size={17}/> Exportar vídeo</button>
         </div>
       </header>
 
