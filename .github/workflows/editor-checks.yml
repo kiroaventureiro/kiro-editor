@@ -1,7 +1,7 @@
 name: Editor checks
 on:
   push:
-    branches: [main]
+    branches: [main, feat/editor-studio-foundation]
   pull_request:
 concurrency:
   group: editor-${{ github.ref }}
