@@ -354,11 +354,14 @@ export async function renderVideo(
       frame = requestAnimationFrame(tick);
     });
     if (signal.aborted) throw abortError();
+    let blob = new Blob(chunks, { type: format.mime });
+    if (format.extension === "webm") {
+      const { default: fixDuration } = await import("fix-webm-duration");
+      blob = await fixDuration(blob, duration * 1000, { logger: false });
+    }
+    if (signal.aborted) throw abortError();
     onProgress(100);
-    return {
-      blob: new Blob(chunks, { type: format.mime }),
-      extension: format.extension,
-    };
+    return { blob, extension: format.extension };
   } finally {
     cancelAnimationFrame(frame);
     if (recorder?.state === "recording") recorder.stop();

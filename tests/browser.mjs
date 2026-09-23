@@ -161,6 +161,8 @@ try {
       { encoding: "utf8" },
     ),
   );
+  console.log("Export metadata", JSON.stringify(probe));
+  await writeFile(`${output}/export-probe.json`, JSON.stringify(probe, null, 2));
   assert(
     probe.streams.some(
       (s) => s.codec_type === "video" && s.width === 1280 && s.height === 720,
