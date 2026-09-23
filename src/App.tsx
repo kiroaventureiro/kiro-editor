@@ -94,9 +94,55 @@ export default function App() {
       if (type !== 'image') duration = await readDuration(url, type);
       newAssets.push({ id: crypto.randomUUID(), name: file.name, type, path: url, duration, size: file.size });
     }
-    commitProject(p => ({ ...p, assets: [...p.assets, ...newAssets], updatedAt: new Date().toISOString() }));
-    setSelectedAssetId(newAssets[0]?.id);
-    setNotice(`${newAssets.length} arquivo(s) importado(s).`);
+
+    const first = newAssets[0];
+    let autoAdded = false;
+    let autoClipId: string | undefined;
+
+    commitProject(p => {
+      const timelineEmpty = p.tracks.every(track => track.clips.length === 0);
+      const shouldAutoAdd = newAssets.length === 1 && timelineEmpty && !!first;
+      let tracks = p.tracks;
+
+      if (shouldAutoAdd) {
+        const trackType: TrackType = first.type === 'audio' ? 'audio' : 'video';
+        const duration = first.type === 'image' ? 4 : Math.max(0.1, first.duration || 5);
+        autoClipId = crypto.randomUUID();
+        tracks = p.tracks.map(track => {
+          if (track.type !== trackType) return track;
+          const clip: Clip = {
+            id: autoClipId!,
+            assetId: first.id,
+            name: first.name,
+            type: trackType,
+            start: 0,
+            duration,
+            sourceIn: 0,
+            sourceOut: duration,
+            volume: 1,
+            speed: 1,
+          };
+          return { ...track, clips: [...track.clips, clip] };
+        });
+        autoAdded = true;
+      }
+
+      return {
+        ...p,
+        assets: [...p.assets, ...newAssets],
+        tracks,
+        updatedAt: new Date().toISOString(),
+      };
+    });
+
+    setSelectedAssetId(first?.id);
+    if (autoAdded && autoClipId) {
+      setSelectedClipId(autoClipId);
+      setPlayhead(0);
+      setNotice(`${first.name} foi importado e adicionado automaticamente à timeline.`);
+    } else {
+      setNotice(`${newAssets.length} arquivo(s) importado(s). Use + para adicionar à timeline.`);
+    }
   };
 
   const addToTimeline = (asset: MediaAsset) => {
