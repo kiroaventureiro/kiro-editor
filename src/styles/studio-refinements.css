@@ -30,7 +30,6 @@ body,
   max-width: 100%;
 }
 
-/* Produto mais compacto: painéis laterais não devem roubar o canvas. */
 .workspace {
   overflow: hidden;
   grid-template-columns: min(var(--library-width), 238px) 4px minmax(0, 1fr) 230px;
@@ -179,6 +178,22 @@ body,
   font-weight: 700;
 }
 
+.layer-picker {
+  flex-direction: row;
+  align-items: center;
+  gap: 5px;
+  margin: 0;
+  font-size: 10px;
+  white-space: nowrap;
+}
+
+.layer-picker select {
+  width: 94px;
+  min-height: 28px;
+  padding: 4px 6px;
+  font-size: 10px;
+}
+
 .timeline-content {
   min-width: 100%;
 }
@@ -191,7 +206,6 @@ body,
   flex-shrink: 0;
 }
 
-/* Preview: área de trabalho clara e priorizada. */
 .preview-stage {
   background:
     linear-gradient(45deg, rgba(255,255,255,.018) 25%, transparent 25%) 0 0/16px 16px,
@@ -274,7 +288,6 @@ body,
   pointer-events: none;
 }
 
-/* Timeline: suficiente para manipular, sem virar metade da tela. */
 .track-row {
   height: 78px;
 }
@@ -326,7 +339,6 @@ body,
   padding-block: 4px;
 }
 
-/* Agulha precisa, fácil de identificar e arrastar. */
 .ruler-playhead,
 .playhead {
   background: var(--playhead);
