@@ -149,6 +149,7 @@ export default function Preview({
       onPlaying(true);
     }
   };
+  const movable = !!selectedClip && selectedClip.type !== "audio";
   const factor =
     quality / Math.min(project.settings.width, project.settings.height);
   return (
@@ -156,6 +157,7 @@ export default function Preview({
       <div className="preview-heading">
         <span>
           MONTAGEM <i /> {project.settings.aspectRatio}
+          {movable && <b className="canvas-hint">Arraste no canvas para posicionar {selectedClip?.type === "text" ? "o texto" : "o vídeo"}</b>}
         </span>
         <div>
           <select
@@ -182,12 +184,14 @@ export default function Preview({
             width={Math.round(project.settings.width * factor)}
             height={Math.round(project.settings.height * factor)}
             aria-label="Prévia da montagem"
+            className={movable ? "canvas-movable" : ""}
             style={{
               aspectRatio: project.settings.aspectRatio.replace(":", " / "),
             }}
             onPointerDown={(e) => {
-              if (!selectedClip || playing || selectedClip.type === "audio")
-                return;
+              if (!movable || !selectedClip) return;
+              if (playing) onPlaying(false);
+              e.preventDefault();
               e.currentTarget.setPointerCapture(e.pointerId);
               onBegin();
               drag.current = {
