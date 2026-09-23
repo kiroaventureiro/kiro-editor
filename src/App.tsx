@@ -1,5 +1,5 @@
-import { Download, FolderOpen, Save, Sparkles } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { Download, FolderOpen, Redo2, Save, Sparkles, Undo2 } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
 import MediaLibrary from './components/MediaLibrary';
 import Preview from './components/Preview';
 import Inspector from './components/Inspector';
@@ -8,6 +8,9 @@ import { createEmptyProject, projectPresets } from './editor/project';
 import type { Clip, KiroProject, MediaAsset, ProjectSettings, TrackType } from './editor/types';
 
 const STORAGE_KEY = 'kiro-editor-project-v01';
+const HISTORY_LIMIT = 50;
+
+type ProjectMutation = (project: KiroProject) => KiroProject;
 
 export default function App() {
   const [project, setProject] = useState<KiroProject>(() => {
@@ -16,13 +19,70 @@ export default function App() {
       return saved ? JSON.parse(saved) : createEmptyProject();
     } catch { return createEmptyProject(); }
   });
+  const [undoStack, setUndoStack] = useState<KiroProject[]>([]);
+  const [redoStack, setRedoStack] = useState<KiroProject[]>([]);
   const [selectedAssetId, setSelectedAssetId] = useState<string>();
   const [selectedClipId, setSelectedClipId] = useState<string>();
   const [playhead, setPlayhead] = useState(0);
   const [notice, setNotice] = useState('Pronto para criar.');
+  const [timelineTransactionOpen, setTimelineTransactionOpen] = useState(false);
 
   const selectedAsset = useMemo(() => project.assets.find(a => a.id === selectedAssetId), [project.assets, selectedAssetId]);
   const selectedClip = useMemo(() => project.tracks.flatMap(t => t.clips).find(c => c.id === selectedClipId), [project.tracks, selectedClipId]);
+
+  const pushUndoSnapshot = (snapshot: KiroProject) => {
+    setUndoStack(stack => [...stack, snapshot].slice(-HISTORY_LIMIT));
+    setRedoStack([]);
+  };
+
+  const commitProject = (mutation: ProjectMutation) => {
+    setProject(current => {
+      pushUndoSnapshot(current);
+      return mutation(current);
+    });
+  };
+
+  const undo = () => {
+    if (!undoStack.length) return;
+    const previous = undoStack[undoStack.length - 1];
+    setRedoStack(stack => [...stack, project].slice(-HISTORY_LIMIT));
+    setUndoStack(stack => stack.slice(0, -1));
+    setProject(previous);
+    setSelectedClipId(undefined);
+    setPlayhead(0);
+    setNotice('Alteração desfeita.');
+  };
+
+  const redo = () => {
+    if (!redoStack.length) return;
+    const next = redoStack[redoStack.length - 1];
+    setUndoStack(stack => [...stack, project].slice(-HISTORY_LIMIT));
+    setRedoStack(stack => stack.slice(0, -1));
+    setProject(next);
+    setSelectedClipId(undefined);
+    setPlayhead(0);
+    setNotice('Alteração refeita.');
+  };
+
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      const modifier = event.ctrlKey || event.metaKey;
+      if (!modifier) return;
+      const key = event.key.toLowerCase();
+      if (key === 'z' && !event.shiftKey) {
+        event.preventDefault();
+        undo();
+      } else if (key === 'y' || (key === 'z' && event.shiftKey)) {
+        event.preventDefault();
+        redo();
+      } else if (key === 's') {
+        event.preventDefault();
+        saveProject();
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  });
 
   const importFiles = async (files: FileList | null) => {
     if (!files?.length) return;
@@ -34,7 +94,7 @@ export default function App() {
       if (type !== 'image') duration = await readDuration(url, type);
       newAssets.push({ id: crypto.randomUUID(), name: file.name, type, path: url, duration, size: file.size });
     }
-    setProject(p => ({ ...p, assets: [...p.assets, ...newAssets], updatedAt: new Date().toISOString() }));
+    commitProject(p => ({ ...p, assets: [...p.assets, ...newAssets], updatedAt: new Date().toISOString() }));
     setSelectedAssetId(newAssets[0]?.id);
     setNotice(`${newAssets.length} arquivo(s) importado(s).`);
   };
@@ -42,7 +102,7 @@ export default function App() {
   const addToTimeline = (asset: MediaAsset) => {
     const trackType: TrackType = asset.type === 'audio' ? 'audio' : 'video';
     const duration = asset.type === 'image' ? 4 : Math.max(0.1, asset.duration || 5);
-    setProject(p => {
+    commitProject(p => {
       const tracks = p.tracks.map(track => {
         if (track.type !== trackType) return track;
         const start = track.clips.reduce((max, clip) => Math.max(max, clip.start + clip.duration), 0);
@@ -59,15 +119,23 @@ export default function App() {
 
   const updateClip = (patch: Partial<Clip>) => {
     if (!selectedClipId) return;
-    setProject(p => ({ ...p, tracks: p.tracks.map(t => ({ ...t, clips: t.clips.map(c => c.id === selectedClipId ? { ...c, ...patch } : c) })), updatedAt: new Date().toISOString() }));
+    commitProject(p => ({ ...p, tracks: p.tracks.map(t => ({ ...t, clips: t.clips.map(c => c.id === selectedClipId ? { ...c, ...patch } : c) })), updatedAt: new Date().toISOString() }));
   };
 
   const deleteClip = () => {
     if (!selectedClipId) return;
-    setProject(p => ({ ...p, tracks: p.tracks.map(t => ({ ...t, clips: t.clips.filter(c => c.id !== selectedClipId) })), updatedAt: new Date().toISOString() }));
+    commitProject(p => ({ ...p, tracks: p.tracks.map(t => ({ ...t, clips: t.clips.filter(c => c.id !== selectedClipId) })), updatedAt: new Date().toISOString() }));
     setSelectedClipId(undefined);
     setNotice('Clipe removido da timeline.');
   };
+
+  const beginTimelineEdit = () => {
+    if (timelineTransactionOpen) return;
+    pushUndoSnapshot(project);
+    setTimelineTransactionOpen(true);
+  };
+
+  const endTimelineEdit = () => setTimelineTransactionOpen(false);
 
   const moveClip = (clipId: string, start: number) => {
     const safeStart = Math.max(0, start);
@@ -132,7 +200,7 @@ export default function App() {
     const firstId = crypto.randomUUID();
     const secondId = crypto.randomUUID();
 
-    setProject(p => ({
+    commitProject(p => ({
       ...p,
       tracks: p.tracks.map(track => ({
         ...track,
@@ -153,16 +221,21 @@ export default function App() {
 
   const changeAspect = (aspectRatio: ProjectSettings['aspectRatio']) => {
     const preset = projectPresets[aspectRatio];
-    setProject(p => ({ ...p, settings: { ...p.settings, aspectRatio, ...preset }, updatedAt: new Date().toISOString() }));
+    commitProject(p => ({ ...p, settings: { ...p.settings, aspectRatio, ...preset }, updatedAt: new Date().toISOString() }));
   };
 
-  const saveProject = () => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...project, assets: [] }));
-    setNotice('Estrutura do projeto salva neste computador.');
-  };
+  function saveProject() {
+    const serializable = {
+      ...project,
+      assets: project.assets.map(asset => ({ ...asset, path: '' })),
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(serializable));
+    setNotice('Projeto salvo. As mídias precisarão ser reconectadas após recarregar a página.');
+  }
 
   const newProject = () => {
     if (!confirm('Criar um novo projeto? A timeline atual será limpa.')) return;
+    pushUndoSnapshot(project);
     setProject(createEmptyProject());
     setSelectedAssetId(undefined);
     setSelectedClipId(undefined);
@@ -175,11 +248,13 @@ export default function App() {
   return (
     <div className="app-shell">
       <header className="topbar">
-        <div className="brand"><span className="brand-mark">K</span><div><strong>KIRO Editor</strong><small>0.4 · Edição touch</small></div></div>
+        <div className="brand"><span className="brand-mark">K</span><div><strong>KIRO Editor</strong><small>0.4 · Histórico de edição</small></div></div>
         <div className="project-name"><strong>{project.name}</strong><small>{notice}</small></div>
         <div className="top-actions">
           <button className="ghost" onClick={newProject}><FolderOpen size={17}/> Novo</button>
           <button className="ghost" onClick={saveProject}><Save size={17}/> Salvar</button>
+          <button className="ghost" onClick={undo} disabled={!undoStack.length} title="Desfazer (Ctrl+Z)"><Undo2 size={17}/> Desfazer</button>
+          <button className="ghost" onClick={redo} disabled={!redoStack.length} title="Refazer (Ctrl+Y)"><Redo2 size={17}/> Refazer</button>
           <button className="ghost" disabled title="KIRO IA entra na fase 2"><Sparkles size={17}/> KIRO IA</button>
           <button className="primary" disabled title="Exportação real entra depois da edição base"><Download size={17}/> Exportar</button>
         </div>
@@ -199,6 +274,8 @@ export default function App() {
         onSplit={splitClip}
         onMoveClip={moveClip}
         onTrimClip={trimClip}
+        onEditStart={beginTimelineEdit}
+        onEditEnd={endTimelineEdit}
         onSelectClip={(clip) => { setSelectedClipId(clip.id); setSelectedAssetId(clip.assetId); setPlayhead(clip.start); }}
         onDelete={deleteClip}
       />
