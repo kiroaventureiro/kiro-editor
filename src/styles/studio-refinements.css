@@ -59,7 +59,8 @@ body,
 
 .preview-wrap {
   overflow: hidden;
-  padding: 7px 10px;
+  padding: 4px 8px 2px;
+  grid-template-rows: 26px minmax(0, 1fr) 44px;
 }
 
 .inspector {
@@ -272,9 +273,10 @@ body,
 .preview-stage {
   background: #0b0e12;
   border: 1px solid #1d232b;
-  border-radius: 9px;
-  margin: 2px 0;
-  padding: 12px 18px;
+  border-radius: 7px;
+  margin: 0;
+  padding: 2px 6px;
+  min-height: 0;
 }
 
 .canvas-shell {
@@ -282,28 +284,25 @@ body,
   display: flex;
   align-items: center;
   justify-content: center;
-  width: auto;
-  height: auto;
   min-width: 0;
   min-height: 0;
-  padding: 7px;
+  padding: 3px;
   border: 1px solid #252d36;
-  border-radius: 8px;
-  background:
-    linear-gradient(45deg, rgba(255,255,255,.018) 25%, transparent 25%) 0 0/16px 16px,
-    linear-gradient(-45deg, rgba(255,255,255,.018) 25%, transparent 25%) 0 8px/16px 16px,
-    #101419;
-  box-shadow: 0 18px 45px rgba(0,0,0,.34);
+  border-radius: 6px;
+  background: #101419;
+  box-shadow: 0 10px 28px rgba(0,0,0,.28);
+  max-width: 98%;
+  max-height: 98%;
 }
 
 .canvas-shell canvas {
   display: block;
-  max-width: 100%;
-  max-height: 100%;
+  width: 100%;
+  height: 100%;
   border: 1px solid #48515e;
-  border-radius: 4px;
+  border-radius: 3px;
   background: #000;
-  box-shadow: 0 8px 24px rgba(0,0,0,.42);
+  box-shadow: 0 6px 16px rgba(0,0,0,.35);
 }
 
 .canvas-movable {
@@ -311,7 +310,7 @@ body,
 }
 
 .canvas-hint {
-  margin-left: 10px;
+  margin-left: 8px;
   color: #91a0b2;
   font-size: 9px;
   font-weight: 500;
@@ -319,53 +318,48 @@ body,
   text-transform: none;
 }
 
+/* O canvas passa a ser limitado principalmente pela ALTURA da área de preview.
+   Assim não sobra um grande vazio acima e abaixo e nenhum formato deforma. */
 .canvas-shell[data-aspect="16:9"] {
-  width: min(82%, 820px);
+  height: 96%;
+  width: auto;
   aspect-ratio: 16 / 9;
 }
 
-.canvas-shell[data-aspect="16:9"] canvas {
-  width: 100%;
-  height: 100%;
-}
-
 .canvas-shell[data-aspect="1:1"] {
-  height: min(92%, 500px);
+  height: 96%;
+  width: auto;
   aspect-ratio: 1 / 1;
 }
 
-.canvas-shell[data-aspect="1:1"] canvas {
-  width: 100%;
-  height: 100%;
-}
-
 .canvas-shell[data-aspect="4:5"] {
-  height: min(94%, 520px);
+  height: 97%;
+  width: auto;
   aspect-ratio: 4 / 5;
 }
 
 .canvas-shell[data-aspect="9:16"] {
-  height: min(96%, 540px);
+  height: 98%;
+  width: auto;
   aspect-ratio: 9 / 16;
-}
-
-.canvas-shell[data-aspect="4:5"] canvas,
-.canvas-shell[data-aspect="9:16"] canvas {
-  width: 100%;
-  height: 100%;
 }
 
 .canvas-label {
   position: absolute;
-  left: 10px;
-  bottom: 9px;
-  padding: 3px 6px;
+  left: 7px;
+  bottom: 6px;
+  padding: 2px 5px;
   border-radius: 4px;
   background: rgba(5, 7, 10, .78);
   color: #aab4c2;
-  font-size: 9px;
-  letter-spacing: .08em;
+  font-size: 8px;
+  letter-spacing: .06em;
   pointer-events: none;
+}
+
+.transport {
+  min-height: 0;
+  padding: 1px 0;
 }
 
 .track-row {
@@ -478,30 +472,21 @@ body,
   .canvas-hint {
     display: none;
   }
-  .canvas-shell[data-aspect="16:9"] {
-    width: min(88%, 720px);
-  }
 }
 
 @media (max-height: 720px) and (min-width: 851px) {
   .app-shell {
-    grid-template-rows: 56px 40px minmax(210px, 1fr) 8px var(--timeline-height);
+    grid-template-rows: 54px 38px minmax(210px, 1fr) 8px var(--timeline-height);
   }
   .topbar {
-    padding-block: 6px;
-  }
-  .preview-wrap {
-    grid-template-rows: 28px minmax(130px, 1fr) 46px;
     padding-block: 5px;
   }
+  .preview-wrap {
+    grid-template-rows: 24px minmax(0, 1fr) 42px;
+    padding: 3px 7px 1px;
+  }
   .preview-stage {
-    padding: 7px 14px;
-  }
-  .canvas-shell[data-aspect="16:9"] {
-    width: min(76%, 680px);
-  }
-  .canvas-shell[data-aspect="9:16"] {
-    height: min(94%, 430px);
+    padding: 1px 4px;
   }
   .track-row {
     height: 72px;
@@ -512,15 +497,16 @@ body,
 }
 
 @media (max-width: 850px) {
+  .preview-wrap {
+    grid-template-rows: 24px minmax(0, 1fr) 42px;
+    padding: 3px 5px 1px;
+  }
   .preview-stage {
-    padding: 6px;
+    padding: 1px 3px;
   }
-  .canvas-shell[data-aspect="16:9"] {
-    width: 94%;
-  }
-  .canvas-shell[data-aspect="9:16"] {
-    height: 96%;
-    max-height: 440px;
+  .canvas-shell {
+    max-width: 99%;
+    max-height: 99%;
   }
   .canvas-label,
   .canvas-hint {
