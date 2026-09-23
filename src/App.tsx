@@ -69,6 +69,52 @@ export default function App() {
     setNotice('Clipe removido da timeline.');
   };
 
+  const moveClip = (clipId: string, start: number) => {
+    const safeStart = Math.max(0, start);
+    setProject(p => ({
+      ...p,
+      tracks: p.tracks.map(track => ({ ...track, clips: track.clips.map(clip => clip.id === clipId ? { ...clip, start: safeStart } : clip) })),
+      updatedAt: new Date().toISOString(),
+    }));
+    if (clipId === selectedClipId) setPlayhead(safeStart);
+  };
+
+  const trimClip = (clipId: string, edge: 'start' | 'end', time: number) => {
+    setProject(p => ({
+      ...p,
+      tracks: p.tracks.map(track => ({
+        ...track,
+        clips: track.clips.map(clip => {
+          if (clip.id !== clipId) return clip;
+          const speed = clip.speed ?? 1;
+          const sourceIn = clip.sourceIn ?? 0;
+          const sourceOut = clip.sourceOut ?? (sourceIn + clip.duration * speed);
+          const oldEnd = clip.start + clip.duration;
+
+          if (edge === 'start') {
+            const newStart = Math.min(oldEnd - 0.1, Math.max(0, time));
+            const delta = newStart - clip.start;
+            return {
+              ...clip,
+              start: newStart,
+              duration: Math.max(0.1, oldEnd - newStart),
+              sourceIn: Math.min(sourceOut - 0.01, Math.max(0, sourceIn + delta * speed)),
+            };
+          }
+
+          const newEnd = Math.max(clip.start + 0.1, time);
+          const newDuration = newEnd - clip.start;
+          return {
+            ...clip,
+            duration: newDuration,
+            sourceOut: Math.max(sourceIn + 0.01, sourceIn + newDuration * speed),
+          };
+        }),
+      })),
+      updatedAt: new Date().toISOString(),
+    }));
+  };
+
   const splitClip = () => {
     if (!selectedClip) return;
     const clipStart = selectedClip.start;
@@ -129,7 +175,7 @@ export default function App() {
   return (
     <div className="app-shell">
       <header className="topbar">
-        <div className="brand"><span className="brand-mark">K</span><div><strong>KIRO Editor</strong><small>0.4 · Timeline interativa</small></div></div>
+        <div className="brand"><span className="brand-mark">K</span><div><strong>KIRO Editor</strong><small>0.4 · Edição touch</small></div></div>
         <div className="project-name"><strong>{project.name}</strong><small>{notice}</small></div>
         <div className="top-actions">
           <button className="ghost" onClick={newProject}><FolderOpen size={17}/> Novo</button>
@@ -141,7 +187,7 @@ export default function App() {
 
       <main className="workspace">
         <MediaLibrary assets={project.assets} selectedAssetId={selectedAssetId} onImport={importFiles} onSelect={(asset) => { setSelectedAssetId(asset.id); setSelectedClipId(undefined); }} onAddToTimeline={addToTimeline} />
-        <Preview asset={previewAsset} settings={project.settings} />
+        <Preview asset={previewAsset} settings={project.settings} clip={selectedClip} playhead={playhead} onPlayheadChange={setPlayhead} />
         <Inspector settings={project.settings} selectedAsset={selectedAsset} selectedClip={selectedClip} onAspectChange={changeAspect} onClipChange={updateClip} />
       </main>
 
@@ -151,6 +197,8 @@ export default function App() {
         playhead={playhead}
         onSeek={setPlayhead}
         onSplit={splitClip}
+        onMoveClip={moveClip}
+        onTrimClip={trimClip}
         onSelectClip={(clip) => { setSelectedClipId(clip.id); setSelectedAssetId(clip.assetId); setPlayhead(clip.start); }}
         onDelete={deleteClip}
       />
