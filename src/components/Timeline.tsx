@@ -11,6 +11,8 @@ interface Props {
   onSelectClip: (clip: Clip) => void;
   onMoveClip: (clipId: string, start: number) => void;
   onTrimClip: (clipId: string, edge: 'start' | 'end', time: number) => void;
+  onEditStart: () => void;
+  onEditEnd: () => void;
   onDelete: () => void;
 }
 
@@ -25,7 +27,7 @@ type DragState = {
   total: number;
 };
 
-export default function Timeline({ tracks, selectedClipId, playhead, onSeek, onSplit, onSelectClip, onMoveClip, onTrimClip, onDelete }: Props) {
+export default function Timeline({ tracks, selectedClipId, playhead, onSeek, onSplit, onSelectClip, onMoveClip, onTrimClip, onEditStart, onEditEnd, onDelete }: Props) {
   const total = Math.max(10, ...tracks.flatMap(t => t.clips.map(c => c.start + c.duration)));
   const ticks = Array.from({ length: 6 }, (_, i) => (total / 5) * i);
   const playheadPercent = Math.min(100, Math.max(0, (playhead / total) * 100));
@@ -53,6 +55,7 @@ export default function Timeline({ tracks, selectedClipId, playhead, onSeek, onS
       laneWidth: rect.width,
       total,
     };
+    onEditStart();
     event.currentTarget.setPointerCapture?.(event.pointerId);
     onSelectClip(clip);
   };
@@ -82,6 +85,7 @@ export default function Timeline({ tracks, selectedClipId, playhead, onSeek, onS
   const endDrag = (event: React.PointerEvent<HTMLElement>) => {
     if (dragRef.current?.pointerId !== event.pointerId) return;
     dragRef.current = null;
+    onEditEnd();
     event.currentTarget.releasePointerCapture?.(event.pointerId);
   };
 
