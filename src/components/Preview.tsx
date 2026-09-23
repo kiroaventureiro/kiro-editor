@@ -30,7 +30,8 @@ export default function Preview({
   onEnd,
 }: Props) {
   const canvas = useRef<HTMLCanvasElement>(null),
-    engine = useRef<Composition | undefined>(undefined);
+    engine = useRef<Composition | undefined>(undefined),
+    seekVersion = useRef(0);
   const latest = useRef({ project, time, playing, onTime, onPlaying });
   latest.current = { project, time, playing, onTime, onPlaying };
   const [status, setStatus] = useState(""),
@@ -78,12 +79,17 @@ export default function Preview({
   }, [resourceKey]);
   useEffect(() => {
     engine.current?.update(project);
-    if (ready && !playing) {
-      engine.current?.sync(time, false);
-      engine.current?.draw(time);
-    }
+    if (!ready || playing) return;
+    const version = ++seekVersion.current;
+    void engine.current
+      ?.seek(time)
+      .then(() => {
+        if (version === seekVersion.current) setStatus("");
+      })
+      .catch((e: Error) => {
+        if (version === seekVersion.current) setStatus(e.message);
+      });
   }, [project, time, playing, ready, quality]);
-  // Drawing while paused catches async decoded frames after scrubbing without moving the playhead.
   useEffect(() => {
     if (!ready) return;
     let frame = 0,
@@ -111,16 +117,18 @@ export default function Preview({
           lastPublished = now;
         }
         if (next >= projectDuration(state.project)) state.onPlaying(false);
-      } else engine.current?.pause();
-      engine.current?.draw(
-        Math.min(
-          state.time,
-          Math.max(
-            0,
-            projectDuration(state.project) - 1 / state.project.settings.fps,
+        engine.current?.draw(
+          Math.min(
+            next,
+            Math.max(
+              0,
+              projectDuration(state.project) - 1 / state.project.settings.fps,
+            ),
           ),
-        ),
-      );
+        );
+      } else {
+        engine.current?.pause();
+      }
       previous = now;
       frame = requestAnimationFrame(draw);
     };
@@ -168,57 +176,60 @@ export default function Preview({
         </div>
       </div>
       <div className="preview-stage">
-        <canvas
-          ref={canvas}
-          width={Math.round(project.settings.width * factor)}
-          height={Math.round(project.settings.height * factor)}
-          aria-label="Prévia da montagem"
-          style={{
-            aspectRatio: project.settings.aspectRatio.replace(":", " / "),
-          }}
-          onPointerDown={(e) => {
-            if (!selectedClip || playing || selectedClip.type === "audio")
-              return;
-            e.currentTarget.setPointerCapture(e.pointerId);
-            onBegin();
-            drag.current = {
-              x: e.clientX,
-              y: e.clientY,
-              cx: selectedClip.x ?? 0,
-              cy: selectedClip.y ?? 0,
-            };
-          }}
-          onPointerMove={(e) => {
-            if (!drag.current) return;
-            const rect = e.currentTarget.getBoundingClientRect();
-            onTransform({
-              x: clamp(
-                drag.current.cx +
-                  ((e.clientX - drag.current.x) / rect.width) * 100,
-                -100,
-                100,
-              ),
-              y: clamp(
-                drag.current.cy +
-                  ((e.clientY - drag.current.y) / rect.height) * 100,
-                -100,
-                100,
-              ),
-            });
-          }}
-          onPointerUp={() => {
-            if (drag.current) {
-              drag.current = undefined;
-              onEnd();
-            }
-          }}
-          onPointerCancel={() => {
-            if (drag.current) {
-              drag.current = undefined;
-              onEnd();
-            }
-          }}
-        />
+        <div className="canvas-shell" data-aspect={project.settings.aspectRatio}>
+          <canvas
+            ref={canvas}
+            width={Math.round(project.settings.width * factor)}
+            height={Math.round(project.settings.height * factor)}
+            aria-label="Prévia da montagem"
+            style={{
+              aspectRatio: project.settings.aspectRatio.replace(":", " / "),
+            }}
+            onPointerDown={(e) => {
+              if (!selectedClip || playing || selectedClip.type === "audio")
+                return;
+              e.currentTarget.setPointerCapture(e.pointerId);
+              onBegin();
+              drag.current = {
+                x: e.clientX,
+                y: e.clientY,
+                cx: selectedClip.x ?? 0,
+                cy: selectedClip.y ?? 0,
+              };
+            }}
+            onPointerMove={(e) => {
+              if (!drag.current) return;
+              const rect = e.currentTarget.getBoundingClientRect();
+              onTransform({
+                x: clamp(
+                  drag.current.cx +
+                    ((e.clientX - drag.current.x) / rect.width) * 100,
+                  -100,
+                  100,
+                ),
+                y: clamp(
+                  drag.current.cy +
+                    ((e.clientY - drag.current.y) / rect.height) * 100,
+                  -100,
+                  100,
+                ),
+              });
+            }}
+            onPointerUp={() => {
+              if (drag.current) {
+                drag.current = undefined;
+                onEnd();
+              }
+            }}
+            onPointerCancel={() => {
+              if (drag.current) {
+                drag.current = undefined;
+                onEnd();
+              }
+            }}
+          />
+          <span className="canvas-label">CANVAS · {project.settings.width}×{project.settings.height}</span>
+        </div>
         {(!duration || status) && (
           <div className="preview-message">
             <strong>{status || "Sua próxima história começa aqui"}</strong>
