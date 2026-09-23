@@ -18,6 +18,7 @@ export default function App() {
   });
   const [selectedAssetId, setSelectedAssetId] = useState<string>();
   const [selectedClipId, setSelectedClipId] = useState<string>();
+  const [playhead, setPlayhead] = useState(0);
   const [notice, setNotice] = useState('Pronto para criar.');
 
   const selectedAsset = useMemo(() => project.assets.find(a => a.id === selectedAssetId), [project.assets, selectedAssetId]);
@@ -45,8 +46,9 @@ export default function App() {
       const tracks = p.tracks.map(track => {
         if (track.type !== trackType) return track;
         const start = track.clips.reduce((max, clip) => Math.max(max, clip.start + clip.duration), 0);
-        const clip: Clip = { id: crypto.randomUUID(), assetId: asset.id, name: asset.name, type: trackType, start, duration, volume: 1, speed: 1 };
+        const clip: Clip = { id: crypto.randomUUID(), assetId: asset.id, name: asset.name, type: trackType, start, duration, sourceIn: 0, sourceOut: duration, volume: 1, speed: 1 };
         setSelectedClipId(clip.id);
+        setPlayhead(start);
         return { ...track, clips: [...track.clips, clip] };
       });
       return { ...p, tracks, updatedAt: new Date().toISOString() };
@@ -67,6 +69,42 @@ export default function App() {
     setNotice('Clipe removido da timeline.');
   };
 
+  const splitClip = () => {
+    if (!selectedClip) return;
+    const clipStart = selectedClip.start;
+    const clipEnd = selectedClip.start + selectedClip.duration;
+    const epsilon = 0.05;
+    if (playhead <= clipStart + epsilon || playhead >= clipEnd - epsilon) {
+      setNotice('Posicione o cursor dentro do clipe para dividir.');
+      return;
+    }
+
+    const firstDuration = playhead - clipStart;
+    const secondDuration = clipEnd - playhead;
+    const sourceIn = selectedClip.sourceIn ?? 0;
+    const splitSource = sourceIn + firstDuration * (selectedClip.speed ?? 1);
+    const firstId = crypto.randomUUID();
+    const secondId = crypto.randomUUID();
+
+    setProject(p => ({
+      ...p,
+      tracks: p.tracks.map(track => ({
+        ...track,
+        clips: track.clips.flatMap(clip => {
+          if (clip.id !== selectedClip.id) return [clip];
+          return [
+            { ...clip, id: firstId, duration: firstDuration, sourceOut: splitSource },
+            { ...clip, id: secondId, start: playhead, duration: secondDuration, sourceIn: splitSource, sourceOut: selectedClip.sourceOut ?? (sourceIn + selectedClip.duration) },
+          ];
+        }),
+      })),
+      updatedAt: new Date().toISOString(),
+    }));
+
+    setSelectedClipId(secondId);
+    setNotice(`Clipe dividido em ${formatTime(firstDuration)} + ${formatTime(secondDuration)}.`);
+  };
+
   const changeAspect = (aspectRatio: ProjectSettings['aspectRatio']) => {
     const preset = projectPresets[aspectRatio];
     setProject(p => ({ ...p, settings: { ...p.settings, aspectRatio, ...preset }, updatedAt: new Date().toISOString() }));
@@ -79,7 +117,11 @@ export default function App() {
 
   const newProject = () => {
     if (!confirm('Criar um novo projeto? A timeline atual será limpa.')) return;
-    setProject(createEmptyProject()); setSelectedAssetId(undefined); setSelectedClipId(undefined); setNotice('Novo projeto criado.');
+    setProject(createEmptyProject());
+    setSelectedAssetId(undefined);
+    setSelectedClipId(undefined);
+    setPlayhead(0);
+    setNotice('Novo projeto criado.');
   };
 
   const previewAsset = selectedClip?.assetId ? project.assets.find(a => a.id === selectedClip.assetId) : selectedAsset;
@@ -87,13 +129,13 @@ export default function App() {
   return (
     <div className="app-shell">
       <header className="topbar">
-        <div className="brand"><span className="brand-mark">K</span><div><strong>KIRO Editor</strong><small>0.3 · Web + Mobile</small></div></div>
+        <div className="brand"><span className="brand-mark">K</span><div><strong>KIRO Editor</strong><small>0.4 · Timeline interativa</small></div></div>
         <div className="project-name"><strong>{project.name}</strong><small>{notice}</small></div>
         <div className="top-actions">
           <button className="ghost" onClick={newProject}><FolderOpen size={17}/> Novo</button>
           <button className="ghost" onClick={saveProject}><Save size={17}/> Salvar</button>
           <button className="ghost" disabled title="KIRO IA entra na fase 2"><Sparkles size={17}/> KIRO IA</button>
-          <button className="primary" disabled title="Exportação real com FFmpeg entra no próximo marco"><Download size={17}/> Exportar</button>
+          <button className="primary" disabled title="Exportação real entra depois da edição base"><Download size={17}/> Exportar</button>
         </div>
       </header>
 
@@ -103,7 +145,15 @@ export default function App() {
         <Inspector settings={project.settings} selectedAsset={selectedAsset} selectedClip={selectedClip} onAspectChange={changeAspect} onClipChange={updateClip} />
       </main>
 
-      <Timeline tracks={project.tracks} selectedClipId={selectedClipId} onSelectClip={(clip) => { setSelectedClipId(clip.id); setSelectedAssetId(clip.assetId); }} onDelete={deleteClip} />
+      <Timeline
+        tracks={project.tracks}
+        selectedClipId={selectedClipId}
+        playhead={playhead}
+        onSeek={setPlayhead}
+        onSplit={splitClip}
+        onSelectClip={(clip) => { setSelectedClipId(clip.id); setSelectedAssetId(clip.assetId); setPlayhead(clip.start); }}
+        onDelete={deleteClip}
+      />
     </div>
   );
 }
@@ -115,4 +165,8 @@ function readDuration(url: string, type: 'video' | 'audio') {
     el.onloadedmetadata = () => resolve(Number.isFinite(el.duration) ? el.duration : 5);
     el.onerror = () => resolve(5);
   });
+}
+
+function formatTime(seconds: number) {
+  return `${Math.max(0, seconds).toFixed(1)}s`;
 }
