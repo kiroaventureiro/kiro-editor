@@ -29,8 +29,6 @@ type DragState = {
   originX: number;
   originStart: number;
   originDuration: number;
-  laneWidth: number;
-  total: number;
 };
 
 export default function Timeline({
@@ -86,9 +84,6 @@ export default function Timeline({
   const beginDrag = (event: React.PointerEvent<HTMLElement>, clip: Clip, mode: DragState['mode']) => {
     event.preventDefault();
     event.stopPropagation();
-    const lane = event.currentTarget.closest('.track-lane') as HTMLElement | null;
-    if (!lane) return;
-    const rect = lane.getBoundingClientRect();
     dragRef.current = {
       mode,
       clipId: clip.id,
@@ -96,8 +91,6 @@ export default function Timeline({
       originX: event.clientX,
       originStart: clip.start,
       originDuration: clip.duration,
-      laneWidth: rect.width,
-      total,
     };
     onEditStart();
     event.currentTarget.setPointerCapture?.(event.pointerId);
@@ -136,32 +129,36 @@ export default function Timeline({
   return (
     <section className="timeline-shell">
       <div className="timeline-toolbar">
-        <div className="timeline-project-actions">
-          <button onClick={onNewProject}><FolderOpen size={16}/> Novo</button>
-          <button onClick={onSaveProject}><Save size={16}/> Salvar</button>
-          <button onClick={onUndo} disabled={!canUndo} title="Desfazer (Ctrl+Z)"><Undo2 size={16}/> Desfazer</button>
-          <button onClick={onRedo} disabled={!canRedo} title="Refazer (Ctrl+Y)"><Redo2 size={16}/> Refazer</button>
+        <div className="timeline-toolbar-main">
+          <div className="timeline-project-actions">
+            <button onClick={onNewProject} title="Novo projeto"><FolderOpen size={16}/> Novo</button>
+            <button onClick={onSaveProject} title="Salvar o projeto de edição"><Save size={16}/> Salvar projeto</button>
+            <button onClick={onUndo} disabled={!canUndo} title="Desfazer (Ctrl+Z)"><Undo2 size={16}/> Desfazer</button>
+            <button onClick={onRedo} disabled={!canRedo} title="Refazer (Ctrl+Y)"><Redo2 size={16}/> Refazer</button>
+          </div>
+
+          <div className="timeline-edit-actions">
+            <button onClick={onSplit} disabled={!selectedClipId}><Scissors size={16}/> Dividir</button>
+            <button onClick={onDelete} disabled={!selectedClipId}><Trash2 size={16}/> Excluir</button>
+          </div>
         </div>
 
-        <div className="timeline-edit-actions">
-          <button onClick={onSplit} disabled={!selectedClipId}><Scissors size={16}/> Dividir</button>
-          <button onClick={onDelete} disabled={!selectedClipId}><Trash2 size={16}/> Excluir</button>
+        <div className="timeline-toolbar-secondary">
           <span className="timeline-time">{formatTime(playhead)} / {formatTime(total)}</span>
+          <label className="timeline-zoom">
+            Zoom
+            <input
+              aria-label="Zoom da timeline"
+              type="range"
+              min="2"
+              max="30"
+              step="1"
+              value={pixelsPerSecond}
+              onChange={(event) => setPixelsPerSecond(Number(event.target.value))}
+            />
+          </label>
+          <span className="timeline-hint">A agulha acompanha o vídeo · arraste para navegar</span>
         </div>
-
-        <label className="timeline-zoom">
-          Zoom
-          <input
-            aria-label="Zoom da timeline"
-            type="range"
-            min="2"
-            max="30"
-            step="1"
-            value={pixelsPerSecond}
-            onChange={(event) => setPixelsPerSecond(Number(event.target.value))}
-          />
-        </label>
-        <span className="timeline-hint">A agulha acompanha o vídeo · arraste para navegar</span>
       </div>
 
       <div className="timeline-scroll" ref={scrollRef}>
