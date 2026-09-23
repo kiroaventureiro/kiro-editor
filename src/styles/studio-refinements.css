@@ -85,16 +85,37 @@ body,
 
 .canvas-shell canvas {
   display: block;
-  max-width: 100%;
-  max-height: 100%;
-  width: auto;
-  height: auto;
   border: 1px solid #48515e;
   border-radius: 5px;
   background: #000;
   box-shadow:
     0 18px 50px rgba(0, 0, 0, 0.5),
     0 0 0 1px rgba(255, 255, 255, 0.035);
+}
+
+/* Cada formato ocupa o máximo espaço útil sem deformar o vídeo. */
+.canvas-shell[data-aspect="16:9"] canvas {
+  width: min(94%, 900px);
+  height: auto;
+  max-height: 100%;
+}
+
+.canvas-shell[data-aspect="1:1"] canvas {
+  height: min(96%, 520px);
+  width: auto;
+  max-width: 96%;
+}
+
+.canvas-shell[data-aspect="4:5"] canvas,
+.canvas-shell[data-aspect="9:16"] canvas {
+  height: 100%;
+  width: auto;
+  max-width: 92%;
+  max-height: 100%;
+}
+
+.canvas-shell[data-aspect="9:16"] {
+  max-width: min(96%, 460px);
 }
 
 .canvas-label {
@@ -108,6 +129,35 @@ body,
   font-size: 9px;
   letter-spacing: .08em;
   pointer-events: none;
+}
+
+/* Timeline: clipes maiores para leitura e manipulação mais confortáveis. */
+.track-row {
+  height: 92px;
+}
+
+.track-name {
+  padding: 14px 12px;
+}
+
+.clip {
+  top: 8px;
+  height: 76px;
+  padding: 7px 10px;
+}
+
+.clip small {
+  margin-top: 30px;
+}
+
+.clip-wave {
+  inset: 22px 0 0;
+  height: 47px;
+}
+
+.timeline-footer {
+  min-height: 28px;
+  align-items: center;
 }
 
 /* A agulha precisa ser reconhecida instantaneamente sem competir com a cor da UI. */
@@ -161,10 +211,10 @@ body,
   box-shadow: 0 0 0 2px rgba(168, 235, 204, 0.12);
 }
 
-/* Telas baixas: a timeline não pode engolir o canvas. */
+/* Telas baixas: manter canvas e timeline úteis ao mesmo tempo. */
 @media (max-height: 720px) and (min-width: 851px) {
   .app-shell {
-    grid-template-rows: 60px 44px minmax(220px, 1fr) 8px var(--timeline-height);
+    grid-template-rows: 60px 44px minmax(210px, 1fr) 8px var(--timeline-height);
   }
 
   .topbar {
@@ -183,22 +233,53 @@ body,
   .canvas-shell {
     max-height: 100%;
   }
+
+  .canvas-shell[data-aspect="9:16"] canvas,
+  .canvas-shell[data-aspect="4:5"] canvas {
+    height: 100%;
+  }
+
+  .track-row {
+    height: 86px;
+  }
+
+  .clip {
+    height: 70px;
+  }
 }
 
 /* Em telas menores, preservar preview + timeline ao mesmo tempo, especialmente em 9:16. */
 @media (max-width: 850px) {
-  .preview-stage canvas {
-    max-height: 92%;
-    max-width: 94%;
+  .canvas-shell {
+    max-height: 98%;
+    max-width: 98%;
   }
 
-  .canvas-shell {
-    max-height: 94%;
-    max-width: 94%;
+  .canvas-shell[data-aspect="16:9"] canvas {
+    width: 98%;
+  }
+
+  .canvas-shell[data-aspect="9:16"] {
+    max-width: 78vw;
+  }
+
+  .canvas-shell[data-aspect="9:16"] canvas,
+  .canvas-shell[data-aspect="4:5"] canvas {
+    height: 100%;
+    max-width: 100%;
   }
 
   .canvas-label {
     display: none;
+  }
+
+  .track-row {
+    height: 84px;
+  }
+
+  .clip {
+    top: 7px;
+    height: 69px;
   }
 
   .ruler-playhead span {
