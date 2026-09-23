@@ -1,0 +1,7 @@
+.clip { touch-action: none; user-select: none; overflow: visible; cursor: grab; }
+.clip:active { cursor: grabbing; }
+.trim-handle { position:absolute; top:0; bottom:0; width:14px; border:0; padding:0; background:rgba(255,255,255,.2); opacity:0; z-index:5; touch-action:none; }
+.clip.selected .trim-handle, .clip:hover .trim-handle { opacity:1; }
+.trim-handle-start { left:0; border-radius:7px 0 0 7px; cursor:ew-resize; }
+.trim-handle-end { right:0; border-radius:0 7px 7px 0; cursor:ew-resize; }
+@media (pointer: coarse) { .trim-handle { width:18px; opacity:.85; } }
