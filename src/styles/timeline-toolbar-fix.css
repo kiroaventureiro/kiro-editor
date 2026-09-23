@@ -1,0 +1,116 @@
+.timeline-toolbar {
+  height: auto !important;
+  min-height: 86px;
+  padding: 8px 12px !important;
+  display: grid !important;
+  grid-template-rows: auto auto;
+  gap: 7px !important;
+  overflow: visible !important;
+}
+
+.timeline-toolbar-main,
+.timeline-toolbar-secondary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.timeline-toolbar-main {
+  justify-content: space-between;
+}
+
+.timeline-project-actions,
+.timeline-edit-actions {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  flex-wrap: nowrap;
+}
+
+.timeline-toolbar button {
+  min-height: 34px;
+  white-space: nowrap;
+}
+
+.timeline-toolbar-secondary {
+  border-top: 1px solid #211a2a;
+  padding-top: 7px;
+}
+
+.timeline-time {
+  min-width: 110px;
+  text-align: center;
+}
+
+.timeline-zoom {
+  min-width: 190px;
+}
+
+.timeline-hint {
+  margin-left: auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.timeline-scroll {
+  height: calc(100% - 86px) !important;
+}
+
+@media (max-width: 1099px) {
+  .timeline-toolbar {
+    min-width: 0 !important;
+    width: 100%;
+    position: sticky;
+    left: 0;
+  }
+
+  .timeline-toolbar-main,
+  .timeline-toolbar-secondary {
+    overflow-x: auto;
+    scrollbar-width: thin;
+    padding-bottom: 2px;
+  }
+
+  .timeline-project-actions,
+  .timeline-edit-actions {
+    flex: 0 0 auto;
+  }
+
+  .timeline-hint {
+    display: none !important;
+  }
+}
+
+@media (max-width: 600px) {
+  .timeline-toolbar {
+    min-height: 96px;
+    padding: 7px 8px !important;
+  }
+
+  .timeline-toolbar button {
+    padding: 7px 9px !important;
+    font-size: 11px !important;
+  }
+
+  .timeline-project-actions button span,
+  .timeline-edit-actions button span {
+    display: none;
+  }
+
+  .timeline-time {
+    min-width: 102px;
+  }
+
+  .timeline-zoom {
+    min-width: 165px;
+  }
+
+  .timeline-zoom input {
+    width: 95px !important;
+  }
+
+  .timeline-scroll {
+    height: calc(100% - 96px) !important;
+  }
+}
