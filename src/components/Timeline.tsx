@@ -13,7 +13,7 @@ import {
   Volume2,
   VolumeX,
 } from "lucide-react";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { Clip, KiroProject, Track } from "../editor/types";
 import { projectDuration, snap } from "../editor/operations";
 interface Props {
@@ -38,9 +38,11 @@ interface Props {
 export default function Timeline(p: Props) {
   const [zoom, setZoom] = useState(55),
     [snapping, setSnapping] = useState(true),
-    [ripple, setRipple] = useState(false);
+    [ripple, setRipple] = useState(false),
+    [viewport, setViewport] = useState(900);
   const scroll = useRef<HTMLDivElement>(null),
-    scrub = useRef<number | null>(null);
+    scrub = useRef<number | null>(null),
+    fittedForDuration = useRef(-1);
   const drag = useRef<{
     id: string;
     x: number;
@@ -49,9 +51,37 @@ export default function Timeline(p: Props) {
     edge?: "start" | "end";
   } | null>(null);
   const total = projectDuration(p.project),
-    width = Math.max(800, (total + 5) * zoom),
-    label = 128;
-  const tick = zoom >= 100 ? 1 : zoom >= 40 ? 2 : zoom >= 15 ? 5 : 10;
+    label = 112,
+    available = Math.max(260, viewport - label - 18),
+    width = Math.max(available, Math.max(1, total) * zoom),
+    fitZoom = Math.max(0.25, Math.min(240, available / Math.max(1, total)));
+  const tick =
+    zoom >= 100 ? 1 : zoom >= 40 ? 2 : zoom >= 15 ? 5 : zoom >= 5 ? 10 : zoom >= 2 ? 30 : 60;
+
+  useEffect(() => {
+    const element = scroll.current;
+    if (!element) return;
+    const measure = () => setViewport(element.clientWidth || 900);
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    if (!total || fittedForDuration.current === total) return;
+    fittedForDuration.current = total;
+    const id = requestAnimationFrame(() => {
+      setZoom(fitZoom);
+      if (scroll.current) scroll.current.scrollLeft = 0;
+    });
+    return () => cancelAnimationFrame(id);
+  }, [total, fitZoom]);
+
+  const fitAll = () => {
+    setZoom(fitZoom);
+    if (scroll.current) scroll.current.scrollLeft = 0;
+  };
   const candidates = [
     0,
     p.time,
@@ -171,10 +201,10 @@ export default function Timeline(p: Props) {
               checked={ripple}
               onChange={(e) => setRipple(e.target.checked)}
             />
-            Fechar espaço na trilha
+            Fechar espaço
           </label>
         </div>
-        <div className="tool-group">
+        <div className="tool-group timeline-view-tools">
           <button
             className={snapping ? "active" : ""}
             aria-label="Encaixe automático"
@@ -188,50 +218,38 @@ export default function Timeline(p: Props) {
             <input
               aria-label="Zoom da timeline"
               type="range"
-              min={5}
+              min={0.25}
               max={240}
+              step={0.25}
               value={zoom}
               onChange={(e) => setZoom(Number(e.target.value))}
             />
           </label>
-          <button
-            onClick={() =>
-              setZoom(
-                Math.max(
-                  5,
-                  Math.min(
-                    240,
-                    ((scroll.current?.clientWidth ?? 800) - label - 40) /
-                      Math.max(5, total),
-                  ),
-                ),
-              )
-            }
-          >
-            Ajustar
+          <button className="fit-timeline" onClick={fitAll} title="Mostrar o projeto inteiro na timeline">
+            Ver tudo
           </button>
-          <button onClick={() => p.onAddTrack("video")}>
+          <button onClick={() => p.onAddTrack("video")} title="Nova camada de vídeo">
             <Plus size={16} />
-            Vídeo
+            Camada
           </button>
-          <button onClick={() => p.onAddTrack("audio")}>
+          <button onClick={() => p.onAddTrack("audio")} title="Nova camada de áudio">
             <Plus size={16} />
             Áudio
           </button>
         </div>
       </div>
       <div className="timeline-scroll" ref={scroll}>
-        <div style={{ width: width + label }}>
+        <div className="timeline-content" style={{ width: width + label }}>
           <div
             className="ruler-row"
             style={{ gridTemplateColumns: `${label}px ${width}px` }}
           >
             <div className="ruler-label">
-              TEMPO · {p.project.settings.fps} FPS
+              {p.project.settings.fps} FPS
             </div>
             <div className="ruler" {...scrubProps}>
               {Array.from(
-                { length: Math.min(2000, Math.ceil(width / zoom / tick)) },
+                { length: Math.min(2000, Math.ceil(width / zoom / tick) + 1) },
                 (_, i) => (
                   <span
                     className="ruler-tick"
@@ -247,13 +265,14 @@ export default function Timeline(p: Props) {
               </div>
             </div>
           </div>
-          {p.project.tracks.map((t) => (
+          {p.project.tracks.map((t, index) => (
             <div
               className={`track-row ${t.locked ? "locked" : ""}`}
               key={t.id}
               style={{ gridTemplateColumns: `${label}px ${width}px` }}
             >
               <div className="track-name">
+                <small className="layer-number">{t.type === "video" ? `V${index + 1}` : t.type === "audio" ? "A" : "T"}</small>
                 <strong title={t.name}>{t.name}</strong>
                 <div>
                   <button
@@ -323,7 +342,7 @@ export default function Timeline(p: Props) {
                         </svg>
                       )}
                       <strong>{c.name}</strong>
-                      <small>{c.duration.toFixed(2)} s</small>
+                      <small>{formatDuration(c.duration)}</small>
                       <button
                         className="trim-handle start"
                         aria-label={`Cortar início de ${c.name}`}
@@ -354,11 +373,11 @@ export default function Timeline(p: Props) {
       <div className="timeline-footer">
         <span>
           {p.selected.length
-            ? `${p.selected.length} clipe(s) selecionado(s)`
-            : "Selecione um clipe para editar"}
+            ? `${p.selected.length} selecionado(s)`
+            : "Selecione um clipe"}
         </span>
         <span>
-          Shift: seleção múltipla · Alt: ignorar encaixe · Espaço: reproduzir
+          Ver tudo enquadra o projeto inteiro · Shift: seleção múltipla · Espaço: reproduzir
         </span>
       </div>
     </section>
@@ -366,4 +385,8 @@ export default function Timeline(p: Props) {
 }
 function format(n: number) {
   return `${Math.floor(n / 60)}:${String(Math.floor(n % 60)).padStart(2, "0")}`;
+}
+function formatDuration(n: number) {
+  if (n < 60) return `${n.toFixed(1)} s`;
+  return format(n);
 }
