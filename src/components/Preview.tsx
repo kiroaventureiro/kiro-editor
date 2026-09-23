@@ -13,33 +13,78 @@ interface Props {
 export default function Preview({ asset, settings, clip, playhead, onPlayheadChange }: Props) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
+  const animationRef = useRef<number | null>(null);
   const [playing, setPlaying] = useState(false);
   const [time, setTime] = useState(0);
   const [duration, setDuration] = useState(0);
+
+  const getMedia = () => asset?.type === 'video' ? videoRef.current : asset?.type === 'audio' ? audioRef.current : null;
 
   useEffect(() => {
     setPlaying(false);
     setTime(0);
     setDuration(asset?.duration || 0);
+    if (animationRef.current !== null) cancelAnimationFrame(animationRef.current);
   }, [asset?.id, asset?.duration]);
 
-  const media = asset?.type === 'video' ? videoRef.current : asset?.type === 'audio' ? audioRef.current : null;
-
   useEffect(() => {
+    const media = getMedia();
     if (!media || !clip) return;
+
+    media.playbackRate = Math.max(0.25, Math.min(4, clip.speed ?? 1));
+    media.volume = Math.max(0, Math.min(1, clip.volume ?? 1));
+
+    // Durante reprodução, o player é a fonte do tempo. Não force o vídeo
+    // de volta ao playhead antigo, senão a agulha fica visualmente presa.
+    if (!media.paused) return;
+
     const speed = clip.speed ?? 1;
     const sourceIn = clip.sourceIn ?? 0;
+    const sourceOut = clip.sourceOut ?? media.duration;
     const local = sourceIn + Math.max(0, playhead - clip.start) * speed;
-    const safe = Math.max(sourceIn, Math.min(clip.sourceOut ?? media.duration ?? local, local));
-    if (Number.isFinite(safe) && Math.abs(media.currentTime - safe) > 0.08) {
+    const safe = Math.max(sourceIn, Math.min(sourceOut, local));
+
+    if (Number.isFinite(safe) && Math.abs(media.currentTime - safe) > 0.05) {
       media.currentTime = safe;
       setTime(safe);
     }
-    media.playbackRate = Math.max(0.25, Math.min(4, speed));
-    media.volume = Math.max(0, Math.min(1, clip.volume ?? 1));
-  }, [playhead, clip?.id, clip?.start, clip?.sourceIn, clip?.sourceOut, clip?.speed, clip?.volume, media]);
+  }, [playhead, clip?.id, clip?.start, clip?.sourceIn, clip?.sourceOut, clip?.speed, clip?.volume, asset?.id]);
+
+  useEffect(() => {
+    if (!playing || !clip) return;
+
+    const tick = () => {
+      const media = getMedia();
+      if (!media || media.paused) return;
+
+      const speed = clip.speed ?? 1;
+      const sourceIn = clip.sourceIn ?? 0;
+      const clipEnd = clip.start + clip.duration;
+      const globalTime = clip.start + Math.max(0, media.currentTime - sourceIn) / speed;
+
+      setTime(media.currentTime);
+
+      if (globalTime >= clipEnd - 0.02) {
+        media.pause();
+        onPlayheadChange(clipEnd);
+        return;
+      }
+
+      onPlayheadChange(globalTime);
+      animationRef.current = requestAnimationFrame(tick);
+    };
+
+    animationRef.current = requestAnimationFrame(tick);
+    return () => {
+      if (animationRef.current !== null) {
+        cancelAnimationFrame(animationRef.current);
+        animationRef.current = null;
+      }
+    };
+  }, [playing, clip?.id, clip?.start, clip?.duration, clip?.sourceIn, clip?.speed, asset?.id]);
 
   const toggle = () => {
+    const media = getMedia();
     if (!media) return;
     if (media.paused) void media.play(); else media.pause();
   };
@@ -50,26 +95,38 @@ export default function Preview({ asset, settings, clip, playhead, onPlayheadCha
       onPlayheadChange(target);
       return;
     }
+    const media = getMedia();
     if (!media) return;
     media.currentTime = Math.max(0, Math.min(media.duration || 0, media.currentTime + delta));
+    setTime(media.currentTime);
   };
 
   const handleTimeUpdate = (currentTime: number) => {
     setTime(currentTime);
-    if (!clip || !playing) return;
+    if (!clip) return;
+
+    const media = getMedia();
+    if (!media || media.paused) return;
+
     const speed = clip.speed ?? 1;
     const sourceIn = clip.sourceIn ?? 0;
     const globalTime = clip.start + Math.max(0, currentTime - sourceIn) / speed;
     const clipEnd = clip.start + clip.duration;
-    if (globalTime >= clipEnd - 0.03) {
-      media?.pause();
-      onPlayheadChange(clipEnd);
-      return;
+    onPlayheadChange(Math.min(clipEnd, globalTime));
+  };
+
+  const handleLoadedMetadata = (media: HTMLMediaElement) => {
+    setDuration(media.duration);
+    if (!clip) return;
+    const sourceIn = clip.sourceIn ?? 0;
+    if (Number.isFinite(sourceIn)) {
+      media.currentTime = sourceIn;
+      setTime(sourceIn);
     }
-    onPlayheadChange(globalTime);
   };
 
   const ratio = settings.aspectRatio.replace(':', ' / ');
+  const hasPlayableMedia = asset?.type === 'video' || asset?.type === 'audio';
 
   return (
     <section className="preview-wrap">
@@ -83,17 +140,29 @@ export default function Preview({ asset, settings, clip, playhead, onPlayheadCha
               onPlay={() => setPlaying(true)}
               onPause={() => setPlaying(false)}
               onTimeUpdate={(e) => handleTimeUpdate(e.currentTarget.currentTime)}
-              onLoadedMetadata={(e) => setDuration(e.currentTarget.duration)}
+              onLoadedMetadata={(e) => handleLoadedMetadata(e.currentTarget)}
             />
           )}
           {asset?.type === 'image' && <img src={asset.path} alt={asset.name}/>} 
-          {asset?.type === 'audio' && <div className="audio-preview"><FileWave/><strong>{asset.name}</strong><span>Prévia de áudio</span><audio ref={audioRef} src={asset.path} onPlay={() => setPlaying(true)} onPause={() => setPlaying(false)} onTimeUpdate={(e) => handleTimeUpdate(e.currentTarget.currentTime)} onLoadedMetadata={(e) => setDuration(e.currentTarget.duration)} /></div>}
+          {asset?.type === 'audio' && (
+            <div className="audio-preview">
+              <FileWave/><strong>{asset.name}</strong><span>Prévia de áudio</span>
+              <audio
+                ref={audioRef}
+                src={asset.path}
+                onPlay={() => setPlaying(true)}
+                onPause={() => setPlaying(false)}
+                onTimeUpdate={(e) => handleTimeUpdate(e.currentTarget.currentTime)}
+                onLoadedMetadata={(e) => handleLoadedMetadata(e.currentTarget)}
+              />
+            </div>
+          )}
         </div>
       </div>
       <div className="transport">
-        <button onClick={() => seek(-5)} disabled={!asset}><SkipBack size={16}/></button>
-        <button className="play" onClick={toggle} disabled={!media}>{playing ? <Pause size={18}/> : <Play size={18}/>}</button>
-        <button onClick={() => seek(5)} disabled={!asset}><SkipForward size={16}/></button>
+        <button onClick={() => seek(-5)} disabled={!hasPlayableMedia}><SkipBack size={16}/></button>
+        <button className="play" onClick={toggle} disabled={!hasPlayableMedia}>{playing ? <Pause size={18}/> : <Play size={18}/>}</button>
+        <button onClick={() => seek(5)} disabled={!hasPlayableMedia}><SkipForward size={16}/></button>
         <span className="timecode">{clip ? `${formatTime(playhead)} · ` : ''}{formatTime(time)} / {formatTime(duration)}</span>
       </div>
     </section>
