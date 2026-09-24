@@ -9,6 +9,9 @@ export class Composition {
   private pending = new Set<string>();
   private context?: AudioContext;
   private destination?: MediaStreamAudioDestinationNode;
+  private monitorGain?: GainNode;
+  private monitorEnabled = true;
+  private monitorVolume = 1;
   private disposed = false;
   private failure?: Error;
   constructor(
@@ -72,10 +75,13 @@ export class Composition {
         }),
     );
   }
-  async enableAudio(monitor: boolean) {
+  async enableAudio(monitor = true) {
+    this.monitorEnabled = monitor;
     if (!this.context) {
       this.context = new AudioContext();
       this.destination = this.context.createMediaStreamDestination();
+      this.monitorGain = this.context.createGain();
+      this.monitorGain.connect(this.context.destination);
       for (const [id, resource] of this.resources)
         if (resource instanceof HTMLMediaElement) {
           resource.volume = 1;
@@ -84,12 +90,26 @@ export class Composition {
           gain.gain.value = 0;
           source.connect(gain);
           gain.connect(this.destination);
-          if (monitor) gain.connect(this.context.destination);
+          gain.connect(this.monitorGain);
           this.gains.set(id, gain);
         }
     }
+    if (this.monitorGain)
+      this.monitorGain.gain.value = this.monitorEnabled
+        ? clamp(this.monitorVolume, 0, 1)
+        : 0;
     await this.context.resume();
     return this.destination!.stream.getAudioTracks();
+  }
+  setMonitorVolume(volume: number) {
+    this.monitorVolume = clamp(volume, 0, 1);
+    if (this.monitorGain)
+      this.monitorGain.gain.value = this.monitorEnabled ? this.monitorVolume : 0;
+  }
+  setMonitorEnabled(enabled: boolean) {
+    this.monitorEnabled = enabled;
+    if (this.monitorGain)
+      this.monitorGain.gain.value = enabled ? this.monitorVolume : 0;
   }
   update(project: KiroProject) {
     this.project = project;
@@ -239,6 +259,8 @@ export class Composition {
       }
     this.resources.clear();
     this.gains.clear();
+    this.monitorGain?.disconnect();
+    this.monitorGain = undefined;
     void this.context?.close();
   }
 }
@@ -261,112 +283,47 @@ export function recordingFormat():
       return { mime, extension: mime.includes("mp4") ? "mp4" : "webm" };
   }
 }
-export async function renderVideo(
-  project: KiroProject,
-  resolution: number,
-  signal: AbortSignal,
-  onProgress: (p: number) => void,
-) {
+
+export async function renderProject(project: KiroProject, onProgress?: (value: number) => void) {
   const format = recordingFormat();
-  if (!format)
-    throw new Error(
-      "Este navegador não suporta exportação local. Tente uma versão atual do Chrome ou Edge no computador.",
-    );
-  const duration = projectDuration(project);
-  if (!duration) throw new Error("Adicione uma cena à timeline.");
+  if (!format) throw new Error("Este navegador não oferece exportação local compatível.");
   const canvas = document.createElement("canvas");
-  const factor =
-    resolution / Math.min(project.settings.width, project.settings.height);
-  canvas.width = Math.round((project.settings.width * factor) / 2) * 2;
-  canvas.height = Math.round((project.settings.height * factor) / 2) * 2;
-  const engine = new Composition(project, canvas);
-  let stream: MediaStream | undefined, recorder: MediaRecorder | undefined;
-  let frame = 0;
-  const abortError = () =>
-    new DOMException("Exportação cancelada.", "AbortError");
+  canvas.width = project.settings.width;
+  canvas.height = project.settings.height;
+  const composition = new Composition(project, canvas);
+  await composition.prepare();
+  const stream = canvas.captureStream(project.settings.fps);
+  const audio = await composition.enableAudio(false);
+  audio.forEach((track) => stream.addTrack(track));
+  const recorder = new MediaRecorder(stream, { mimeType: format.mime });
+  const chunks: BlobPart[] = [];
+  recorder.ondataavailable = (event) => {
+    if (event.data.size) chunks.push(event.data);
+  };
+  const done = new Promise<Blob>((resolve, reject) => {
+    recorder.onerror = () => reject(new Error("A exportação foi interrompida."));
+    recorder.onstop = () => resolve(new Blob(chunks, { type: format.mime }));
+  });
+  recorder.start(250);
+  const fps = Math.max(1, project.settings.fps),
+    duration = projectDuration(project),
+    frame = 1 / fps;
+  let last = performance.now();
   try {
-    await engine.prepare();
-    if (signal.aborted) throw abortError();
-    const audio = await engine.enableAudio(false);
-    await engine.seek(0);
-    if (signal.aborted) throw abortError();
-    stream = canvas.captureStream(project.settings.fps);
-    audio.forEach((track) => stream!.addTrack(track));
-    recorder = new MediaRecorder(stream, {
-      mimeType: format.mime,
-      videoBitsPerSecond: resolution === 1080 ? 8_000_000 : 4_000_000,
-      audioBitsPerSecond: 192000,
-    });
-    const chunks: Blob[] = [];
-    await new Promise<void>((resolve, reject) => {
-      const cleanup = () => {
-        cancelAnimationFrame(frame);
-        signal.removeEventListener("abort", abort);
-        document.removeEventListener("visibilitychange", visibility);
-      };
-      const fail = (error: Error) => {
-        cleanup();
-        recorder!.onstop = null;
-        if (recorder!.state !== "inactive") recorder!.stop();
-        reject(error);
-      };
-      const abort = () => fail(abortError());
-      const visibility = () => {
-        if (document.hidden)
-          fail(
-            new Error(
-              "Exportação interrompida: mantenha esta aba visível para preservar o ritmo do vídeo.",
-            ),
-          );
-      };
-      signal.addEventListener("abort", abort, { once: true });
-      document.addEventListener("visibilitychange", visibility);
-      recorder!.ondataavailable = (e) => {
-        if (e.data.size) chunks.push(e.data);
-      };
-      recorder!.onerror = () =>
-        fail(new Error("O navegador não conseguiu codificar o vídeo."));
-      recorder!.onstop = () => {
-        cleanup();
-        resolve();
-      };
-      let start = 0;
-      const tick = (now: number) => {
-        if (!start) start = now;
-        const time = Math.min(duration, (now - start) / 1000);
-        try {
-          engine.sync(time, true);
-          engine.draw(
-            Math.min(time, Math.max(0, duration - 1 / project.settings.fps)),
-          );
-        } catch (e) {
-          fail(e instanceof Error ? e : new Error("Falha na renderização."));
-          return;
-        }
-        onProgress(Math.min(99, (time / duration) * 100));
-        if (time >= duration) {
-          engine.pause();
-          recorder!.stop();
-          return;
-        }
-        frame = requestAnimationFrame(tick);
-      };
-      recorder!.start(250);
-      frame = requestAnimationFrame(tick);
-    });
-    if (signal.aborted) throw abortError();
-    let blob = new Blob(chunks, { type: format.mime });
-    if (format.extension === "webm") {
-      const { default: fixDuration } = await import("fix-webm-duration");
-      blob = await fixDuration(blob, duration * 1000, { logger: false });
+    for (let t = 0; t < duration; t += frame) {
+      composition.sync(t, true);
+      composition.draw(t);
+      onProgress?.(duration ? Math.min(1, t / duration) : 1);
+      const wait = Math.max(0, frame * 1000 - (performance.now() - last));
+      await new Promise((resolve) => setTimeout(resolve, wait));
+      last = performance.now();
     }
-    if (signal.aborted) throw abortError();
-    onProgress(100);
-    return { blob, extension: format.extension };
   } finally {
-    cancelAnimationFrame(frame);
-    if (recorder?.state === "recording") recorder.stop();
-    stream?.getTracks().forEach((t) => t.stop());
-    engine.dispose();
+    composition.pause();
+    recorder.stop();
   }
+  const blob = await done;
+  composition.dispose();
+  onProgress?.(1);
+  return { blob, extension: format.extension };
 }
