@@ -1,16 +1,15 @@
 /* KIRO Editor — Canvas module v1
-   Geometry locked to the approved reference: the module owns the whole central
-   column, while the picture itself is sized from available height. */
+   Geometry locked to the approved reference screenshot. */
 
 @media (min-width: 851px) {
   .canvas-module {
-    width: 100% !important;
-    max-width: none !important;
+    width: min(100%, 600px) !important;
+    max-width: 600px !important;
     min-width: 0 !important;
     min-height: 0 !important;
-    justify-self: stretch !important;
+    justify-self: start !important;
     align-self: stretch !important;
-    margin: 0 !important;
+    margin: 0 0 0 8px !important;
     padding: 6px 8px 6px !important;
     grid-template-rows: 32px minmax(0, 1fr) 48px !important;
     background: #0d141b !important;
@@ -61,6 +60,7 @@
 
   .canvas-meta .canvas-hint {
     min-width: 0;
+    max-width: 170px;
     overflow: hidden;
     text-overflow: ellipsis;
     color: #6f8496;
@@ -96,6 +96,12 @@
     place-items: center !important;
   }
 
+  .canvas-actions button.active {
+    color: #80e8c5 !important;
+    border-color: #466c60 !important;
+    background: #14231f !important;
+  }
+
   .canvas-monitor {
     width: 100% !important;
     min-width: 0 !important;
@@ -125,11 +131,17 @@
     overflow: hidden !important;
   }
 
-  /* Match the reference: the picture is driven by monitor height, not by the
-     full width of the central column. This preserves a compact 16:9 monitor. */
-  .canvas-monitor .canvas-shell[data-aspect="16:9"] {
-    height: min(96%, 300px) !important;
-    width: auto !important;
+  /* In the reference the 16:9 image almost fills the module horizontally.
+     Keep the outer block compact instead of stretching the entire center column. */
+  .canvas-fit-view .canvas-monitor .canvas-shell[data-aspect="16:9"] {
+    width: min(calc(100% - 12px), 560px) !important;
+    height: auto !important;
+    aspect-ratio: 16 / 9 !important;
+  }
+
+  .canvas-fill-view .canvas-monitor .canvas-shell[data-aspect="16:9"] {
+    width: 100% !important;
+    height: auto !important;
     aspect-ratio: 16 / 9 !important;
   }
 
@@ -171,7 +183,7 @@
     margin: 0 !important;
     padding: 5px 3px 0 !important;
     display: grid !important;
-    grid-template-columns: minmax(120px, 1fr) auto minmax(120px, 1fr) !important;
+    grid-template-columns: minmax(118px, 1fr) auto minmax(180px, 1fr) !important;
     align-items: center !important;
     gap: 8px !important;
     border-top: 0 !important;
@@ -222,6 +234,11 @@
     color: #c8d2d9 !important;
   }
 
+  .canvas-view-controls button:disabled {
+    opacity: .35 !important;
+    cursor: default !important;
+  }
+
   .canvas-playback-controls .play {
     width: 42px !important;
     height: 42px !important;
@@ -239,11 +256,18 @@
 
   .canvas-view-controls {
     justify-self: end;
-    gap: 6px;
+    gap: 5px;
   }
 
   .canvas-view-controls button.is-muted {
     color: #ef8c8c !important;
+  }
+
+  .canvas-volume-slider {
+    width: 62px;
+    height: 4px;
+    accent-color: #77e6c2;
+    cursor: pointer;
   }
 
   .canvas-aspect-chip {
@@ -263,6 +287,8 @@
 
 @media (min-width: 851px) and (max-height: 700px) {
   .canvas-module {
+    width: min(100%, 570px) !important;
+    max-width: 570px !important;
     grid-template-rows: 29px minmax(0, 1fr) 44px !important;
     padding: 5px 7px !important;
   }
@@ -271,8 +297,8 @@
     padding: 5px !important;
   }
 
-  .canvas-monitor .canvas-shell[data-aspect="16:9"] {
-    height: min(95%, 268px) !important;
+  .canvas-fit-view .canvas-monitor .canvas-shell[data-aspect="16:9"] {
+    width: min(calc(100% - 10px), 532px) !important;
   }
 
   .canvas-monitor .canvas-shell[data-aspect="9:16"],
@@ -284,5 +310,10 @@
   .canvas-transport {
     min-height: 44px !important;
     padding-top: 3px !important;
+    grid-template-columns: 112px auto minmax(170px, 1fr) !important;
+  }
+
+  .canvas-volume-slider {
+    width: 54px;
   }
 }
