@@ -1,8 +1,17 @@
-import { Maximize2, Pause, Play, SkipBack, SkipForward } from "lucide-react";
+import {
+  Maximize2,
+  Pause,
+  Play,
+  SkipBack,
+  SkipForward,
+  Volume2,
+  VolumeX,
+} from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import type { Clip, KiroProject } from "../editor/types";
 import { Composition } from "../editor/engine";
 import { clamp, projectDuration } from "../editor/operations";
+
 interface Props {
   project: KiroProject;
   time: number;
@@ -16,6 +25,15 @@ interface Props {
   onBegin: () => void;
   onEnd: () => void;
 }
+
+function formatTime(value: number) {
+  const safe = Math.max(0, Number.isFinite(value) ? value : 0);
+  const minutes = Math.floor(safe / 60);
+  const seconds = Math.floor(safe % 60);
+  const tenths = Math.floor((safe % 1) * 10);
+  return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}.${tenths}`;
+}
+
 export default function Preview({
   project,
   time,
@@ -34,12 +52,16 @@ export default function Preview({
     seekVersion = useRef(0);
   const latest = useRef({ project, time, playing, onTime, onPlaying });
   latest.current = { project, time, playing, onTime, onPlaying };
+
   const [status, setStatus] = useState(""),
     [ready, setReady] = useState(false),
-    [quality, setQuality] = useState(540);
+    [quality, setQuality] = useState(540),
+    [muted, setMuted] = useState(false);
+
   const drag = useRef<
     { x: number; y: number; cx: number; cy: number } | undefined
   >(undefined);
+
   const duration = projectDuration(project);
   const resourceKey = JSON.stringify(
     project.tracks
@@ -50,6 +72,7 @@ export default function Preview({
         project.assets.find((a) => a.id === c.assetId)?.path,
       ]),
   );
+
   useEffect(() => {
     let cancelled = false;
     setReady(false);
@@ -77,6 +100,7 @@ export default function Preview({
       next.dispose();
     };
   }, [resourceKey]);
+
   useEffect(() => {
     engine.current?.update(project);
     if (!ready || playing) return;
@@ -90,6 +114,7 @@ export default function Preview({
         if (version === seekVersion.current) setStatus(e.message);
       });
   }, [project, time, playing, ready, quality]);
+
   useEffect(() => {
     if (!ready) return;
     let frame = 0,
@@ -135,13 +160,15 @@ export default function Preview({
     frame = requestAnimationFrame(draw);
     return () => cancelAnimationFrame(frame);
   }, [ready]);
+
   useEffect(() => {
-    if (!playing || !ready) return;
-    void engine.current?.enableAudio(true).catch((e: Error) => {
+    if (!ready) return;
+    void engine.current?.enableAudio(playing && !muted).catch((e: Error) => {
       setStatus(e.message);
       onPlaying(false);
     });
-  }, [playing, ready, onPlaying]);
+  }, [playing, ready, muted, onPlaying]);
+
   const toggle = () => {
     if (playing) onPlaying(false);
     else {
@@ -149,35 +176,47 @@ export default function Preview({
       onPlaying(true);
     }
   };
+
   const movable = !!selectedClip && selectedClip.type !== "audio";
   const factor =
     quality / Math.min(project.settings.width, project.settings.height);
+
   return (
-    <section className="preview-wrap">
-      <div className="preview-heading">
-        <span>
-          MONTAGEM <i /> {project.settings.aspectRatio}
-          {movable && <b className="canvas-hint">Arraste no canvas para posicionar {selectedClip?.type === "text" ? "o texto" : "o vídeo"}</b>}
-        </span>
-        <div>
+    <section className="preview-wrap canvas-module">
+      <div className="preview-heading canvas-module-heading">
+        <div className="canvas-meta">
+          <strong>Canvas</strong>
+          <i />
+          <span>{project.settings.width} × {project.settings.height}</span>
+          <i />
+          <span>{project.settings.fps} fps</span>
+          {movable && (
+            <b className="canvas-hint">
+              Arraste no canvas para posicionar {selectedClip?.type === "text" ? "o texto" : "o vídeo"}
+            </b>
+          )}
+        </div>
+        <div className="canvas-actions">
           <select
             aria-label="Qualidade da prévia"
             value={quality}
             onChange={(e) => setQuality(Number(e.target.value))}
           >
-            <option value={360}>Prévia leve</option>
-            <option value={540}>Prévia normal</option>
-            <option value={1080}>Prévia alta</option>
+            <option value={360}>Prévia (leve)</option>
+            <option value={540}>Prévia (normal)</option>
+            <option value={1080}>Prévia (alta)</option>
           </select>
           <button
-            aria-label={focus ? "Sair do foco" : "Modo foco"}
+            aria-label={focus ? "Sair do foco" : "Expandir canvas"}
+            title={focus ? "Sair do foco" : "Expandir canvas"}
             onClick={onFocus}
           >
             <Maximize2 size={16} />
           </button>
         </div>
       </div>
-      <div className="preview-stage">
+
+      <div className="preview-stage canvas-monitor">
         <div className="canvas-shell" data-aspect={project.settings.aspectRatio}>
           <canvas
             ref={canvas}
@@ -232,8 +271,8 @@ export default function Preview({
               }
             }}
           />
-          <span className="canvas-label">CANVAS · {project.settings.width}×{project.settings.height}</span>
         </div>
+
         {(!duration || status) && (
           <div className="preview-message">
             <strong>{status || "Sua próxima história começa aqui"}</strong>
@@ -243,41 +282,49 @@ export default function Preview({
           </div>
         )}
       </div>
-      <div className="transport">
-        <button
-          aria-label="Voltar um quadro"
-          onClick={() => onTime(Math.max(0, time - 1 / project.settings.fps))}
-        >
-          <SkipBack size={17} />
-        </button>
-        <button
-          className="play primary"
-          aria-label={playing ? "Pausar" : "Reproduzir montagem"}
-          disabled={!ready || !duration}
-          onClick={toggle}
-        >
-          {playing ? <Pause size={20} /> : <Play size={20} />}
-        </button>
-        <button
-          aria-label="Avançar um quadro"
-          onClick={() =>
-            onTime(Math.min(duration, time + 1 / project.settings.fps))
-          }
-        >
-          <SkipForward size={17} />
-        </button>
-        <label className="time-entry">
-          <input
-            aria-label="Posição em segundos"
-            type="number"
-            min={0}
-            max={duration}
-            step={1 / project.settings.fps}
-            value={Number(time.toFixed(3))}
-            onChange={(e) => onTime(clamp(Number(e.target.value), 0, duration))}
-          />
-          <span>/ {duration.toFixed(2)} s</span>
-        </label>
+
+      <div className="transport canvas-transport">
+        <div className="canvas-time-readout">
+          <strong>{formatTime(time)}</strong>
+          <span>/ {formatTime(duration)}</span>
+        </div>
+
+        <div className="canvas-playback-controls">
+          <button
+            aria-label="Voltar um quadro"
+            onClick={() => onTime(Math.max(0, time - 1 / project.settings.fps))}
+          >
+            <SkipBack size={17} />
+          </button>
+          <button
+            className="play primary"
+            aria-label={playing ? "Pausar" : "Reproduzir montagem"}
+            disabled={!ready || !duration}
+            onClick={toggle}
+          >
+            {playing ? <Pause size={20} /> : <Play size={20} />}
+          </button>
+          <button
+            aria-label="Avançar um quadro"
+            onClick={() =>
+              onTime(Math.min(duration, time + 1 / project.settings.fps))
+            }
+          >
+            <SkipForward size={17} />
+          </button>
+        </div>
+
+        <div className="canvas-view-controls">
+          <button
+            aria-label={muted ? "Ativar áudio da prévia" : "Silenciar prévia"}
+            title={muted ? "Ativar áudio" : "Silenciar"}
+            className={muted ? "is-muted" : ""}
+            onClick={() => setMuted((value) => !value)}
+          >
+            {muted ? <VolumeX size={16} /> : <Volume2 size={16} />}
+          </button>
+          <span className="canvas-aspect-chip">{project.settings.aspectRatio}</span>
+        </div>
       </div>
     </section>
   );
