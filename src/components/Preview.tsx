@@ -1,4 +1,6 @@
 import {
+  Crop,
+  Focus,
   Maximize2,
   Pause,
   Play,
@@ -49,14 +51,16 @@ export default function Preview({
 }: Props) {
   const canvas = useRef<HTMLCanvasElement>(null),
     engine = useRef<Composition | undefined>(undefined),
-    seekVersion = useRef(0);
+    seekVersion = useRef(0),
+    previousVolume = useRef(1);
   const latest = useRef({ project, time, playing, onTime, onPlaying });
   latest.current = { project, time, playing, onTime, onPlaying };
 
   const [status, setStatus] = useState(""),
     [ready, setReady] = useState(false),
     [quality, setQuality] = useState(540),
-    [muted, setMuted] = useState(false);
+    [volume, setVolume] = useState(1),
+    [fitView, setFitView] = useState(true);
 
   const drag = useRef<
     { x: number; y: number; cx: number; cy: number } | undefined
@@ -84,6 +88,7 @@ export default function Preview({
       .then(async () => {
         if (cancelled) return;
         await next.seek(latest.current.time);
+        next.setMonitorVolume(volume);
         if (!cancelled) {
           setReady(true);
           setStatus("");
@@ -163,11 +168,12 @@ export default function Preview({
 
   useEffect(() => {
     if (!ready) return;
-    void engine.current?.enableAudio(playing && !muted).catch((e: Error) => {
+    engine.current?.setMonitorVolume(volume);
+    void engine.current?.enableAudio(playing).catch((e: Error) => {
       setStatus(e.message);
       onPlaying(false);
     });
-  }, [playing, ready, muted, onPlaying]);
+  }, [playing, ready, volume, onPlaying]);
 
   const toggle = () => {
     if (playing) onPlaying(false);
@@ -181,8 +187,26 @@ export default function Preview({
   const factor =
     quality / Math.min(project.settings.width, project.settings.height);
 
+  const toggleMute = () => {
+    if (volume > 0) {
+      previousVolume.current = volume;
+      setVolume(0);
+    } else {
+      setVolume(previousVolume.current || 1);
+    }
+  };
+
+  const resetFraming = () => {
+    if (!movable) return;
+    onBegin();
+    onTransform({ x: 0, y: 0, scale: 1, rotation: 0 });
+    onEnd();
+  };
+
   return (
-    <section className="preview-wrap canvas-module">
+    <section
+      className={`preview-wrap canvas-module ${fitView ? "canvas-fit-view" : "canvas-fill-view"}`}
+    >
       <div className="preview-heading canvas-module-heading">
         <div className="canvas-meta">
           <strong>Canvas</strong>
@@ -206,6 +230,14 @@ export default function Preview({
             <option value={540}>Prévia (normal)</option>
             <option value={1080}>Prévia (alta)</option>
           </select>
+          <button
+            className={fitView ? "active" : ""}
+            aria-label="Ajustar prévia à área"
+            title={fitView ? "Prévia ajustada" : "Ajustar prévia à área"}
+            onClick={() => setFitView((value) => !value)}
+          >
+            <Focus size={15} />
+          </button>
           <button
             aria-label={focus ? "Sair do foco" : "Expandir canvas"}
             title={focus ? "Sair do foco" : "Expandir canvas"}
@@ -316,14 +348,32 @@ export default function Preview({
 
         <div className="canvas-view-controls">
           <button
-            aria-label={muted ? "Ativar áudio da prévia" : "Silenciar prévia"}
-            title={muted ? "Ativar áudio" : "Silenciar"}
-            className={muted ? "is-muted" : ""}
-            onClick={() => setMuted((value) => !value)}
+            aria-label={volume > 0 ? "Silenciar prévia" : "Ativar áudio da prévia"}
+            title={volume > 0 ? "Silenciar" : "Ativar áudio"}
+            className={volume === 0 ? "is-muted" : ""}
+            onClick={toggleMute}
           >
-            {muted ? <VolumeX size={16} /> : <Volume2 size={16} />}
+            {volume === 0 ? <VolumeX size={16} /> : <Volume2 size={16} />}
           </button>
+          <input
+            className="canvas-volume-slider"
+            aria-label="Volume da prévia"
+            type="range"
+            min="0"
+            max="1"
+            step="0.01"
+            value={volume}
+            onChange={(e) => setVolume(Number(e.target.value))}
+          />
           <span className="canvas-aspect-chip">{project.settings.aspectRatio}</span>
+          <button
+            aria-label="Reenquadrar mídia selecionada"
+            title="Reenquadrar mídia"
+            disabled={!movable}
+            onClick={resetFraming}
+          >
+            <Crop size={16} />
+          </button>
         </div>
       </div>
     </section>
