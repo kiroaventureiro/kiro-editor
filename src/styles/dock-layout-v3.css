@@ -2,6 +2,11 @@
    Docks laterais e canvas vivem em regiões separadas. Nenhum dock pode virar parte do canvas. */
 
 @media (min-width: 851px) {
+  html {
+    --kiro-dock-top: 58px;
+    --kiro-dock-bottom: calc(min(var(--timeline-height), 190px) + 7px);
+  }
+
   /* Quando Biblioteca e Propriedades estão encaixadas, o workspace central vira
      uma região simples dedicada exclusivamente ao Preview. Isso evita colunas
      implícitas do CSS Grid antigo e elimina o efeito de canvas misturado aos painéis. */
@@ -26,14 +31,25 @@
     overflow: hidden !important;
   }
 
-  /* Painéis dockados são sempre regiões independentes e nunca participam do fluxo
-     interno do workspace central. */
+  /* Painéis dockados são regiões independentes e acompanham exatamente a altura
+     da área do canvas: começam sob o topo e terminam sobre o resizer da timeline. */
   html:not([data-kiro-library-dock="free"]) .media-panel,
   html:not([data-kiro-inspector-dock="free"]) .inspector {
     position: fixed !important;
+    top: var(--kiro-dock-top) !important;
+    bottom: var(--kiro-dock-bottom) !important;
+    height: auto !important;
+    max-height: none !important;
     margin: 0 !important;
     transform: none !important;
     z-index: 70 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    border-top: 0 !important;
+    border-bottom: 1px solid #25303a !important;
+    background: #0f151c !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
   }
 
   /* Garante que o preview mantenha uma área limpa mesmo quando os dois docks usam
@@ -78,14 +94,25 @@
     justify-content: center !important;
   }
 
-  /* Docks ficam visualmente colados às bordas, sem aparência de janela flutuante. */
-  .media-panel.panel-docked-left,
-  .inspector.panel-docked-left,
-  .media-panel.panel-docked-right,
-  .inspector.panel-docked-right {
-    border-radius: 0 !important;
-    box-shadow: none !important;
-    background: #0f151c !important;
+  /* Conteúdo interno não pode criar a barra horizontal feia no rodapé do dock. */
+  .media-panel.panel-docked-left *,
+  .media-panel.panel-docked-right *,
+  .inspector.panel-docked-left *,
+  .inspector.panel-docked-right * {
+    min-width: 0;
+  }
+
+  .media-panel.panel-docked-left .asset-list,
+  .media-panel.panel-docked-right .asset-list,
+  .media-panel.panel-docked-left .import-dropzone,
+  .media-panel.panel-docked-right .import-dropzone,
+  .media-panel.panel-docked-left .search,
+  .media-panel.panel-docked-right .search,
+  .media-panel.panel-docked-left .target-track,
+  .media-panel.panel-docked-right .target-track {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
   }
 
   /* Oculta qualquer scrollbar horizontal criada pela antiga largura de painel. */
@@ -94,5 +121,19 @@
   .inspector.panel-docked-left,
   .inspector.panel-docked-right {
     overflow-x: hidden !important;
+  }
+}
+
+@media (min-width: 851px) and (max-height: 680px) {
+  html {
+    --kiro-dock-top: 54px;
+    --kiro-dock-bottom: calc(min(var(--timeline-height), 176px) + 6px);
+  }
+}
+
+@media (min-width: 1181px) and (min-height: 760px) {
+  html {
+    --kiro-dock-top: 62px;
+    --kiro-dock-bottom: calc(min(var(--timeline-height), 220px) + 7px);
   }
 }
