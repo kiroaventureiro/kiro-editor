@@ -1,0 +1,249 @@
+/* KIRO Editor 0.6 — primeira etapa do workspace modular
+   Painéis podem ser exibidos/ocultados, laterais invertidas e presets salvos. */
+
+.layout-manager-trigger {
+  position: fixed;
+  z-index: 80;
+  left: 7px;
+  bottom: 74px;
+  width: 54px;
+  min-height: 50px;
+  padding: 6px 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  border-radius: 9px;
+  border: 1px solid transparent;
+  background: #0d1319;
+  color: #aeb9c6;
+  font-size: 9px;
+  box-shadow: 0 6px 18px rgba(0,0,0,.24);
+}
+
+.layout-manager-trigger:hover,
+.layout-manager-trigger.active {
+  color: #d9fff0;
+  background: #14241f;
+  border-color: rgba(126,230,194,.28);
+}
+
+.layout-manager-popover {
+  position: fixed;
+  z-index: 120;
+  left: 72px;
+  top: 70px;
+  width: 278px;
+  max-height: calc(100vh - 90px);
+  overflow: auto;
+  padding: 12px;
+  border: 1px solid #2b3945;
+  border-radius: 12px;
+  background: rgba(14, 20, 27, .97);
+  box-shadow: 0 22px 70px rgba(0,0,0,.52);
+  backdrop-filter: blur(18px);
+}
+
+.layout-manager-popover header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.layout-manager-popover header > div {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.layout-manager-popover header strong {
+  font-size: 13px;
+}
+
+.layout-manager-popover header small {
+  color: #8e9aa7;
+  font-size: 10px;
+}
+
+.layout-manager-popover header button {
+  width: 30px;
+  min-height: 30px;
+  padding: 0;
+}
+
+.layout-presets {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 5px;
+  margin-bottom: 12px;
+}
+
+.layout-presets button {
+  min-height: 31px;
+  padding: 5px;
+  font-size: 10px;
+}
+
+.layout-panel-list {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.layout-toggle-row {
+  width: 100%;
+  min-height: 34px;
+  padding: 6px 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #10171e;
+  border-color: #283540;
+  font-size: 10px;
+}
+
+.layout-toggle-row i {
+  width: 20px;
+  height: 20px;
+  display: grid;
+  place-items: center;
+  border: 1px solid #35434f;
+  border-radius: 6px;
+  background: #0b1015;
+}
+
+.layout-toggle-row.enabled i {
+  border-color: rgba(124,232,192,.45);
+  background: rgba(124,232,192,.14);
+  color: #bff5df;
+}
+
+.layout-manager-actions {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 6px;
+  margin-top: 12px;
+}
+
+.layout-manager-actions button {
+  justify-content: flex-start;
+  min-height: 33px;
+  font-size: 10px;
+}
+
+.layout-manager-popover p {
+  margin: 11px 2px 0;
+  color: #778694;
+  font-size: 9px;
+  line-height: 1.45;
+}
+
+@media (min-width: 851px) {
+  /* Painéis padrão */
+  html:not(.kiro-swap-sides):not(.kiro-hide-library):not(.kiro-hide-inspector) .workspace {
+    grid-template-columns: 232px 4px minmax(0, 1fr) 274px !important;
+  }
+
+  /* Biblioteca oculta */
+  html.kiro-hide-library:not(.kiro-hide-inspector) .workspace {
+    grid-template-columns: minmax(0, 1fr) 274px !important;
+  }
+  html.kiro-hide-library .media-panel,
+  html.kiro-hide-library .library-resizer {
+    display: none !important;
+  }
+  html.kiro-hide-library:not(.kiro-hide-inspector) .preview-wrap {
+    grid-column: 1 !important;
+  }
+  html.kiro-hide-library:not(.kiro-hide-inspector) .inspector {
+    grid-column: 2 !important;
+  }
+
+  /* Propriedades ocultas */
+  html.kiro-hide-inspector:not(.kiro-hide-library) .workspace {
+    grid-template-columns: 232px 4px minmax(0, 1fr) !important;
+  }
+  html.kiro-hide-inspector .inspector {
+    display: none !important;
+  }
+
+  /* Laterais ocultas: canvas domina o estúdio */
+  html.kiro-hide-library.kiro-hide-inspector .workspace {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+  html.kiro-hide-library.kiro-hide-inspector .preview-wrap {
+    grid-column: 1 !important;
+  }
+
+  /* Inverter Biblioteca e Propriedades */
+  html.kiro-swap-sides:not(.kiro-hide-library):not(.kiro-hide-inspector) .workspace {
+    grid-template-columns: 274px minmax(0, 1fr) 4px 232px !important;
+  }
+  html.kiro-swap-sides:not(.kiro-hide-library):not(.kiro-hide-inspector) .inspector {
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+    border-left: 0;
+    border-right: 1px solid #25303a;
+  }
+  html.kiro-swap-sides:not(.kiro-hide-library):not(.kiro-hide-inspector) .preview-wrap {
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+  }
+  html.kiro-swap-sides:not(.kiro-hide-library):not(.kiro-hide-inspector) .library-resizer {
+    grid-column: 3 !important;
+    grid-row: 1 !important;
+  }
+  html.kiro-swap-sides:not(.kiro-hide-library):not(.kiro-hide-inspector) .media-panel {
+    grid-column: 4 !important;
+    grid-row: 1 !important;
+    border-right: 0;
+    border-left: 1px solid #222d36;
+  }
+
+  /* Timeline pode sumir por completo */
+  html.kiro-hide-timeline .timeline-resizer,
+  html.kiro-hide-timeline .timeline-region {
+    display: none !important;
+  }
+  html.kiro-hide-timeline .app-shell {
+    grid-template-rows: 58px minmax(0, 1fr) !important;
+  }
+
+  /* Timeline compacta: preset útil para Shorts e foco no canvas */
+  html.kiro-compact-timeline:not(.kiro-hide-timeline) .app-shell {
+    grid-template-rows: 58px minmax(0, 1fr) 7px 190px !important;
+  }
+  html.kiro-compact-timeline .timeline-toolbar {
+    min-height: 38px;
+    padding-block: 4px;
+  }
+  html.kiro-compact-timeline .track-row {
+    height: 58px;
+  }
+  html.kiro-compact-timeline .clip {
+    top: 5px;
+    height: 48px;
+  }
+
+  /* Barra vertical opcional */
+  html.kiro-hide-tools .workspace-tools,
+  html.kiro-hide-tools .layout-manager-trigger {
+    display: none !important;
+  }
+  html.kiro-hide-tools .workspace,
+  html.kiro-hide-tools .timeline-resizer,
+  html.kiro-hide-tools .timeline-region {
+    margin-left: 0 !important;
+    width: 100% !important;
+  }
+}
+
+@media (max-width: 850px) {
+  .layout-manager-trigger {
+    display: none;
+  }
+  .layout-manager-popover {
+    display: none;
+  }
+}
