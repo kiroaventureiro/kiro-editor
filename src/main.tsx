@@ -8,6 +8,7 @@ import "./styles/premium-layout.css";
 import "./styles/proportions-v2.css";
 import "./styles/modular-workspace.css";
 import "./styles/dock-layout-v2.css";
+import "./styles/dock-layout-v3.css";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
