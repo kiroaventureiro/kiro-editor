@@ -1,0 +1,165 @@
+/* KIRO Editor 0.6 — docking v2
+   Painel flutuante pode sobrepor; painel encaixado reserva espaço real do canvas. */
+
+@media (min-width: 851px) {
+  html {
+    --kiro-lib-left: 0px;
+    --kiro-lib-right: 0px;
+    --kiro-inspector-left: 0px;
+    --kiro-inspector-right: 0px;
+  }
+
+  html[data-kiro-library-dock="left"] { --kiro-lib-left: 272px; }
+  html[data-kiro-library-dock="right"] { --kiro-lib-right: 272px; }
+  html[data-kiro-inspector-dock="left"] { --kiro-inspector-left: 292px; }
+  html[data-kiro-inspector-dock="right"] { --kiro-inspector-right: 292px; }
+
+  /* O canvas/workspace perde fisicamente o espaço ocupado por docks laterais. */
+  html[data-kiro-library-dock="left"] .workspace,
+  html[data-kiro-library-dock="right"] .workspace,
+  html[data-kiro-inspector-dock="left"] .workspace,
+  html[data-kiro-inspector-dock="right"] .workspace {
+    margin-left: calc(
+      68px + var(--kiro-lib-left) + var(--kiro-inspector-left)
+    ) !important;
+    width: calc(
+      100% - 68px - var(--kiro-lib-left) - var(--kiro-lib-right) -
+      var(--kiro-inspector-left) - var(--kiro-inspector-right)
+    ) !important;
+  }
+
+  /* Quando um painel está encaixado, ele sai do grid interno do workspace. */
+  html[data-kiro-library-dock="left"] .workspace,
+  html[data-kiro-library-dock="right"] .workspace {
+    grid-template-columns: minmax(0, 1fr) 274px !important;
+  }
+  html[data-kiro-library-dock="left"] .media-panel,
+  html[data-kiro-library-dock="right"] .media-panel,
+  html[data-kiro-library-dock="left"] .library-resizer,
+  html[data-kiro-library-dock="right"] .library-resizer {
+    position: fixed !important;
+  }
+  html[data-kiro-library-dock="left"] .library-resizer,
+  html[data-kiro-library-dock="right"] .library-resizer {
+    display: none !important;
+  }
+  html[data-kiro-library-dock="left"] .preview-wrap,
+  html[data-kiro-library-dock="right"] .preview-wrap {
+    grid-column: 1 !important;
+  }
+  html[data-kiro-library-dock="left"] .inspector:not(.panel-docked-left):not(.panel-docked-right),
+  html[data-kiro-library-dock="right"] .inspector:not(.panel-docked-left):not(.panel-docked-right) {
+    grid-column: 2 !important;
+  }
+
+  html[data-kiro-inspector-dock="left"] .workspace,
+  html[data-kiro-inspector-dock="right"] .workspace {
+    grid-template-columns: 232px 4px minmax(0, 1fr) !important;
+  }
+  html[data-kiro-inspector-dock="left"] .inspector,
+  html[data-kiro-inspector-dock="right"] .inspector {
+    position: fixed !important;
+  }
+  html[data-kiro-inspector-dock="left"] .preview-wrap,
+  html[data-kiro-inspector-dock="right"] .preview-wrap {
+    grid-column: 3 !important;
+  }
+
+  /* Se os dois estiverem encaixados, sobra apenas o preview no grid central. */
+  html:not([data-kiro-library-dock="free"]):not([data-kiro-inspector-dock="free"]) .workspace {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+  html:not([data-kiro-library-dock="free"]):not([data-kiro-inspector-dock="free"]) .preview-wrap {
+    grid-column: 1 !important;
+  }
+
+  /* Docks reais: altos, estreitos e terminam antes da timeline. */
+  html[data-kiro-library-dock="left"] .media-panel,
+  html[data-kiro-library-dock="right"] .media-panel,
+  html[data-kiro-inspector-dock="left"] .inspector,
+  html[data-kiro-inspector-dock="right"] .inspector {
+    top: 58px !important;
+    bottom: calc(var(--timeline-height, 230px) + 8px) !important;
+    height: auto !important;
+    max-height: none !important;
+    transform: none !important;
+    border-radius: 0 !important;
+    box-shadow: 8px 0 26px rgba(0,0,0,.25) !important;
+    overflow: auto !important;
+  }
+
+  html.kiro-compact-timeline[data-kiro-library-dock="left"] .media-panel,
+  html.kiro-compact-timeline[data-kiro-library-dock="right"] .media-panel,
+  html.kiro-compact-timeline[data-kiro-inspector-dock="left"] .inspector,
+  html.kiro-compact-timeline[data-kiro-inspector-dock="right"] .inspector {
+    bottom: 198px !important;
+  }
+
+  html.kiro-hide-timeline[data-kiro-library-dock="left"] .media-panel,
+  html.kiro-hide-timeline[data-kiro-library-dock="right"] .media-panel,
+  html.kiro-hide-timeline[data-kiro-inspector-dock="left"] .inspector,
+  html.kiro-hide-timeline[data-kiro-inspector-dock="right"] .inspector {
+    bottom: 0 !important;
+  }
+
+  html[data-kiro-library-dock="left"] .media-panel {
+    left: 68px !important;
+    right: auto !important;
+    width: 272px !important;
+  }
+  html[data-kiro-library-dock="right"] .media-panel {
+    left: auto !important;
+    right: 0 !important;
+    width: 272px !important;
+  }
+  html[data-kiro-inspector-dock="left"] .inspector {
+    left: calc(68px + var(--kiro-lib-left)) !important;
+    right: auto !important;
+    width: 292px !important;
+  }
+  html[data-kiro-inspector-dock="right"] .inspector {
+    left: auto !important;
+    right: var(--kiro-lib-right) !important;
+    width: 292px !important;
+  }
+
+  /* Só painéis realmente livres recebem aparência de janela flutuante. */
+  html[data-kiro-library-dock="free"].kiro-float-library .media-panel,
+  html[data-kiro-inspector-dock="free"].kiro-float-inspector .inspector {
+    border-radius: 11px !important;
+    box-shadow: 0 22px 70px rgba(0,0,0,.52) !important;
+  }
+
+  /* O rail de ferramentas continua independente do canvas e dos docks. */
+  html.kiro-hide-tools[data-kiro-library-dock="left"] .workspace,
+  html.kiro-hide-tools[data-kiro-library-dock="right"] .workspace,
+  html.kiro-hide-tools[data-kiro-inspector-dock="left"] .workspace,
+  html.kiro-hide-tools[data-kiro-inspector-dock="right"] .workspace {
+    margin-left: calc(var(--kiro-lib-left) + var(--kiro-inspector-left)) !important;
+    width: calc(
+      100% - var(--kiro-lib-left) - var(--kiro-lib-right) -
+      var(--kiro-inspector-left) - var(--kiro-inspector-right)
+    ) !important;
+  }
+
+  html.kiro-hide-tools[data-kiro-library-dock="left"] .media-panel {
+    left: 0 !important;
+  }
+  html.kiro-hide-tools[data-kiro-inspector-dock="left"] .inspector {
+    left: var(--kiro-lib-left) !important;
+  }
+
+  /* Guias: somente laterais, exatamente onde o painel passará a ocupar espaço. */
+  .dock-guide-left {
+    left: 68px !important;
+    top: 58px !important;
+    bottom: var(--timeline-height, 230px) !important;
+    width: 132px !important;
+  }
+  .dock-guide-right {
+    right: 0 !important;
+    top: 58px !important;
+    bottom: var(--timeline-height, 230px) !important;
+    width: 132px !important;
+  }
+}
