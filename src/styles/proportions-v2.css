@@ -1,0 +1,177 @@
+/* KIRO Editor — proportion pass v2
+   Keeps the approved premium direction while giving the canvas more vertical authority. */
+
+@media (min-width: 851px) {
+  /* The previous default timeline height was consuming too much of short desktop screens.
+     Keep it user-resizable downward, but stop it from dominating the workspace on load. */
+  .app-shell {
+    grid-template-rows: 58px minmax(0, 1fr) 7px min(var(--timeline-height), 190px);
+  }
+
+  .workspace {
+    grid-template-columns: 232px 4px minmax(0, 1fr) 278px;
+  }
+
+  .media-panel {
+    padding: 12px 10px;
+  }
+
+  .inspector {
+    width: 278px;
+    padding: 12px;
+  }
+
+  /* Preview should read as the visual center of the product, not as a letterboxed strip. */
+  .preview-wrap {
+    grid-template-rows: 30px minmax(0, 1fr) 52px;
+    padding: 6px 10px 4px;
+  }
+
+  .preview-stage {
+    padding: 2px;
+    min-height: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .canvas-shell {
+    max-width: 97%;
+    max-height: 97%;
+  }
+
+  /* Size from available HEIGHT first. This fixes both excessive side width and
+     the empty bands above/below the canvas on shorter monitors. */
+  .canvas-shell[data-aspect="16:9"] {
+    height: 96%;
+    width: auto;
+    max-width: 96%;
+    aspect-ratio: 16 / 9;
+  }
+
+  .canvas-shell[data-aspect="9:16"] {
+    height: 98%;
+    width: auto;
+    max-width: 72%;
+    aspect-ratio: 9 / 16;
+  }
+
+  .canvas-shell[data-aspect="4:5"] {
+    height: 97%;
+    width: auto;
+    max-width: 82%;
+    aspect-ratio: 4 / 5;
+  }
+
+  .canvas-shell[data-aspect="1:1"] {
+    height: 94%;
+    width: auto;
+    max-width: 90%;
+    aspect-ratio: 1 / 1;
+  }
+
+  .transport {
+    min-height: 48px;
+    padding: 2px 0 0;
+  }
+
+  /* Timeline remains comfortable, but visually secondary to the canvas. */
+  .timeline-toolbar {
+    min-height: 40px;
+    padding: 5px 9px;
+  }
+
+  .ruler-row {
+    height: 28px;
+  }
+
+  .track-row {
+    height: 60px;
+  }
+
+  .clip {
+    top: 5px;
+    height: 50px;
+  }
+
+  .clip small {
+    margin-top: 12px;
+  }
+
+  .clip-wave {
+    inset: 18px 0 0;
+    height: 28px;
+  }
+
+  .timeline-footer {
+    min-height: 20px;
+    padding-block: 2px;
+  }
+}
+
+@media (min-width: 851px) and (max-height: 680px) {
+  .app-shell {
+    grid-template-rows: 54px minmax(0, 1fr) 6px min(var(--timeline-height), 176px);
+  }
+
+  .topbar {
+    min-height: 54px;
+    padding-block: 6px;
+  }
+
+  .workspace-tools {
+    top: 54px;
+  }
+
+  .preview-wrap {
+    grid-template-rows: 26px minmax(0, 1fr) 46px;
+    padding: 4px 8px 2px;
+  }
+
+  .transport {
+    min-height: 44px;
+  }
+
+  .timeline-toolbar {
+    min-height: 36px;
+    padding-block: 4px;
+  }
+
+  .track-row {
+    height: 56px;
+  }
+
+  .clip {
+    height: 46px;
+  }
+}
+
+@media (min-width: 1181px) and (min-height: 760px) {
+  .app-shell {
+    grid-template-rows: 62px minmax(0, 1fr) 7px min(var(--timeline-height), 220px);
+  }
+
+  .workspace-tools {
+    top: 62px;
+  }
+
+  .workspace {
+    grid-template-columns: 250px 4px minmax(0, 1fr) 292px;
+  }
+
+  .inspector {
+    width: 292px;
+  }
+
+  .preview-wrap {
+    grid-template-rows: 32px minmax(0, 1fr) 56px;
+  }
+
+  .track-row {
+    height: 66px;
+  }
+
+  .clip {
+    height: 56px;
+  }
+}
