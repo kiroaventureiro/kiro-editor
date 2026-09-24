@@ -1,38 +1,84 @@
-/* KIRO Editor 0.6 — docking v3
-   Docks laterais e canvas vivem em regiões separadas. Nenhum dock pode virar parte do canvas. */
+/* KIRO Editor 0.6 — docking v3 estabilizado
+   Docks laterais reservam espaço real. Canvas, painéis e timeline não se sobrepõem. */
 
 @media (min-width: 851px) {
   html {
     --kiro-dock-top: 58px;
-    --kiro-dock-bottom: calc(min(var(--timeline-height), 190px) + 7px);
+    --kiro-dock-bottom: 197px;
+    --kiro-rail-width: 68px;
+    --kiro-library-dock-width: 280px;
+    --kiro-inspector-dock-width: 300px;
+    --kiro-lib-left: 0px;
+    --kiro-lib-right: 0px;
+    --kiro-inspector-left: 0px;
+    --kiro-inspector-right: 0px;
   }
 
-  /* Quando Biblioteca e Propriedades estão encaixadas, o workspace central vira
-     uma região simples dedicada exclusivamente ao Preview. Isso evita colunas
-     implícitas do CSS Grid antigo e elimina o efeito de canvas misturado aos painéis. */
-  html:not([data-kiro-library-dock="free"]):not([data-kiro-inspector-dock="free"]) .workspace {
+  html[data-kiro-library-dock="left"] { --kiro-lib-left: var(--kiro-library-dock-width); }
+  html[data-kiro-library-dock="right"] { --kiro-lib-right: var(--kiro-library-dock-width); }
+  html[data-kiro-inspector-dock="left"] { --kiro-inspector-left: var(--kiro-inspector-dock-width); }
+  html[data-kiro-inspector-dock="right"] { --kiro-inspector-right: var(--kiro-inspector-dock-width); }
+
+  /* A área central perde fisicamente o espaço ocupado pelos docks. */
+  html[data-kiro-library-dock="left"] .workspace,
+  html[data-kiro-library-dock="right"] .workspace,
+  html[data-kiro-inspector-dock="left"] .workspace,
+  html[data-kiro-inspector-dock="right"] .workspace {
+    margin-left: calc(var(--kiro-rail-width) + var(--kiro-lib-left) + var(--kiro-inspector-left)) !important;
+    width: calc(100% - var(--kiro-rail-width) - var(--kiro-lib-left) - var(--kiro-lib-right) - var(--kiro-inspector-left) - var(--kiro-inspector-right)) !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
+    background: #0b1015 !important;
+  }
+
+  /* Biblioteca encaixada sai do grid; Propriedades continua estática se não estiver solta/encaixada. */
+  html:not([data-kiro-library-dock="free"])[data-kiro-inspector-dock="free"]:not(.kiro-float-inspector) .workspace {
+    display: grid !important;
+    grid-template-columns: minmax(0,1fr) 278px !important;
+  }
+  html:not([data-kiro-library-dock="free"])[data-kiro-inspector-dock="free"]:not(.kiro-float-inspector) .preview-wrap {
+    grid-column: 1 !important;
+  }
+  html:not([data-kiro-library-dock="free"])[data-kiro-inspector-dock="free"]:not(.kiro-float-inspector) .inspector {
+    grid-column: 2 !important;
+  }
+
+  /* Propriedades encaixada sai do grid; Biblioteca continua estática se não estiver solta/encaixada. */
+  html[data-kiro-library-dock="free"]:not(.kiro-float-library):not([data-kiro-inspector-dock="free"]) .workspace {
+    display: grid !important;
+    grid-template-columns: 232px 4px minmax(0,1fr) !important;
+  }
+  html[data-kiro-library-dock="free"]:not(.kiro-float-library):not([data-kiro-inspector-dock="free"]) .media-panel {
+    grid-column: 1 !important;
+  }
+  html[data-kiro-library-dock="free"]:not(.kiro-float-library):not([data-kiro-inspector-dock="free"]) .library-resizer {
+    grid-column: 2 !important;
+  }
+  html[data-kiro-library-dock="free"]:not(.kiro-float-library):not([data-kiro-inspector-dock="free"]) .preview-wrap {
+    grid-column: 3 !important;
+  }
+
+  /* Se ambos estão encaixados, ou o painel restante está flutuante, o centro é só preview. */
+  html:not([data-kiro-library-dock="free"]):not([data-kiro-inspector-dock="free"]) .workspace,
+  html:not([data-kiro-library-dock="free"]).kiro-float-inspector .workspace,
+  html:not([data-kiro-inspector-dock="free"]).kiro-float-library .workspace {
     display: block !important;
     position: relative !important;
-    overflow: hidden !important;
-    min-width: 0 !important;
   }
-
-  html:not([data-kiro-library-dock="free"]):not([data-kiro-inspector-dock="free"]) .workspace > .preview-wrap {
-    display: grid !important;
+  html:not([data-kiro-library-dock="free"]):not([data-kiro-inspector-dock="free"]) .preview-wrap,
+  html:not([data-kiro-library-dock="free"]).kiro-float-inspector .preview-wrap,
+  html:not([data-kiro-inspector-dock="free"]).kiro-float-library .preview-wrap {
     width: 100% !important;
     height: 100% !important;
     min-width: 0 !important;
     max-width: none !important;
     margin: 0 !important;
-    position: relative !important;
-    inset: auto !important;
     grid-column: auto !important;
     grid-row: auto !important;
     overflow: hidden !important;
   }
 
-  /* Painéis dockados são regiões independentes e acompanham exatamente a altura
-     da área do canvas: começam sob o topo e terminam sobre o resizer da timeline. */
+  /* Painéis encaixados: altura exata do workspace, do fim do topo ao início da timeline. */
   html:not([data-kiro-library-dock="free"]) .media-panel,
   html:not([data-kiro-inspector-dock="free"]) .inspector {
     position: fixed !important;
@@ -45,61 +91,56 @@
     z-index: 70 !important;
     border-radius: 0 !important;
     box-shadow: none !important;
-    border-top: 0 !important;
-    border-bottom: 1px solid #25303a !important;
     background: #0f151c !important;
     overflow-y: auto !important;
     overflow-x: hidden !important;
+    box-sizing: border-box !important;
   }
 
-  /* Garante que o preview mantenha uma área limpa mesmo quando os dois docks usam
-     lados opostos ou o mesmo lado. */
-  html[data-kiro-library-dock="left"][data-kiro-inspector-dock="right"] .workspace,
-  html[data-kiro-library-dock="right"][data-kiro-inspector-dock="left"] .workspace,
-  html[data-kiro-library-dock="left"][data-kiro-inspector-dock="left"] .workspace,
-  html[data-kiro-library-dock="right"][data-kiro-inspector-dock="right"] .workspace {
-    background: #0b1015 !important;
+  html[data-kiro-library-dock="left"] .media-panel {
+    left: var(--kiro-rail-width) !important;
+    right: auto !important;
+    width: var(--kiro-library-dock-width) !important;
+    border-left: 0 !important;
+    border-right: 1px solid #25303a !important;
+  }
+  html[data-kiro-library-dock="right"] .media-panel {
+    left: auto !important;
+    right: 0 !important;
+    width: var(--kiro-library-dock-width) !important;
+    border-left: 1px solid #25303a !important;
+    border-right: 0 !important;
+  }
+  html[data-kiro-inspector-dock="left"] .inspector {
+    left: calc(var(--kiro-rail-width) + var(--kiro-lib-left)) !important;
+    right: auto !important;
+    width: var(--kiro-inspector-dock-width) !important;
+    border-left: 0 !important;
+    border-right: 1px solid #25303a !important;
+  }
+  html[data-kiro-inspector-dock="right"] .inspector {
+    left: auto !important;
+    right: var(--kiro-lib-right) !important;
+    width: var(--kiro-inspector-dock-width) !important;
+    border-left: 1px solid #25303a !important;
+    border-right: 0 !important;
   }
 
-  /* Canvas: ocupa a região central disponível sem ultrapassar os docks. */
-  html:not([data-kiro-library-dock="free"]):not([data-kiro-inspector-dock="free"]) .preview-stage {
-    width: 100% !important;
-    min-width: 0 !important;
-    overflow: hidden !important;
-    display: grid !important;
-    place-items: center !important;
+  /* Remove qualquer espaço/borda estranha no rodapé do dock. */
+  .media-panel.panel-docked-left,
+  .media-panel.panel-docked-right,
+  .inspector.panel-docked-left,
+  .inspector.panel-docked-right {
+    padding-bottom: 12px !important;
+    border-bottom: 0 !important;
   }
 
-  html:not([data-kiro-library-dock="free"]):not([data-kiro-inspector-dock="free"]) .canvas-shell {
-    max-width: calc(100% - 20px) !important;
-    max-height: calc(100% - 12px) !important;
-    margin-inline: auto !important;
-  }
-
-  html:not([data-kiro-library-dock="free"]):not([data-kiro-inspector-dock="free"]) .canvas-shell[data-aspect="16:9"] {
-    width: min(calc(100% - 20px), 860px) !important;
-    height: auto !important;
-    aspect-ratio: 16 / 9 !important;
-  }
-
-  html:not([data-kiro-library-dock="free"]):not([data-kiro-inspector-dock="free"]) .canvas-shell[data-aspect="9:16"] {
-    height: min(calc(100% - 12px), 560px) !important;
-    width: auto !important;
-    aspect-ratio: 9 / 16 !important;
-  }
-
-  html:not([data-kiro-library-dock="free"]):not([data-kiro-inspector-dock="free"]) .transport {
-    width: 100% !important;
-    min-width: 0 !important;
-    justify-content: center !important;
-  }
-
-  /* Conteúdo interno não pode criar a barra horizontal feia no rodapé do dock. */
   .media-panel.panel-docked-left *,
   .media-panel.panel-docked-right *,
   .inspector.panel-docked-left *,
   .inspector.panel-docked-right * {
     min-width: 0;
+    box-sizing: border-box;
   }
 
   .media-panel.panel-docked-left .asset-list,
@@ -112,28 +153,47 @@
   .media-panel.panel-docked-right .target-track {
     width: 100% !important;
     max-width: 100% !important;
-    box-sizing: border-box !important;
   }
 
-  /* Oculta qualquer scrollbar horizontal criada pela antiga largura de painel. */
-  .media-panel.panel-docked-left,
-  .media-panel.panel-docked-right,
-  .inspector.panel-docked-left,
-  .inspector.panel-docked-right {
-    overflow-x: hidden !important;
+  html:not([data-kiro-library-dock="free"]) .library-resizer {
+    display: none !important;
   }
-}
 
-@media (min-width: 851px) and (max-height: 680px) {
-  html {
-    --kiro-dock-top: 54px;
-    --kiro-dock-bottom: calc(min(var(--timeline-height), 176px) + 6px);
+  /* Canvas permanece independente dos docks. */
+  html:not([data-kiro-library-dock="free"]):not([data-kiro-inspector-dock="free"]) .preview-stage {
+    width: 100% !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
+    display: grid !important;
+    place-items: center !important;
   }
-}
+  html:not([data-kiro-library-dock="free"]):not([data-kiro-inspector-dock="free"]) .canvas-shell {
+    max-width: calc(100% - 24px) !important;
+    max-height: calc(100% - 16px) !important;
+    margin-inline: auto !important;
+  }
+  html:not([data-kiro-library-dock="free"]):not([data-kiro-inspector-dock="free"]) .canvas-shell[data-aspect="16:9"] {
+    width: min(calc(100% - 24px), 900px) !important;
+    height: auto !important;
+    aspect-ratio: 16 / 9 !important;
+  }
+  html:not([data-kiro-library-dock="free"]):not([data-kiro-inspector-dock="free"]) .canvas-shell[data-aspect="9:16"] {
+    height: min(calc(100% - 16px), 560px) !important;
+    width: auto !important;
+    aspect-ratio: 9 / 16 !important;
+  }
 
-@media (min-width: 1181px) and (min-height: 760px) {
-  html {
-    --kiro-dock-top: 62px;
-    --kiro-dock-bottom: calc(min(var(--timeline-height), 220px) + 7px);
+  /* Guias mostram somente regiões laterais válidas. */
+  .dock-guide-left {
+    left: var(--kiro-rail-width) !important;
+    top: var(--kiro-dock-top) !important;
+    bottom: var(--kiro-dock-bottom) !important;
+    width: 128px !important;
+  }
+  .dock-guide-right {
+    right: 0 !important;
+    top: var(--kiro-dock-top) !important;
+    bottom: var(--kiro-dock-bottom) !important;
+    width: 128px !important;
   }
 }
