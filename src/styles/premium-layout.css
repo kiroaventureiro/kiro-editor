@@ -1,0 +1,298 @@
+/* KIRO Editor — premium layout layer
+   Structural overrides based on the approved product concept. */
+
+@media (min-width: 851px) {
+  .app-shell {
+    position: relative;
+    grid-template-rows: 58px minmax(0, 1fr) 8px var(--timeline-height);
+    background: #0a0e12;
+  }
+
+  .topbar {
+    grid-row: 1;
+    min-height: 58px;
+    padding: 8px 14px 8px 16px;
+    background: linear-gradient(180deg, #111821 0%, #0e141b 100%);
+    border-bottom: 1px solid #24303a;
+    box-shadow: 0 8px 30px rgba(0,0,0,.22);
+  }
+
+  .brand-mark {
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    box-shadow: 0 0 0 1px rgba(168,235,204,.18), 0 8px 20px rgba(0,0,0,.28);
+  }
+
+  .top-actions button {
+    min-height: 34px;
+    border-radius: 8px;
+    background: #171f28;
+    border-color: #293642;
+  }
+
+  .top-actions .primary {
+    background: #8ee8c5;
+    color: #071812;
+    border-color: #8ee8c5;
+  }
+
+  /* Move the current workspace controls into a real vertical tool rail. */
+  .workspace-tools {
+    position: absolute;
+    z-index: 30;
+    left: 0;
+    top: 58px;
+    bottom: 0;
+    width: 68px;
+    padding: 10px 6px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: stretch;
+    background: #0d1319;
+    border-right: 1px solid #25303a;
+    border-bottom: 0;
+    box-shadow: 8px 0 22px rgba(0,0,0,.2);
+  }
+
+  .workspace-tools > div {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
+  }
+
+  .workspace-tools button,
+  .workspace-tools .button {
+    min-height: 52px;
+    width: 100%;
+    padding: 7px 4px;
+    border-radius: 8px;
+    border: 1px solid transparent;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    justify-content: center;
+    font-size: 9px;
+    line-height: 1.1;
+    background: transparent;
+    color: #aeb9c6;
+  }
+
+  .workspace-tools button:hover,
+  .workspace-tools .button:hover,
+  .workspace-tools button.active {
+    color: #d9fff0;
+    background: #14241f;
+    border-color: rgba(126,230,194,.22);
+  }
+
+  .workspace {
+    grid-row: 2;
+    margin-left: 68px;
+    width: calc(100% - 68px);
+    grid-template-columns: 248px 4px minmax(0, 1fr) 300px;
+    background: #0b1015;
+  }
+
+  .media-panel {
+    padding: 14px 12px;
+    background: #0f151c;
+    border-right: 1px solid #222d36;
+  }
+
+  .import-dropzone {
+    min-height: 126px;
+    justify-content: center;
+    border-radius: 10px;
+    background: linear-gradient(180deg, rgba(33,67,57,.5), rgba(24,42,37,.35));
+    border-color: #3c6859;
+  }
+
+  .asset-list-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 9px;
+  }
+
+  .asset-list-grid .asset-thumbnail {
+    height: 76px;
+  }
+
+  .preview-wrap {
+    padding: 8px 12px 6px;
+    grid-template-rows: 30px minmax(0, 1fr) 50px;
+    background: radial-gradient(circle at center, #111923 0%, #0b1015 72%);
+  }
+
+  .preview-stage {
+    border: 0;
+    background: transparent;
+    padding: 4px;
+    border-radius: 0;
+  }
+
+  .canvas-shell {
+    max-width: 96%;
+    max-height: 96%;
+    border: 1px solid #33424f;
+    border-radius: 8px;
+    padding: 0;
+    background: #020304;
+    box-shadow: 0 18px 52px rgba(0,0,0,.48), 0 0 0 1px rgba(255,255,255,.02);
+  }
+
+  .canvas-shell[data-aspect="16:9"] {
+    height: auto;
+    width: min(94%, 920px);
+    aspect-ratio: 16 / 9;
+  }
+
+  .canvas-shell[data-aspect="9:16"] {
+    height: min(96%, 560px);
+    width: auto;
+  }
+
+  .canvas-shell[data-aspect="4:5"] {
+    height: min(94%, 540px);
+    width: auto;
+  }
+
+  .canvas-shell[data-aspect="1:1"] {
+    height: min(92%, 520px);
+    width: auto;
+  }
+
+  .canvas-shell canvas {
+    border: 0;
+    border-radius: 7px;
+    box-shadow: none;
+  }
+
+  .preview-heading {
+    font-size: 10px;
+    letter-spacing: .04em;
+    color: #b1bcc8;
+  }
+
+  .transport {
+    gap: 12px;
+  }
+
+  .transport .play {
+    width: 44px;
+    height: 44px;
+    box-shadow: 0 6px 18px rgba(126,230,194,.2);
+  }
+
+  .inspector {
+    width: 300px;
+    padding: 14px 14px 18px;
+    background: #0f151c;
+    border-left: 1px solid #25303a;
+  }
+
+  .inspector-tabs {
+    grid-template-columns: repeat(4, 1fr);
+    padding: 3px;
+    border-radius: 9px;
+    background: #131b23;
+  }
+
+  .inspector-tabs button {
+    min-height: 34px;
+    font-size: 10px;
+  }
+
+  .timeline-resizer {
+    grid-row: 3;
+    margin-left: 68px;
+    width: calc(100% - 68px);
+  }
+
+  .timeline-region {
+    grid-row: 4;
+    margin-left: 68px;
+    width: calc(100% - 68px);
+    background: #0b1015;
+  }
+
+  .timeline-shell {
+    background: #0d1319;
+    border-top: 1px solid #26323c;
+  }
+
+  .timeline-toolbar {
+    min-height: 44px;
+    padding: 7px 10px;
+    background: #10171f;
+  }
+
+  .timeline-toolbar button {
+    min-height: 30px;
+    border-radius: 7px;
+    background: #151d26;
+    border-color: #2b3742;
+  }
+
+  .ruler-row {
+    height: 34px;
+    background: #0f161d;
+  }
+
+  .track-row {
+    height: 70px;
+    border-bottom-color: #202a33;
+  }
+
+  .track-name {
+    background: #0f161d;
+    border-right: 1px solid #26313a;
+  }
+
+  .track-lane {
+    background-color: #0b1117;
+  }
+
+  .clip {
+    top: 6px;
+    height: 58px;
+    border-radius: 7px;
+  }
+
+  .clip-video {
+    background: linear-gradient(180deg, #28466d, #1c3150);
+    border-color: #4b8ed8;
+  }
+
+  .clip-text {
+    background: linear-gradient(180deg, #5b3bb6, #40277f);
+    border-color: #8665df;
+  }
+
+  .clip-audio {
+    background: linear-gradient(180deg, #0f6a59, #0b4b3f);
+    border-color: #2ab493;
+  }
+}
+
+@media (max-width: 1180px) and (min-width: 851px) {
+  .workspace-tools {
+    width: 60px;
+  }
+
+  .workspace,
+  .timeline-resizer,
+  .timeline-region {
+    margin-left: 60px;
+    width: calc(100% - 60px);
+  }
+
+  .workspace {
+    grid-template-columns: 220px 4px minmax(0, 1fr) 260px;
+  }
+
+  .inspector {
+    width: 260px;
+  }
+}
