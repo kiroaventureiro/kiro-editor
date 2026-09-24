@@ -1,0 +1,259 @@
+/* KIRO Editor — stable layout v1
+   Final proportion pass based on the approved premium reference.
+   No experimental docking: fixed, predictable desktop structure. */
+
+@media (min-width: 851px) {
+  .app-shell {
+    grid-template-rows: 56px minmax(0, 1fr) 6px min(var(--timeline-height), 168px) !important;
+    background: #0a0f14;
+  }
+
+  .topbar {
+    min-height: 56px !important;
+    padding: 7px 12px !important;
+  }
+
+  .brand-mark {
+    width: 36px !important;
+    height: 36px !important;
+  }
+
+  .workspace-tools {
+    top: 56px !important;
+    width: 60px !important;
+    padding: 8px 5px !important;
+  }
+
+  .workspace-tools button,
+  .workspace-tools .button {
+    min-height: 46px !important;
+    padding: 6px 3px !important;
+    font-size: 8px !important;
+  }
+
+  .workspace {
+    margin-left: 60px !important;
+    width: calc(100% - 60px) !important;
+    grid-template-columns: 210px 4px minmax(0, 1fr) 252px !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
+  }
+
+  .media-panel {
+    padding: 10px 9px !important;
+    min-width: 0 !important;
+    overflow-x: hidden !important;
+  }
+
+  .library-heading {
+    margin-bottom: 8px !important;
+  }
+
+  .import-dropzone {
+    min-height: 96px !important;
+    padding: 10px 8px !important;
+  }
+
+  .search {
+    min-height: 32px !important;
+  }
+
+  .asset-list-grid {
+    gap: 7px !important;
+  }
+
+  .asset-list-grid .asset-thumbnail {
+    height: 62px !important;
+  }
+
+  .preview-wrap {
+    padding: 5px 8px 3px !important;
+    grid-template-rows: 28px minmax(0, 1fr) 46px !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
+  }
+
+  .preview-heading {
+    min-width: 0 !important;
+  }
+
+  .preview-stage {
+    padding: 2px !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
+  }
+
+  .canvas-shell {
+    max-width: calc(100% - 8px) !important;
+    max-height: calc(100% - 6px) !important;
+    border-radius: 5px !important;
+    box-shadow: 0 10px 30px rgba(0,0,0,.36) !important;
+  }
+
+  .canvas-shell[data-aspect="16:9"] {
+    height: 96% !important;
+    width: auto !important;
+    max-width: calc(100% - 8px) !important;
+    aspect-ratio: 16 / 9 !important;
+  }
+
+  .canvas-shell[data-aspect="9:16"] {
+    height: 98% !important;
+    width: auto !important;
+    max-width: 64% !important;
+    aspect-ratio: 9 / 16 !important;
+  }
+
+  .canvas-shell[data-aspect="4:5"] {
+    height: 97% !important;
+    width: auto !important;
+    max-width: 76% !important;
+  }
+
+  .canvas-shell[data-aspect="1:1"] {
+    height: 94% !important;
+    width: auto !important;
+    max-width: 86% !important;
+  }
+
+  .transport {
+    min-height: 42px !important;
+    gap: 10px !important;
+    padding-top: 1px !important;
+  }
+
+  .transport .play {
+    width: 40px !important;
+    height: 40px !important;
+  }
+
+  .inspector {
+    width: 252px !important;
+    padding: 10px 10px 12px !important;
+    min-width: 0 !important;
+    overflow-x: hidden !important;
+  }
+
+  .inspector-tabs {
+    gap: 2px !important;
+  }
+
+  .inspector-tabs button {
+    min-height: 30px !important;
+    font-size: 9px !important;
+    padding-inline: 5px !important;
+  }
+
+  .timeline-resizer,
+  .timeline-region {
+    margin-left: 60px !important;
+    width: calc(100% - 60px) !important;
+  }
+
+  .timeline-toolbar {
+    min-height: 38px !important;
+    padding: 4px 8px !important;
+    gap: 6px !important;
+  }
+
+  .timeline-toolbar button {
+    min-height: 28px !important;
+    padding: 4px 8px !important;
+  }
+
+  .ruler-row {
+    height: 24px !important;
+  }
+
+  .track-row {
+    height: 44px !important;
+  }
+
+  .track-name {
+    font-size: 9px !important;
+  }
+
+  .clip {
+    top: 4px !important;
+    height: 36px !important;
+    border-radius: 5px !important;
+  }
+
+  .clip small {
+    margin-top: 4px !important;
+  }
+
+  .clip-wave {
+    inset: 15px 0 0 !important;
+    height: 18px !important;
+  }
+
+  .timeline-footer {
+    min-height: 18px !important;
+    padding-block: 1px !important;
+    font-size: 8px !important;
+  }
+}
+
+@media (min-width: 851px) and (max-height: 680px) {
+  .app-shell {
+    grid-template-rows: 52px minmax(0, 1fr) 5px min(var(--timeline-height), 154px) !important;
+  }
+
+  .topbar {
+    min-height: 52px !important;
+    padding-block: 5px !important;
+  }
+
+  .workspace-tools {
+    top: 52px !important;
+  }
+
+  .workspace {
+    grid-template-columns: 204px 4px minmax(0, 1fr) 244px !important;
+  }
+
+  .inspector {
+    width: 244px !important;
+  }
+
+  .preview-wrap {
+    grid-template-rows: 25px minmax(0, 1fr) 42px !important;
+    padding: 3px 7px 2px !important;
+  }
+
+  .transport {
+    min-height: 39px !important;
+  }
+
+  .timeline-toolbar {
+    min-height: 34px !important;
+  }
+
+  .track-row {
+    height: 40px !important;
+  }
+
+  .clip {
+    top: 3px !important;
+    height: 34px !important;
+  }
+}
+
+@media (min-width: 1280px) and (min-height: 720px) {
+  .workspace {
+    grid-template-columns: 220px 4px minmax(0, 1fr) 266px !important;
+  }
+
+  .inspector {
+    width: 266px !important;
+  }
+
+  .app-shell {
+    grid-template-rows: 58px minmax(0, 1fr) 6px min(var(--timeline-height), 182px) !important;
+  }
+
+  .workspace-tools {
+    top: 58px !important;
+  }
+}
