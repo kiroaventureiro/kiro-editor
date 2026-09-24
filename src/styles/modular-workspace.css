@@ -134,17 +134,17 @@
   backdrop-filter: blur(3px);
 }
 html.kiro-docking-active .dock-guide { display: grid; }
-.dock-guide-left { left: 68px; top: 58px; bottom: 0; width: 92px; }
-.dock-guide-right { right: 0; top: 58px; bottom: 0; width: 92px; }
-.dock-guide-top { left: 160px; right: 92px; top: 58px; height: 72px; }
-.dock-guide-bottom { left: 160px; right: 92px; bottom: 0; height: 72px; }
+.dock-guide-left { left: 68px; top: 58px; bottom: 0; width: 120px; }
+.dock-guide-right { right: 0; top: 58px; bottom: 0; width: 120px; }
+.dock-guide-top { left: 188px; right: 120px; top: 58px; height: 92px; }
+.dock-guide-bottom { left: 188px; right: 120px; bottom: 0; height: 92px; }
 html[data-kiro-dock-hint="left"] .dock-guide-left,
 html[data-kiro-dock-hint="right"] .dock-guide-right,
 html[data-kiro-dock-hint="top"] .dock-guide-top,
 html[data-kiro-dock-hint="bottom"] .dock-guide-bottom {
-  background: rgba(124,232,192,.24);
+  background: rgba(124,232,192,.28);
   border-style: solid;
-  box-shadow: inset 0 0 0 1px rgba(124,232,192,.28), 0 0 26px rgba(124,232,192,.12);
+  box-shadow: inset 0 0 0 2px rgba(124,232,192,.34), 0 0 30px rgba(124,232,192,.14);
 }
 
 @media (min-width: 851px) {
@@ -214,7 +214,7 @@ html[data-kiro-dock-hint="bottom"] .dock-guide-bottom {
     width: 100% !important;
   }
 
-  /* Floating panels: current DOM panels become movable docks without changing editor logic. */
+  /* Floating panels */
   html.kiro-float-library:not(.kiro-hide-library) .media-panel,
   html.kiro-float-inspector:not(.kiro-hide-inspector) .inspector {
     position: fixed !important;
@@ -222,6 +222,7 @@ html[data-kiro-dock-hint="bottom"] .dock-guide-bottom {
     display: block !important;
     width: 286px !important;
     height: min(72vh, 650px) !important;
+    max-width: calc(100vw - 24px) !important;
     max-height: calc(100vh - 84px) !important;
     overflow: auto !important;
     border: 1px solid #31404d !important;
@@ -229,17 +230,9 @@ html[data-kiro-dock-hint="bottom"] .dock-guide-bottom {
     box-shadow: 0 22px 70px rgba(0,0,0,.52) !important;
     backdrop-filter: blur(14px);
   }
-  html.kiro-float-library:not(.kiro-hide-library) .media-panel {
-    left: 82px;
-    top: 74px;
-  }
-  html.kiro-float-inspector:not(.kiro-hide-inspector) .inspector {
-    left: auto;
-    right: 18px;
-    top: 74px;
-  }
+  html.kiro-float-library:not(.kiro-hide-library) .media-panel { left: 82px; top: 74px; }
+  html.kiro-float-inspector:not(.kiro-hide-inspector) .inspector { left: auto; right: 18px; top: 74px; }
 
-  /* Biblioteca usa .library-heading; Propriedades usa .panel-heading. Ambos são alças de arraste. */
   html.kiro-float-library .media-panel .library-heading,
   html.kiro-float-library .media-panel .panel-heading,
   html.kiro-float-inspector .inspector .panel-heading,
@@ -271,15 +264,53 @@ html[data-kiro-dock-hint="bottom"] .dock-guide-bottom {
   .panel-is-dragging .library-heading,
   .panel-is-dragging .compact-heading { cursor: grabbing !important; }
 
-  /* Estados encaixados por borda: continuam arrastáveis para trocar de encaixe. */
-  .media-panel.panel-docked-left,
-  .inspector.panel-docked-left { border-radius: 0 11px 11px 0 !important; }
-  .media-panel.panel-docked-right,
-  .inspector.panel-docked-right { border-radius: 11px 0 0 11px !important; }
-  .media-panel.panel-docked-top,
-  .inspector.panel-docked-top { border-radius: 0 0 11px 11px !important; }
-  .media-panel.panel-docked-bottom,
-  .inspector.panel-docked-bottom { border-radius: 11px 11px 0 0 !important; }
+  /* Encaixe real: estas regras vencem o tamanho flutuante acima. */
+  html.kiro-float-library .media-panel.panel-docked-left,
+  html.kiro-float-inspector .inspector.panel-docked-left {
+    left: 68px !important;
+    right: auto !important;
+    top: 58px !important;
+    bottom: 0 !important;
+    width: clamp(260px, 24vw, 340px) !important;
+    height: auto !important;
+    max-height: none !important;
+    border-radius: 0 10px 10px 0 !important;
+  }
+  html.kiro-float-library .media-panel.panel-docked-right,
+  html.kiro-float-inspector .inspector.panel-docked-right {
+    left: auto !important;
+    right: 0 !important;
+    top: 58px !important;
+    bottom: 0 !important;
+    width: clamp(260px, 24vw, 340px) !important;
+    height: auto !important;
+    max-height: none !important;
+    border-radius: 10px 0 0 10px !important;
+  }
+  html.kiro-float-library .media-panel.panel-docked-top,
+  html.kiro-float-inspector .inspector.panel-docked-top {
+    left: 68px !important;
+    right: 0 !important;
+    top: 58px !important;
+    bottom: auto !important;
+    width: auto !important;
+    height: clamp(210px, 30vh, 300px) !important;
+    max-width: none !important;
+    max-height: none !important;
+    border-radius: 0 0 10px 10px !important;
+  }
+  html.kiro-float-library .media-panel.panel-docked-bottom,
+  html.kiro-float-inspector .inspector.panel-docked-bottom {
+    left: 68px !important;
+    right: 0 !important;
+    top: auto !important;
+    bottom: 0 !important;
+    width: auto !important;
+    height: clamp(210px, 30vh, 300px) !important;
+    max-width: none !important;
+    max-height: none !important;
+    border-radius: 10px 10px 0 0 !important;
+  }
 
   html.kiro-float-library:not(.kiro-hide-library) .library-resizer { display: none !important; }
   html.kiro-float-library:not(.kiro-hide-library):not(.kiro-float-inspector):not(.kiro-hide-inspector) .workspace {
