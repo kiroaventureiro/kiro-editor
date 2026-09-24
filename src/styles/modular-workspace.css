@@ -125,7 +125,7 @@
   display: none;
   place-items: center;
   border: 1px dashed rgba(124,232,192,.6);
-  background: rgba(74, 160, 130, .13);
+  background: rgba(74,160,130,.13);
   color: #cffff0;
   font-size: 10px;
   font-weight: 700;
@@ -136,11 +136,14 @@
 html.kiro-docking-active .dock-guide { display: grid; }
 .dock-guide-left { left: 68px; top: 58px; bottom: 0; width: 120px; }
 .dock-guide-right { right: 0; top: 58px; bottom: 0; width: 120px; }
-.dock-guide-top { left: 188px; right: 120px; top: 58px; height: 92px; }
-.dock-guide-bottom { left: 188px; right: 120px; bottom: 0; height: 92px; }
+.dock-guide-bottom {
+  left: 188px;
+  right: 120px;
+  bottom: calc(var(--timeline-height, 230px) + 8px);
+  height: 82px;
+}
 html[data-kiro-dock-hint="left"] .dock-guide-left,
 html[data-kiro-dock-hint="right"] .dock-guide-right,
-html[data-kiro-dock-hint="top"] .dock-guide-top,
 html[data-kiro-dock-hint="bottom"] .dock-guide-bottom {
   background: rgba(124,232,192,.28);
   border-style: solid;
@@ -264,7 +267,7 @@ html[data-kiro-dock-hint="bottom"] .dock-guide-bottom {
   .panel-is-dragging .library-heading,
   .panel-is-dragging .compact-heading { cursor: grabbing !important; }
 
-  /* Encaixe real: estas regras vencem o tamanho flutuante acima. */
+  /* Encaixes laterais ocupam as bordas; o encaixe superior foi removido. */
   html.kiro-float-library .media-panel.panel-docked-left,
   html.kiro-float-inspector .inspector.panel-docked-left {
     left: 68px !important;
@@ -287,29 +290,20 @@ html[data-kiro-dock-hint="bottom"] .dock-guide-bottom {
     max-height: none !important;
     border-radius: 10px 0 0 10px !important;
   }
-  html.kiro-float-library .media-panel.panel-docked-top,
-  html.kiro-float-inspector .inspector.panel-docked-top {
-    left: 68px !important;
-    right: 0 !important;
-    top: 58px !important;
-    bottom: auto !important;
-    width: auto !important;
-    height: clamp(210px, 30vh, 300px) !important;
-    max-width: none !important;
-    max-height: none !important;
-    border-radius: 0 0 10px 10px !important;
-  }
+
+  /* Base fica acima da timeline para não cobrir a edição. */
   html.kiro-float-library .media-panel.panel-docked-bottom,
   html.kiro-float-inspector .inspector.panel-docked-bottom {
-    left: 68px !important;
-    right: 0 !important;
+    left: 50% !important;
+    right: auto !important;
     top: auto !important;
-    bottom: 0 !important;
-    width: auto !important;
-    height: clamp(210px, 30vh, 300px) !important;
-    max-width: none !important;
-    max-height: none !important;
-    border-radius: 10px 10px 0 0 !important;
+    bottom: calc(var(--timeline-height, 230px) + 8px) !important;
+    transform: translateX(-50%);
+    width: min(68vw, 820px) !important;
+    height: min(28vh, 220px) !important;
+    max-width: calc(100vw - 100px) !important;
+    max-height: 220px !important;
+    border-radius: 10px !important;
   }
 
   html.kiro-float-library:not(.kiro-hide-library) .library-resizer { display: none !important; }
