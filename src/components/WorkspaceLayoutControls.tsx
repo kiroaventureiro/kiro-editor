@@ -17,7 +17,7 @@ type DockPosition = { x: number; y: number; dock?: DockZone };
 
 const STORAGE_KEY = "kiro-editor-workspace-layout-v2";
 const POSITIONS_KEY = "kiro-editor-workspace-floating-positions-v2";
-const DOCK_THRESHOLD = 96;
+const DOCK_THRESHOLD = 112;
 
 const DEFAULT_LAYOUT: LayoutState = {
   library: true,
@@ -70,37 +70,61 @@ function clearDockClasses(panel: HTMLElement) {
   );
 }
 
+function resetDockInline(panel: HTMLElement) {
+  panel.style.right = "auto";
+  panel.style.bottom = "auto";
+  panel.style.width = "286px";
+  panel.style.height = "min(72vh, 650px)";
+  panel.style.maxWidth = "calc(100vw - 24px)";
+  panel.style.maxHeight = "calc(100vh - 84px)";
+}
+
 function applyDock(panel: HTMLElement, dock: DockZone) {
   clearDockClasses(panel);
+  resetDockInline(panel);
   if (dock === "free") return;
-  panel.classList.add(`panel-docked-${dock}`);
 
-  const rail = document.documentElement.classList.contains("kiro-hide-tools") ? 8 : 76;
-  const top = 66;
-  const bottom = 12;
+  panel.classList.add(`panel-docked-${dock}`);
+  const rail = document.documentElement.classList.contains("kiro-hide-tools") ? 8 : 68;
+  const top = 58;
+  const gap = 8;
+  const usableWidth = Math.max(320, window.innerWidth - rail - gap * 2);
+  const usableHeight = Math.max(240, window.innerHeight - top - gap * 2);
 
   if (dock === "left") {
-    panel.style.left = `${rail}px`;
-    panel.style.top = `${top}px`;
+    panel.style.left = `${rail + gap}px`;
+    panel.style.top = `${top + gap}px`;
+    panel.style.width = `${Math.min(340, Math.max(260, usableWidth * 0.24))}px`;
+    panel.style.height = `${usableHeight}px`;
   }
   if (dock === "right") {
-    panel.style.left = `${Math.max(rail, window.innerWidth - panel.offsetWidth - 12)}px`;
-    panel.style.top = `${top}px`;
+    const width = Math.min(340, Math.max(260, usableWidth * 0.24));
+    panel.style.width = `${width}px`;
+    panel.style.left = `${window.innerWidth - width - gap}px`;
+    panel.style.top = `${top + gap}px`;
+    panel.style.height = `${usableHeight}px`;
   }
   if (dock === "top") {
-    panel.style.left = `${Math.max(rail, Math.round((window.innerWidth - panel.offsetWidth) / 2))}px`;
-    panel.style.top = `${top}px`;
+    const width = Math.min(760, Math.max(420, usableWidth * 0.62));
+    panel.style.width = `${width}px`;
+    panel.style.height = `${Math.min(300, Math.max(220, usableHeight * 0.38))}px`;
+    panel.style.left = `${Math.max(rail + gap, Math.round((window.innerWidth - width) / 2))}px`;
+    panel.style.top = `${top + gap}px`;
   }
   if (dock === "bottom") {
-    panel.style.left = `${Math.max(rail, Math.round((window.innerWidth - panel.offsetWidth) / 2))}px`;
-    panel.style.top = `${Math.max(top, window.innerHeight - panel.offsetHeight - bottom)}px`;
+    const width = Math.min(760, Math.max(420, usableWidth * 0.62));
+    const height = Math.min(300, Math.max(220, usableHeight * 0.38));
+    panel.style.width = `${width}px`;
+    panel.style.height = `${height}px`;
+    panel.style.left = `${Math.max(rail + gap, Math.round((window.innerWidth - width) / 2))}px`;
+    panel.style.top = `${window.innerHeight - height - gap}px`;
   }
 }
 
 function detectDock(event: PointerEvent): DockZone {
   if (event.clientX <= DOCK_THRESHOLD) return "left";
   if (event.clientX >= window.innerWidth - DOCK_THRESHOLD) return "right";
-  if (event.clientY <= 110) return "top";
+  if (event.clientY <= 120) return "top";
   if (event.clientY >= window.innerHeight - DOCK_THRESHOLD) return "bottom";
   return "free";
 }
@@ -129,12 +153,14 @@ function attachFloatingDrag(selector: string, positionKey: string) {
 
     event.preventDefault();
     clearDockClasses(panel);
+    resetDockInline(panel);
     const rect = panel.getBoundingClientRect();
     const offsetX = event.clientX - rect.left;
     const offsetY = event.clientY - rect.top;
     handle.setPointerCapture?.(event.pointerId);
     panel.classList.add("panel-is-dragging");
     document.documentElement.classList.add("kiro-docking-active");
+    let pendingDock: DockZone = "free";
 
     const move = (moveEvent: PointerEvent) => {
       const maxX = Math.max(8, window.innerWidth - panel.offsetWidth - 8);
@@ -144,11 +170,11 @@ function attachFloatingDrag(selector: string, positionKey: string) {
       panel.style.left = `${x}px`;
       panel.style.top = `${y}px`;
 
-      const dock = detectDock(moveEvent);
-      document.documentElement.dataset.kiroDockHint = dock;
+      pendingDock = detectDock(moveEvent);
+      document.documentElement.dataset.kiroDockHint = pendingDock;
     };
 
-    const stop = (upEvent: PointerEvent) => {
+    const stop = () => {
       window.removeEventListener("pointermove", move);
       window.removeEventListener("pointerup", stop);
       window.removeEventListener("pointercancel", stop);
@@ -156,15 +182,13 @@ function attachFloatingDrag(selector: string, positionKey: string) {
       document.documentElement.classList.remove("kiro-docking-active");
       delete document.documentElement.dataset.kiroDockHint;
 
-      const dock = detectDock(upEvent);
-      applyDock(panel, dock);
-
+      applyDock(panel, pendingDock);
       const next = readPositions();
       const box = panel.getBoundingClientRect();
       next[positionKey] = {
         x: Math.round(box.left),
         y: Math.round(box.top),
-        dock,
+        dock: pendingDock,
       };
       localStorage.setItem(POSITIONS_KEY, JSON.stringify(next));
     };
@@ -304,9 +328,8 @@ export default function WorkspaceLayoutControls() {
           </div>
 
           <p>
-            Painel solto: arraste pelo título. Encoste nas bordas esquerda,
-            direita, superior ou inferior para encaixar. Solte no meio para manter
-            livre. A posição fica salva neste navegador.
+            Painel solto: arraste pelo título. Quando uma guia acender, solte para
+            encaixar naquela borda. Solte no centro para continuar livre.
           </p>
         </section>
       )}
