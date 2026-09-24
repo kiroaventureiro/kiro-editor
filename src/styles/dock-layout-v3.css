@@ -1,0 +1,98 @@
+/* KIRO Editor 0.6 — docking v3
+   Docks laterais e canvas vivem em regiões separadas. Nenhum dock pode virar parte do canvas. */
+
+@media (min-width: 851px) {
+  /* Quando Biblioteca e Propriedades estão encaixadas, o workspace central vira
+     uma região simples dedicada exclusivamente ao Preview. Isso evita colunas
+     implícitas do CSS Grid antigo e elimina o efeito de canvas misturado aos painéis. */
+  html:not([data-kiro-library-dock="free"]):not([data-kiro-inspector-dock="free"]) .workspace {
+    display: block !important;
+    position: relative !important;
+    overflow: hidden !important;
+    min-width: 0 !important;
+  }
+
+  html:not([data-kiro-library-dock="free"]):not([data-kiro-inspector-dock="free"]) .workspace > .preview-wrap {
+    display: grid !important;
+    width: 100% !important;
+    height: 100% !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    margin: 0 !important;
+    position: relative !important;
+    inset: auto !important;
+    grid-column: auto !important;
+    grid-row: auto !important;
+    overflow: hidden !important;
+  }
+
+  /* Painéis dockados são sempre regiões independentes e nunca participam do fluxo
+     interno do workspace central. */
+  html:not([data-kiro-library-dock="free"]) .media-panel,
+  html:not([data-kiro-inspector-dock="free"]) .inspector {
+    position: fixed !important;
+    margin: 0 !important;
+    transform: none !important;
+    z-index: 70 !important;
+  }
+
+  /* Garante que o preview mantenha uma área limpa mesmo quando os dois docks usam
+     lados opostos ou o mesmo lado. */
+  html[data-kiro-library-dock="left"][data-kiro-inspector-dock="right"] .workspace,
+  html[data-kiro-library-dock="right"][data-kiro-inspector-dock="left"] .workspace,
+  html[data-kiro-library-dock="left"][data-kiro-inspector-dock="left"] .workspace,
+  html[data-kiro-library-dock="right"][data-kiro-inspector-dock="right"] .workspace {
+    background: #0b1015 !important;
+  }
+
+  /* Canvas: ocupa a região central disponível sem ultrapassar os docks. */
+  html:not([data-kiro-library-dock="free"]):not([data-kiro-inspector-dock="free"]) .preview-stage {
+    width: 100% !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
+    display: grid !important;
+    place-items: center !important;
+  }
+
+  html:not([data-kiro-library-dock="free"]):not([data-kiro-inspector-dock="free"]) .canvas-shell {
+    max-width: calc(100% - 20px) !important;
+    max-height: calc(100% - 12px) !important;
+    margin-inline: auto !important;
+  }
+
+  html:not([data-kiro-library-dock="free"]):not([data-kiro-inspector-dock="free"]) .canvas-shell[data-aspect="16:9"] {
+    width: min(calc(100% - 20px), 860px) !important;
+    height: auto !important;
+    aspect-ratio: 16 / 9 !important;
+  }
+
+  html:not([data-kiro-library-dock="free"]):not([data-kiro-inspector-dock="free"]) .canvas-shell[data-aspect="9:16"] {
+    height: min(calc(100% - 12px), 560px) !important;
+    width: auto !important;
+    aspect-ratio: 9 / 16 !important;
+  }
+
+  html:not([data-kiro-library-dock="free"]):not([data-kiro-inspector-dock="free"]) .transport {
+    width: 100% !important;
+    min-width: 0 !important;
+    justify-content: center !important;
+  }
+
+  /* Docks ficam visualmente colados às bordas, sem aparência de janela flutuante. */
+  .media-panel.panel-docked-left,
+  .inspector.panel-docked-left,
+  .media-panel.panel-docked-right,
+  .inspector.panel-docked-right {
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    background: #0f151c !important;
+  }
+
+  /* Oculta qualquer scrollbar horizontal criada pela antiga largura de painel. */
+  .media-panel.panel-docked-left,
+  .media-panel.panel-docked-right,
+  .inspector.panel-docked-left,
+  .inspector.panel-docked-right {
+    overflow-x: hidden !important;
+  }
+}
