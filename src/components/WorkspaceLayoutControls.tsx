@@ -1,4 +1,12 @@
-import { ArrowLeftRight, Check, LayoutDashboard, PanelLeft, PanelRight, RotateCcw, X } from "lucide-react";
+import {
+  ArrowLeftRight,
+  Check,
+  LayoutDashboard,
+  PanelLeft,
+  PanelRight,
+  RotateCcw,
+  X,
+} from "lucide-react";
 import { useEffect, useState } from "react";
 
 type LayoutState = {
@@ -12,12 +20,12 @@ type LayoutState = {
   floatingInspector: boolean;
 };
 
-type DockZone = "free" | "left" | "right" | "bottom";
+type DockZone = "free" | "left" | "right";
 type DockPosition = { x: number; y: number; dock?: DockZone | string };
 
 const STORAGE_KEY = "kiro-editor-workspace-layout-v2";
-const POSITIONS_KEY = "kiro-editor-workspace-floating-positions-v2";
-const DOCK_THRESHOLD = 112;
+const POSITIONS_KEY = "kiro-editor-workspace-floating-positions-v3";
+const DOCK_THRESHOLD = 122;
 
 const DEFAULT_LAYOUT: LayoutState = {
   library: true,
@@ -50,7 +58,13 @@ function readPositions(): Record<string, DockPosition> {
 }
 
 function normalizeDock(dock?: string): DockZone {
-  return dock === "left" || dock === "right" || dock === "bottom" ? dock : "free";
+  return dock === "left" || dock === "right" ? dock : "free";
+}
+
+function setRootDock(positionKey: string, dock: DockZone) {
+  const root = document.documentElement;
+  if (positionKey === "library") root.dataset.kiroLibraryDock = dock;
+  if (positionKey === "inspector") root.dataset.kiroInspectorDock = dock;
 }
 
 function applyLayout(layout: LayoutState) {
@@ -61,8 +75,17 @@ function applyLayout(layout: LayoutState) {
   root.classList.toggle("kiro-hide-tools", !layout.tools);
   root.classList.toggle("kiro-swap-sides", layout.swapped);
   root.classList.toggle("kiro-compact-timeline", layout.compactTimeline);
-  root.classList.toggle("kiro-float-library", layout.floatingLibrary && layout.library);
-  root.classList.toggle("kiro-float-inspector", layout.floatingInspector && layout.inspector);
+  root.classList.toggle(
+    "kiro-float-library",
+    layout.floatingLibrary && layout.library,
+  );
+  root.classList.toggle(
+    "kiro-float-inspector",
+    layout.floatingInspector && layout.inspector,
+  );
+
+  if (!layout.floatingLibrary) setRootDock("library", "free");
+  if (!layout.floatingInspector) setRootDock("inspector", "free");
 }
 
 function clearDockClasses(panel: HTMLElement) {
@@ -74,7 +97,7 @@ function clearDockClasses(panel: HTMLElement) {
   );
 }
 
-function resetDockInline(panel: HTMLElement) {
+function resetFloatingInline(panel: HTMLElement) {
   panel.style.right = "auto";
   panel.style.bottom = "auto";
   panel.style.width = "286px";
@@ -83,63 +106,34 @@ function resetDockInline(panel: HTMLElement) {
   panel.style.maxHeight = "calc(100vh - 84px)";
 }
 
-function getBottomDockTop(height: number) {
-  const timeline = document.querySelector<HTMLElement>(".timeline-region");
-  const timelineVisible = timeline && getComputedStyle(timeline).display !== "none";
-  const boundary = timelineVisible
-    ? timeline.getBoundingClientRect().top
-    : window.innerHeight;
-  return Math.max(66, boundary - height - 8);
-}
-
-function applyDock(panel: HTMLElement, dock: DockZone) {
+function applyDock(
+  panel: HTMLElement,
+  dock: DockZone,
+  positionKey: string,
+) {
   clearDockClasses(panel);
-  resetDockInline(panel);
-  if (dock === "free") return;
+  setRootDock(positionKey, dock);
+
+  if (dock === "free") {
+    resetFloatingInline(panel);
+    return;
+  }
 
   panel.classList.add(`panel-docked-${dock}`);
-  const rail = document.documentElement.classList.contains("kiro-hide-tools") ? 8 : 68;
-  const top = 58;
-  const gap = 8;
-  const usableWidth = Math.max(320, window.innerWidth - rail - gap * 2);
-  const usableHeight = Math.max(240, window.innerHeight - top - gap * 2);
-
-  if (dock === "left") {
-    panel.style.left = `${rail + gap}px`;
-    panel.style.top = `${top + gap}px`;
-    panel.style.width = `${Math.min(340, Math.max(260, usableWidth * 0.24))}px`;
-    panel.style.height = `${usableHeight}px`;
-  }
-
-  if (dock === "right") {
-    const width = Math.min(340, Math.max(260, usableWidth * 0.24));
-    panel.style.width = `${width}px`;
-    panel.style.left = `${window.innerWidth - width - gap}px`;
-    panel.style.top = `${top + gap}px`;
-    panel.style.height = `${usableHeight}px`;
-  }
-
-  if (dock === "bottom") {
-    const width = Math.min(820, Math.max(460, usableWidth * 0.68));
-    const height = Math.min(220, Math.max(170, usableHeight * 0.28));
-    panel.style.width = `${width}px`;
-    panel.style.height = `${height}px`;
-    panel.style.left = `${Math.max(rail + gap, Math.round((window.innerWidth - width) / 2))}px`;
-    panel.style.top = `${getBottomDockTop(height)}px`;
-  }
+  panel.style.removeProperty("left");
+  panel.style.removeProperty("right");
+  panel.style.removeProperty("top");
+  panel.style.removeProperty("bottom");
+  panel.style.removeProperty("width");
+  panel.style.removeProperty("height");
+  panel.style.removeProperty("max-width");
+  panel.style.removeProperty("max-height");
+  panel.style.removeProperty("transform");
 }
 
 function detectDock(event: PointerEvent): DockZone {
   if (event.clientX <= DOCK_THRESHOLD) return "left";
   if (event.clientX >= window.innerWidth - DOCK_THRESHOLD) return "right";
-
-  const timeline = document.querySelector<HTMLElement>(".timeline-region");
-  const timelineVisible = timeline && getComputedStyle(timeline).display !== "none";
-  const boundary = timelineVisible
-    ? timeline.getBoundingClientRect().top
-    : window.innerHeight;
-
-  if (event.clientY >= boundary - DOCK_THRESHOLD) return "bottom";
   return "free";
 }
 
@@ -153,21 +147,50 @@ function attachFloatingDrag(selector: string, positionKey: string) {
   const positions = readPositions();
   const saved = positions[positionKey];
   if (saved) {
-    panel.style.left = `${saved.x}px`;
-    panel.style.top = `${saved.y}px`;
-    applyDock(panel, normalizeDock(saved.dock));
+    const dock = normalizeDock(saved.dock);
+    if (dock === "free") {
+      panel.style.left = `${saved.x}px`;
+      panel.style.top = `${saved.y}px`;
+    }
+    applyDock(panel, dock, positionKey);
+  } else {
+    setRootDock(positionKey, "free");
   }
 
   const onPointerDown = (event: PointerEvent) => {
     const root = document.documentElement;
     const allowed =
-      (positionKey === "library" && root.classList.contains("kiro-float-library")) ||
-      (positionKey === "inspector" && root.classList.contains("kiro-float-inspector"));
-    if (!allowed || (event.target as HTMLElement).closest("button,input,select,textarea")) return;
+      (positionKey === "library" &&
+        root.classList.contains("kiro-float-library")) ||
+      (positionKey === "inspector" &&
+        root.classList.contains("kiro-float-inspector"));
+    if (
+      !allowed ||
+      (event.target as HTMLElement).closest("button,input,select,textarea")
+    )
+      return;
 
     event.preventDefault();
+
+    const wasDocked =
+      panel.classList.contains("panel-docked-left") ||
+      panel.classList.contains("panel-docked-right");
+    const dockRect = panel.getBoundingClientRect();
+
     clearDockClasses(panel);
-    resetDockInline(panel);
+    setRootDock(positionKey, "free");
+    resetFloatingInline(panel);
+
+    if (wasDocked) {
+      const width = panel.offsetWidth;
+      const height = panel.offsetHeight;
+      panel.style.left = `${Math.max(8, event.clientX - width / 2)}px`;
+      panel.style.top = `${Math.max(64, Math.min(event.clientY - 22, window.innerHeight - height - 8))}px`;
+    } else if (!panel.style.left || !panel.style.top) {
+      panel.style.left = `${dockRect.left}px`;
+      panel.style.top = `${dockRect.top}px`;
+    }
+
     const rect = panel.getBoundingClientRect();
     const offsetX = event.clientX - rect.left;
     const offsetY = event.clientY - rect.top;
@@ -196,7 +219,7 @@ function attachFloatingDrag(selector: string, positionKey: string) {
       document.documentElement.classList.remove("kiro-docking-active");
       delete document.documentElement.dataset.kiroDockHint;
 
-      applyDock(panel, pendingDock);
+      applyDock(panel, pendingDock, positionKey);
       const next = readPositions();
       const box = panel.getBoundingClientRect();
       next[positionKey] = {
@@ -244,11 +267,15 @@ export default function WorkspaceLayoutControls() {
     inspector?.removeAttribute("style");
     if (library) clearDockClasses(library);
     if (inspector) clearDockClasses(inspector);
+    setRootDock("library", "free");
+    setRootDock("inspector", "free");
     localStorage.removeItem(POSITIONS_KEY);
     setLayout(DEFAULT_LAYOUT);
   };
 
   const preset = (name: "edit" | "canvas" | "shorts") => {
+    setRootDock("library", "free");
+    setRootDock("inspector", "free");
     if (name === "edit") setLayout(DEFAULT_LAYOUT);
     if (name === "canvas")
       setLayout({
@@ -292,7 +319,7 @@ export default function WorkspaceLayoutControls() {
           <header>
             <div>
               <strong>Layout do estúdio</strong>
-              <small>Solte, arraste e encaixe sem cobrir o canvas.</small>
+              <small>Painel livre sobrepõe. Painel encaixado reserva espaço.</small>
             </div>
             <button aria-label="Fechar" onClick={() => setOpen(false)}>
               <X size={16} />
@@ -306,14 +333,34 @@ export default function WorkspaceLayoutControls() {
           </div>
 
           <div className="layout-panel-list">
-            <ToggleRow label="Biblioteca" checked={layout.library} onChange={(value) => patch({ library: value })} />
-            <ToggleRow label="Propriedades" checked={layout.inspector} onChange={(value) => patch({ inspector: value })} />
-            <ToggleRow label="Timeline" checked={layout.timeline} onChange={(value) => patch({ timeline: value })} />
-            <ToggleRow label="Barra de ferramentas" checked={layout.tools} onChange={(value) => patch({ tools: value })} />
-            <ToggleRow label="Timeline compacta" checked={layout.compactTimeline} onChange={(value) => patch({ compactTimeline: value })} />
+            <ToggleRow
+              label="Biblioteca"
+              checked={layout.library}
+              onChange={(value) => patch({ library: value })}
+            />
+            <ToggleRow
+              label="Propriedades"
+              checked={layout.inspector}
+              onChange={(value) => patch({ inspector: value })}
+            />
+            <ToggleRow
+              label="Timeline"
+              checked={layout.timeline}
+              onChange={(value) => patch({ timeline: value })}
+            />
+            <ToggleRow
+              label="Barra de ferramentas"
+              checked={layout.tools}
+              onChange={(value) => patch({ tools: value })}
+            />
+            <ToggleRow
+              label="Timeline compacta"
+              checked={layout.compactTimeline}
+              onChange={(value) => patch({ compactTimeline: value })}
+            />
           </div>
 
-          <div className="layout-manager-section-title">PAINÉIS FLUTUANTES</div>
+          <div className="layout-manager-section-title">PAINÉIS MÓVEIS</div>
           <div className="layout-manager-actions">
             <button
               className={layout.floatingLibrary ? "active" : ""}
@@ -321,7 +368,7 @@ export default function WorkspaceLayoutControls() {
               onClick={() => patch({ floatingLibrary: !layout.floatingLibrary })}
             >
               <PanelLeft size={15} />
-              {layout.floatingLibrary ? "Encaixar Biblioteca" : "Soltar Biblioteca"}
+              {layout.floatingLibrary ? "Fixar Biblioteca" : "Soltar Biblioteca"}
             </button>
             <button
               className={layout.floatingInspector ? "active" : ""}
@@ -329,9 +376,14 @@ export default function WorkspaceLayoutControls() {
               onClick={() => patch({ floatingInspector: !layout.floatingInspector })}
             >
               <PanelRight size={15} />
-              {layout.floatingInspector ? "Encaixar Propriedades" : "Soltar Propriedades"}
+              {layout.floatingInspector
+                ? "Fixar Propriedades"
+                : "Soltar Propriedades"}
             </button>
-            <button className={layout.swapped ? "active" : ""} onClick={() => patch({ swapped: !layout.swapped })}>
+            <button
+              className={layout.swapped ? "active" : ""}
+              onClick={() => patch({ swapped: !layout.swapped })}
+            >
               <ArrowLeftRight size={15} />
               Inverter laterais
             </button>
@@ -342,24 +394,36 @@ export default function WorkspaceLayoutControls() {
           </div>
 
           <p>
-            Arraste pelo título. Os encaixes disponíveis são esquerda, direita e
-            base. O encaixe superior foi removido para não cobrir o vídeo.
+            Biblioteca e Propriedades agora encaixam somente nas laterais. Ao
+            encaixar, deixam de ficar sobre o canvas e passam a ocupar uma coluna
+            própria do estúdio.
           </p>
         </section>
       )}
 
       <div className="dock-guides" aria-hidden="true">
-        <span className="dock-guide dock-guide-left">Esquerda</span>
-        <span className="dock-guide dock-guide-right">Direita</span>
-        <span className="dock-guide dock-guide-bottom">Base</span>
+        <span className="dock-guide dock-guide-left">Encaixar à esquerda</span>
+        <span className="dock-guide dock-guide-right">Encaixar à direita</span>
       </div>
     </>
   );
 }
 
-function ToggleRow({ label, checked, onChange }: { label: string; checked: boolean; onChange: (value: boolean) => void }) {
+function ToggleRow({
+  label,
+  checked,
+  onChange,
+}: {
+  label: string;
+  checked: boolean;
+  onChange: (value: boolean) => void;
+}) {
   return (
-    <button className={`layout-toggle-row ${checked ? "enabled" : ""}`} aria-pressed={checked} onClick={() => onChange(!checked)}>
+    <button
+      className={`layout-toggle-row ${checked ? "enabled" : ""}`}
+      aria-pressed={checked}
+      onClick={() => onChange(!checked)}
+    >
       <span>{label}</span>
       <i>{checked && <Check size={13} />}</i>
     </button>
