@@ -134,13 +134,24 @@
   backdrop-filter: blur(3px);
 }
 html.kiro-docking-active .dock-guide { display: grid; }
-.dock-guide-left { left: 68px; top: 58px; bottom: 0; width: 120px; }
-.dock-guide-right { right: 0; top: 58px; bottom: 0; width: 120px; }
-.dock-guide-bottom {
-  left: 188px;
-  right: 120px;
+.dock-guide-left {
+  left: 68px;
+  top: 58px;
   bottom: calc(var(--timeline-height, 230px) + 8px);
-  height: 82px;
+  width: 120px;
+}
+.dock-guide-right {
+  right: 0;
+  top: 58px;
+  bottom: calc(var(--timeline-height, 230px) + 8px);
+  width: 120px;
+}
+/* A base foi mantida apenas como fallback discreto; o layout prioriza laterais. */
+.dock-guide-bottom {
+  left: 28%;
+  right: 28%;
+  bottom: calc(var(--timeline-height, 230px) + 8px);
+  height: 56px;
 }
 html[data-kiro-dock-hint="left"] .dock-guide-left,
 html[data-kiro-dock-hint="right"] .dock-guide-right,
@@ -224,9 +235,9 @@ html[data-kiro-dock-hint="bottom"] .dock-guide-bottom {
     z-index: 110;
     display: block !important;
     width: 286px !important;
-    height: min(72vh, 650px) !important;
+    height: min(64vh, 560px) !important;
     max-width: calc(100vw - 24px) !important;
-    max-height: calc(100vh - 84px) !important;
+    max-height: calc(100vh - var(--timeline-height, 230px) - 76px) !important;
     overflow: auto !important;
     border: 1px solid #31404d !important;
     border-radius: 11px !important;
@@ -267,14 +278,14 @@ html[data-kiro-dock-hint="bottom"] .dock-guide-bottom {
   .panel-is-dragging .library-heading,
   .panel-is-dragging .compact-heading { cursor: grabbing !important; }
 
-  /* Encaixes laterais ocupam as bordas; o encaixe superior foi removido. */
+  /* Docks laterais ficam somente na área de trabalho, nunca sobre a timeline. */
   html.kiro-float-library .media-panel.panel-docked-left,
   html.kiro-float-inspector .inspector.panel-docked-left {
     left: 68px !important;
     right: auto !important;
     top: 58px !important;
-    bottom: 0 !important;
-    width: clamp(260px, 24vw, 340px) !important;
+    bottom: calc(var(--timeline-height, 230px) + 8px) !important;
+    width: clamp(250px, 22vw, 320px) !important;
     height: auto !important;
     max-height: none !important;
     border-radius: 0 10px 10px 0 !important;
@@ -284,14 +295,14 @@ html[data-kiro-dock-hint="bottom"] .dock-guide-bottom {
     left: auto !important;
     right: 0 !important;
     top: 58px !important;
-    bottom: 0 !important;
-    width: clamp(260px, 24vw, 340px) !important;
+    bottom: calc(var(--timeline-height, 230px) + 8px) !important;
+    width: clamp(250px, 22vw, 320px) !important;
     height: auto !important;
     max-height: none !important;
     border-radius: 10px 0 0 10px !important;
   }
 
-  /* Base fica acima da timeline para não cobrir a edição. */
+  /* Base compacta: nunca deve virar um painel gigante sobre o vídeo. */
   html.kiro-float-library .media-panel.panel-docked-bottom,
   html.kiro-float-inspector .inspector.panel-docked-bottom {
     left: 50% !important;
@@ -299,10 +310,10 @@ html[data-kiro-dock-hint="bottom"] .dock-guide-bottom {
     top: auto !important;
     bottom: calc(var(--timeline-height, 230px) + 8px) !important;
     transform: translateX(-50%);
-    width: min(68vw, 820px) !important;
-    height: min(28vh, 220px) !important;
-    max-width: calc(100vw - 100px) !important;
-    max-height: 220px !important;
+    width: min(56vw, 680px) !important;
+    height: 138px !important;
+    max-width: calc(100vw - 140px) !important;
+    max-height: 138px !important;
     border-radius: 10px !important;
   }
 
