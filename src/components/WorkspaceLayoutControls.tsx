@@ -12,8 +12,8 @@ type LayoutState = {
   floatingInspector: boolean;
 };
 
-type DockZone = "free" | "left" | "right" | "top" | "bottom";
-type DockPosition = { x: number; y: number; dock?: DockZone };
+type DockZone = "free" | "left" | "right" | "bottom";
+type DockPosition = { x: number; y: number; dock?: DockZone | string };
 
 const STORAGE_KEY = "kiro-editor-workspace-layout-v2";
 const POSITIONS_KEY = "kiro-editor-workspace-floating-positions-v2";
@@ -49,6 +49,10 @@ function readPositions(): Record<string, DockPosition> {
   }
 }
 
+function normalizeDock(dock?: string): DockZone {
+  return dock === "left" || dock === "right" || dock === "bottom" ? dock : "free";
+}
+
 function applyLayout(layout: LayoutState) {
   const root = document.documentElement;
   root.classList.toggle("kiro-hide-library", !layout.library);
@@ -79,6 +83,15 @@ function resetDockInline(panel: HTMLElement) {
   panel.style.maxHeight = "calc(100vh - 84px)";
 }
 
+function getBottomDockTop(height: number) {
+  const timeline = document.querySelector<HTMLElement>(".timeline-region");
+  const timelineVisible = timeline && getComputedStyle(timeline).display !== "none";
+  const boundary = timelineVisible
+    ? timeline.getBoundingClientRect().top
+    : window.innerHeight;
+  return Math.max(66, boundary - height - 8);
+}
+
 function applyDock(panel: HTMLElement, dock: DockZone) {
   clearDockClasses(panel);
   resetDockInline(panel);
@@ -97,6 +110,7 @@ function applyDock(panel: HTMLElement, dock: DockZone) {
     panel.style.width = `${Math.min(340, Math.max(260, usableWidth * 0.24))}px`;
     panel.style.height = `${usableHeight}px`;
   }
+
   if (dock === "right") {
     const width = Math.min(340, Math.max(260, usableWidth * 0.24));
     panel.style.width = `${width}px`;
@@ -104,28 +118,28 @@ function applyDock(panel: HTMLElement, dock: DockZone) {
     panel.style.top = `${top + gap}px`;
     panel.style.height = `${usableHeight}px`;
   }
-  if (dock === "top") {
-    const width = Math.min(760, Math.max(420, usableWidth * 0.62));
-    panel.style.width = `${width}px`;
-    panel.style.height = `${Math.min(300, Math.max(220, usableHeight * 0.38))}px`;
-    panel.style.left = `${Math.max(rail + gap, Math.round((window.innerWidth - width) / 2))}px`;
-    panel.style.top = `${top + gap}px`;
-  }
+
   if (dock === "bottom") {
-    const width = Math.min(760, Math.max(420, usableWidth * 0.62));
-    const height = Math.min(300, Math.max(220, usableHeight * 0.38));
+    const width = Math.min(820, Math.max(460, usableWidth * 0.68));
+    const height = Math.min(220, Math.max(170, usableHeight * 0.28));
     panel.style.width = `${width}px`;
     panel.style.height = `${height}px`;
     panel.style.left = `${Math.max(rail + gap, Math.round((window.innerWidth - width) / 2))}px`;
-    panel.style.top = `${window.innerHeight - height - gap}px`;
+    panel.style.top = `${getBottomDockTop(height)}px`;
   }
 }
 
 function detectDock(event: PointerEvent): DockZone {
   if (event.clientX <= DOCK_THRESHOLD) return "left";
   if (event.clientX >= window.innerWidth - DOCK_THRESHOLD) return "right";
-  if (event.clientY <= 120) return "top";
-  if (event.clientY >= window.innerHeight - DOCK_THRESHOLD) return "bottom";
+
+  const timeline = document.querySelector<HTMLElement>(".timeline-region");
+  const timelineVisible = timeline && getComputedStyle(timeline).display !== "none";
+  const boundary = timelineVisible
+    ? timeline.getBoundingClientRect().top
+    : window.innerHeight;
+
+  if (event.clientY >= boundary - DOCK_THRESHOLD) return "bottom";
   return "free";
 }
 
@@ -141,7 +155,7 @@ function attachFloatingDrag(selector: string, positionKey: string) {
   if (saved) {
     panel.style.left = `${saved.x}px`;
     panel.style.top = `${saved.y}px`;
-    applyDock(panel, saved.dock ?? "free");
+    applyDock(panel, normalizeDock(saved.dock));
   }
 
   const onPointerDown = (event: PointerEvent) => {
@@ -278,7 +292,7 @@ export default function WorkspaceLayoutControls() {
           <header>
             <div>
               <strong>Layout do estúdio</strong>
-              <small>Solte, arraste e encaixe nas bordas.</small>
+              <small>Solte, arraste e encaixe sem cobrir o canvas.</small>
             </div>
             <button aria-label="Fechar" onClick={() => setOpen(false)}>
               <X size={16} />
@@ -328,8 +342,8 @@ export default function WorkspaceLayoutControls() {
           </div>
 
           <p>
-            Painel solto: arraste pelo título. Quando uma guia acender, solte para
-            encaixar naquela borda. Solte no centro para continuar livre.
+            Arraste pelo título. Os encaixes disponíveis são esquerda, direita e
+            base. O encaixe superior foi removido para não cobrir o vídeo.
           </p>
         </section>
       )}
@@ -337,7 +351,6 @@ export default function WorkspaceLayoutControls() {
       <div className="dock-guides" aria-hidden="true">
         <span className="dock-guide dock-guide-left">Esquerda</span>
         <span className="dock-guide dock-guide-right">Direita</span>
-        <span className="dock-guide dock-guide-top">Topo</span>
         <span className="dock-guide dock-guide-bottom">Base</span>
       </div>
     </>
