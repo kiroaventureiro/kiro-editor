@@ -1,13 +1,14 @@
-export type TrackType = 'video' | 'audio' | 'text' | 'overlay';
+export type TrackType = "video" | "audio" | "text" | "overlay";
 
 export interface MediaAsset {
   id: string;
   name: string;
-  type: 'video' | 'audio' | 'image';
+  type: "video" | "audio" | "image";
   path: string;
   duration?: number;
   thumbnail?: string;
   size?: number;
+  peaks?: number[];
 }
 
 export interface Clip {
@@ -22,6 +23,19 @@ export interface Clip {
   volume?: number;
   speed?: number;
   text?: string;
+  x?: number;
+  y?: number;
+  scale?: number;
+  rotation?: number;
+  opacity?: number;
+  endScale?: number;
+  endX?: number;
+  endY?: number;
+  fadeIn?: number;
+  fadeOut?: number;
+  fontSize?: number;
+  color?: string;
+  notes?: string;
 }
 
 export interface Track {
@@ -37,7 +51,7 @@ export interface ProjectSettings {
   width: number;
   height: number;
   fps: number;
-  aspectRatio: '16:9' | '9:16' | '1:1' | '4:5';
+  aspectRatio: "16:9" | "9:16" | "1:1" | "4:5";
 }
 
 export interface KiroProject {
