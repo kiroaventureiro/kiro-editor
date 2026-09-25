@@ -154,6 +154,23 @@
   height: 20px !important;
 }
 
+.timeline-premium .timeline-context {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 48px;
+  height: 28px;
+  padding: 0 9px;
+  border: 1px solid #2c4b42;
+  border-radius: 7px;
+  background: #12231e;
+  color: #91e7c9;
+  font-size: 9px;
+  font-weight: 750;
+  letter-spacing: .03em;
+  white-space: nowrap;
+}
+
 @media (min-width: 851px) and (max-height: 680px) {
   .timeline-premium .track-row {
     height: 48px !important;
