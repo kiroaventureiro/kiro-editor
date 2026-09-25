@@ -193,44 +193,126 @@
   }
 
   .timeline-toolbar {
-    min-height: 36px !important;
-    padding: 4px 7px !important;
+    min-height: 38px !important;
+    padding: 4px 8px !important;
+    gap: 8px !important;
+    background: #111820 !important;
+    border-bottom-color: #26323c !important;
+  }
+
+  .timeline-toolbar .tool-group {
     gap: 5px !important;
   }
 
   .timeline-toolbar button {
-    min-height: 27px !important;
-    padding: 4px 7px !important;
+    min-height: 29px !important;
+    height: 29px !important;
+    padding: 4px 8px !important;
+    font-size: 9px !important;
+    border-radius: 6px !important;
+  }
+
+  .timeline-edit-tools > button[aria-label="Ferramenta de seleção"] {
+    color: #071611 !important;
+    background: #77e6c2 !important;
+    border-color: #77e6c2 !important;
+  }
+
+  .timeline-view-tools {
+    margin-left: auto !important;
+  }
+
+  .timeline-view-tools .zoom {
+    gap: 6px !important;
+    margin-inline: 1px !important;
+  }
+
+  .timeline-view-tools .zoom span {
+    color: #b8c4cc !important;
     font-size: 9px !important;
   }
 
-  .ruler-row { height: 23px !important; }
+  .timeline-view-tools .zoom input {
+    width: 86px !important;
+  }
 
-  .track-row { height: 38px !important; }
+  .timeline-toolbar .zoom-step {
+    width: 29px !important;
+    min-width: 29px !important;
+    padding: 0 !important;
+  }
+
+  .layer-picker {
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: 5px !important;
+    margin-left: 2px !important;
+    font-size: 9px !important;
+  }
+
+  .layer-picker select {
+    min-height: 28px !important;
+    height: 28px !important;
+    max-width: 118px !important;
+    padding: 3px 22px 3px 7px !important;
+    font-size: 9px !important;
+  }
+
+  .ruler-row { height: 25px !important; }
+
+  .track-row { height: 44px !important; }
 
   .track-name {
     font-size: 9px !important;
-    width: 96px !important;
-    min-width: 96px !important;
+    width: 132px !important;
+    min-width: 132px !important;
+    padding-inline: 7px !important;
+    gap: 5px !important;
+  }
+
+  .track-name strong {
+    max-width: 64px !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+  }
+
+  .track-name button {
+    min-width: 24px !important;
+    width: 24px !important;
+    height: 24px !important;
+    min-height: 24px !important;
+    padding: 0 !important;
   }
 
   .clip {
     top: 3px !important;
-    height: 32px !important;
+    height: 38px !important;
     border-radius: 5px !important;
   }
 
-  .clip small { margin-top: 3px !important; }
+  .clip strong {
+    position: relative !important;
+    z-index: 2 !important;
+    font-size: 9px !important;
+  }
+
+  .clip small { margin-top: 4px !important; }
+
+  .clip-film {
+    opacity: .84 !important;
+  }
 
   .clip-wave {
-    inset: 14px 0 0 !important;
-    height: 15px !important;
+    inset: 16px 0 0 !important;
+    height: 18px !important;
   }
 
   .timeline-footer {
-    min-height: 17px !important;
-    padding-block: 1px !important;
+    min-height: 18px !important;
+    padding: 1px 8px !important;
     font-size: 8px !important;
+    background: #0c1218 !important;
   }
 }
 
@@ -252,9 +334,9 @@
   .transport { min-height: 37px !important; }
   .transport .play { width: 37px !important; height: 37px !important; }
 
-  .timeline-toolbar { min-height: 34px !important; }
-  .track-row { height: 36px !important; }
-  .clip { top: 3px !important; height: 30px !important; }
+  .timeline-toolbar { min-height: 36px !important; }
+  .track-row { height: 40px !important; }
+  .clip { top: 3px !important; height: 34px !important; }
 }
 
 /* Em monitores largos, preserve as MESMAS proporções do mockup em vez de abrir um vazio enorme no centro. */
