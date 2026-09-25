@@ -1,8 +1,30 @@
-import type { Clip, KiroProject } from "./types";
+import type { Clip, KiroProject, Track } from "./types";
 import { activeAt, clamp, envelope, projectDuration } from "./operations";
 
 type Resource = HTMLVideoElement | HTMLAudioElement | HTMLImageElement;
-/** One composition path shared by preview and recorded output. Track order is bottom to top. */
+
+function visualPriority(track: Track) {
+  if (track.type === "text") return 30;
+  if (track.type === "overlay") return 20;
+  if (track.type === "video") return 10;
+  return 0;
+}
+
+/**
+ * Ordem visual da composição, de baixo para cima.
+ * Vídeos formam a base, overlays ficam acima dos vídeos e textos ficam sempre no topo.
+ * A ordem relativa entre trilhas do mesmo tipo continua sendo a ordem do projeto.
+ */
+export function visualTrackStack(tracks: Track[]) {
+  return tracks
+    .map((track, index) => ({ track, index }))
+    .sort(
+      (a, b) =>
+        visualPriority(a.track) - visualPriority(b.track) || a.index - b.index,
+    )
+    .map(({ track }) => track);
+}
+
 export class Composition {
   private resources = new Map<string, Resource>();
   private gains = new Map<string, GainNode>();
@@ -212,7 +234,7 @@ export class Composition {
       h = this.canvas.height;
     ctx.fillStyle = "#000";
     ctx.fillRect(0, 0, w, h);
-    for (const track of this.project.tracks) {
+    for (const track of visualTrackStack(this.project.tracks)) {
       if (track.muted && track.type === "text") continue;
       for (const c of track.clips) {
         if (!activeAt(c, time) || c.type === "audio") continue;
@@ -259,8 +281,6 @@ export class Composition {
                 ? source.videoHeight
                 : source.naturalHeight;
             if (sw && sh) {
-              // Fill the project frame by default. The user can reposition/scale
-              // the selected clip afterwards in the canvas/inspector.
               const fit = Math.max(w / sw, h / sh);
               ctx.drawImage(
                 source,
