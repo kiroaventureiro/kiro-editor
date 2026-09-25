@@ -131,8 +131,6 @@
     overflow: hidden !important;
   }
 
-  /* In the reference the 16:9 image almost fills the module horizontally.
-     Keep the outer block compact instead of stretching the entire center column. */
   .canvas-fit-view .canvas-monitor .canvas-shell[data-aspect="16:9"] {
     width: min(calc(100% - 12px), 560px) !important;
     height: auto !important;
@@ -175,6 +173,26 @@
   .canvas-monitor .preview-message {
     width: min(420px, 76%) !important;
     text-align: center !important;
+  }
+
+  .canvas-monitor-empty .canvas-shell {
+    visibility: hidden !important;
+  }
+
+  .canvas-monitor-empty .preview-message {
+    position: absolute !important;
+    inset: 0 !important;
+    width: 100% !important;
+    max-width: none !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 8px !important;
+    padding: 24px !important;
+    box-sizing: border-box !important;
+    background: transparent !important;
+    pointer-events: none !important;
   }
 
   .canvas-transport {
