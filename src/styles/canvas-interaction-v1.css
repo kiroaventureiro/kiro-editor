@@ -1,0 +1,115 @@
+/* KIRO Editor — seleção e transformação direta no canvas */
+
+.canvas-monitor .canvas-shell {
+  position: relative !important;
+  overflow: visible !important;
+}
+
+.canvas-monitor .canvas-shell canvas.canvas-selectable {
+  cursor: default;
+}
+
+.canvas-selection-box {
+  position: absolute;
+  z-index: 20;
+  min-width: 22px;
+  min-height: 22px;
+  border: 2px solid #78e8c4;
+  box-shadow:
+    0 0 0 1px rgba(5, 15, 13, 0.82),
+    0 0 14px rgba(120, 232, 196, 0.18);
+  cursor: move;
+  touch-action: none;
+  user-select: none;
+  transform-origin: center center;
+}
+
+.canvas-selection-text {
+  border-style: dashed;
+}
+
+.canvas-selection-label {
+  position: absolute;
+  left: 6px;
+  top: 6px;
+  max-width: calc(100% - 12px);
+  padding: 3px 6px;
+  border-radius: 5px;
+  background: rgba(7, 16, 20, 0.84);
+  color: #dff9ef;
+  font-size: 9px;
+  line-height: 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.canvas-resize-handle {
+  position: absolute !important;
+  z-index: 24 !important;
+  width: 12px !important;
+  min-width: 12px !important;
+  height: 12px !important;
+  min-height: 12px !important;
+  padding: 0 !important;
+  border: 2px solid #0b1714 !important;
+  border-radius: 50% !important;
+  background: #8bf2d0 !important;
+  box-shadow: 0 0 0 1px #8bf2d0 !important;
+  touch-action: none;
+}
+
+.canvas-resize-handle.nw {
+  left: 0;
+  top: 0;
+  transform: translate(-50%, -50%);
+  cursor: nwse-resize;
+}
+
+.canvas-resize-handle.ne {
+  right: 0;
+  top: 0;
+  transform: translate(50%, -50%);
+  cursor: nesw-resize;
+}
+
+.canvas-resize-handle.sw {
+  left: 0;
+  bottom: 0;
+  transform: translate(-50%, 50%);
+  cursor: nesw-resize;
+}
+
+.canvas-resize-handle.se {
+  right: 0;
+  bottom: 0;
+  transform: translate(50%, 50%);
+  cursor: nwse-resize;
+}
+
+.canvas-layer-count {
+  display: inline-flex;
+  align-items: center;
+  min-height: 20px;
+  padding: 0 7px;
+  border: 1px solid #29443b;
+  border-radius: 999px;
+  background: #10201b;
+  color: #89e9ca;
+  font-size: 8px;
+  font-weight: 650;
+}
+
+@media (max-width: 1100px) {
+  .canvas-layer-count {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .canvas-selection-box,
+  .canvas-resize-handle {
+    transition: none !important;
+  }
+}
