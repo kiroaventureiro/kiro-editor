@@ -48,6 +48,15 @@ type DragState = {
   edge?: "start" | "end";
 };
 
+type DragVisual = {
+  id: string;
+  trackId: string;
+  start: number;
+  duration: number;
+  snapped: boolean;
+  mode: "move" | "trim-start" | "trim-end";
+};
+
 const EPS = 1 / 1000;
 
 export default function Timeline(p: Props) {
@@ -55,6 +64,7 @@ export default function Timeline(p: Props) {
   const [snapping, setSnapping] = useState(true);
   const [ripple, setRipple] = useState(false);
   const [viewport, setViewport] = useState(900);
+  const [dragVisual, setDragVisual] = useState<DragVisual | null>(null);
 
   const scroll = useRef<HTMLDivElement>(null);
   const scrub = useRef<number | null>(null);
@@ -191,6 +201,17 @@ export default function Timeline(p: Props) {
       duration: c.duration,
       edge,
     };
+    const track = p.project.tracks.find((t) => t.clips.some((clip) => clip.id === c.id));
+    if (track) {
+      setDragVisual({
+        id: c.id,
+        trackId: track.id,
+        start: c.start,
+        duration: c.duration,
+        snapped: false,
+        mode: edge === "start" ? "trim-start" : edge === "end" ? "trim-end" : "move",
+      });
+    }
   };
 
   const isContiguousTrack = (track: Track) => {
@@ -213,7 +234,7 @@ export default function Timeline(p: Props) {
     duration: number,
   ) => {
     const moved = track.clips.find((c) => c.id === id);
-    if (!moved) return false;
+    if (!moved) return null;
 
     const others = track.clips
       .filter((c) => c.id !== id)
@@ -224,14 +245,17 @@ export default function Timeline(p: Props) {
 
     const ordered = [...others.slice(0, index), moved, ...others.slice(index)];
     let cursor = Math.min(...track.clips.map((c) => c.start));
+    let movedStart = moved.start;
     const clips = ordered.map((clip) => {
-      const next = { ...clip, start: cursor };
+      const start = cursor;
+      if (clip.id === id) movedStart = start;
+      const next = { ...clip, start };
       cursor += clip.duration;
       return next;
     });
 
     p.onTrack(track.id, { clips });
-    return true;
+    return movedStart;
   };
 
   // Em faixas com espaços livres, mantém a posição escolhida sempre que possível.
@@ -299,6 +323,7 @@ export default function Timeline(p: Props) {
       snapping && !e.altKey
         ? snap(target, candidates, 8 / zoom, p.project.settings.fps)
         : snap(target, [], 0, p.project.settings.fps);
+    let snapped = Math.abs(next - target) > EPS;
 
     const track = p.project.tracks.find((t) => t.clips.some((c) => c.id === d.id));
 
@@ -311,18 +336,60 @@ export default function Timeline(p: Props) {
             8 / zoom,
             p.project.settings.fps,
           ) - d.duration;
-        if (Math.abs(snappedEnd - target) < Math.abs(next - target))
+        if (Math.abs(snappedEnd - target) < Math.abs(next - target)) {
           next = Math.max(0, snappedEnd);
+          snapped = true;
+        }
       }
 
       if (track && isContiguousTrack(track)) {
-        reorderContiguousTrack(track, d.id, next, d.duration);
+        const reorderedStart = reorderContiguousTrack(track, d.id, next, d.duration);
+        if (reorderedStart !== null) {
+          setDragVisual({
+            id: d.id,
+            trackId: track.id,
+            start: reorderedStart,
+            duration: d.duration,
+            snapped: true,
+            mode: "move",
+          });
+        }
         return;
       }
 
-      if (track) next = nearestFreeStart(track, d.id, next, d.duration);
+      if (track) {
+        const freeStart = nearestFreeStart(track, d.id, next, d.duration);
+        if (Math.abs(freeStart - next) > EPS) snapped = true;
+        next = freeStart;
+        setDragVisual({
+          id: d.id,
+          trackId: track.id,
+          start: next,
+          duration: d.duration,
+          snapped,
+          mode: "move",
+        });
+      }
     } else if (track) {
-      next = constrainTrim(track, d.id, d.edge, next);
+      const constrained = constrainTrim(track, d.id, d.edge, next);
+      if (Math.abs(constrained - next) > EPS) snapped = true;
+      next = constrained;
+      const clip = track.clips.find((c) => c.id === d.id);
+      if (clip) {
+        const start = d.edge === "start" ? next : clip.start;
+        const duration =
+          d.edge === "start"
+            ? Math.max(EPS, clip.start + clip.duration - next)
+            : Math.max(EPS, next - clip.start);
+        setDragVisual({
+          id: d.id,
+          trackId: track.id,
+          start,
+          duration,
+          snapped,
+          mode: d.edge === "start" ? "trim-start" : "trim-end",
+        });
+      }
     }
 
     p.onMove(d.id, next, d.edge);
@@ -331,6 +398,7 @@ export default function Timeline(p: Props) {
   const end = () => {
     if (drag.current) {
       drag.current = null;
+      setDragVisual(null);
       p.onEnd();
     }
   };
@@ -446,7 +514,7 @@ export default function Timeline(p: Props) {
 
           {p.project.tracks.map((t, index) => (
             <div
-              className={`track-row ${t.locked ? "locked" : ""}`}
+              className={`track-row ${t.locked ? "locked" : ""} ${dragVisual?.trackId === t.id ? "drop-active" : ""}`}
               key={t.id}
               style={{ gridTemplateColumns: `${label}px ${width}px` }}
             >
@@ -472,8 +540,21 @@ export default function Timeline(p: Props) {
               </div>
 
               <div className="track-lane" {...scrubProps}>
+                {dragVisual?.trackId === t.id && dragVisual.mode === "move" && (
+                  <div
+                    className={`clip-drop-slot ${dragVisual.snapped ? "snapped" : ""}`}
+                    style={{
+                      left: dragVisual.start * zoom,
+                      width: Math.max(4, dragVisual.duration * zoom),
+                    }}
+                    aria-hidden="true"
+                  >
+                    <i />
+                  </div>
+                )}
                 {t.clips.map((c) => {
                   const asset = p.project.assets.find((a) => a.id === c.assetId);
+                  const dragging = dragVisual?.id === c.id;
                   return (
                     <div
                       role="button"
@@ -481,7 +562,7 @@ export default function Timeline(p: Props) {
                       aria-label={`Clipe ${c.name}`}
                       aria-pressed={p.selected.includes(c.id)}
                       key={c.id}
-                      className={`clip clip-${t.type} ${p.selected.includes(c.id) ? "selected" : ""}`}
+                      className={`clip clip-${t.type} ${p.selected.includes(c.id) ? "selected" : ""} ${dragging ? "dragging" : ""}`}
                       style={{ left: c.start * zoom, width: Math.max(4, c.duration * zoom) }}
                       onPointerDown={(e) => start(e, c, !!t.locked)}
                       onPointerMove={move}
@@ -535,8 +616,16 @@ export default function Timeline(p: Props) {
       </div>
 
       <div className="timeline-footer">
-        <span>{p.selected.length ? `${p.selected.length} selecionado(s)` : "Selecione um clipe"}</span>
-        <span>Arraste para reordenar cortes · sem sobreposição · Alt ignora encaixe · Espaço reproduz</span>
+        <span>
+          {dragVisual
+            ? dragVisual.snapped
+              ? "Encaixe encontrado — solte para posicionar"
+              : "Movendo clipe — solte na posição desejada"
+            : p.selected.length
+              ? `${p.selected.length} selecionado(s)`
+              : "Selecione um clipe"}
+        </span>
+        <span>Arraste para reordenar cortes · guia verde mostra o encaixe · Alt ignora encaixe · Espaço reproduz</span>
       </div>
     </section>
   );
