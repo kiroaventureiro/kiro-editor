@@ -58,6 +58,9 @@ type DragVisual = {
 };
 
 const EPS = 1 / 1000;
+const MIN_ZOOM = 0.05;
+const MAX_ZOOM = 240;
+const RULER_MIN_LABEL_GAP = 72;
 
 export default function Timeline(p: Props) {
   const [zoom, setZoom] = useState(55);
@@ -73,12 +76,14 @@ export default function Timeline(p: Props) {
   const projectId = useRef(p.project.id);
 
   const total = projectDuration(p.project);
-  const label = 150;
+  const label = 158;
   const available = Math.max(260, viewport - label - 18);
   const width = Math.max(available, Math.max(1, total) * zoom);
-  const fitZoom = Math.max(0.25, Math.min(240, available / Math.max(1, total)));
-  const tick =
-    zoom >= 100 ? 1 : zoom >= 40 ? 2 : zoom >= 15 ? 5 : zoom >= 5 ? 10 : zoom >= 2 ? 30 : 60;
+  const fitZoom = Math.max(
+    MIN_ZOOM,
+    Math.min(MAX_ZOOM, available / Math.max(1, total)),
+  );
+  const tick = chooseRulerStep(zoom);
 
   const selectedClip = p.project.tracks
     .flatMap((t) => t.clips)
@@ -107,8 +112,6 @@ export default function Timeline(p: Props) {
     }
   }, [p.project.id]);
 
-  // Enquadra automaticamente apenas na primeira vez em que o projeto ganha conteúdo.
-  // Depois disso o zoom é totalmente manual: mover/dividir clipes nunca altera o zoom.
   useEffect(() => {
     if (!total || autoFitDone.current) return;
     autoFitDone.current = true;
@@ -125,7 +128,7 @@ export default function Timeline(p: Props) {
   };
 
   const changeZoom = (delta: number) =>
-    setZoom((value) => Math.max(0.25, Math.min(240, value + delta)));
+    setZoom((value) => Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, value + delta)));
 
   const moveToLayer = (targetId: string) => {
     if (!selectedClip || !sourceTrack || targetId === sourceTrack.id) return;
@@ -201,7 +204,9 @@ export default function Timeline(p: Props) {
       duration: c.duration,
       edge,
     };
-    const track = p.project.tracks.find((t) => t.clips.some((clip) => clip.id === c.id));
+    const track = p.project.tracks.find((t) =>
+      t.clips.some((clip) => clip.id === c.id),
+    );
     if (track) {
       setDragVisual({
         id: c.id,
@@ -209,7 +214,12 @@ export default function Timeline(p: Props) {
         start: c.start,
         duration: c.duration,
         snapped: false,
-        mode: edge === "start" ? "trim-start" : edge === "end" ? "trim-end" : "move",
+        mode:
+          edge === "start"
+            ? "trim-start"
+            : edge === "end"
+              ? "trim-end"
+              : "move",
       });
     }
   };
@@ -221,12 +231,12 @@ export default function Timeline(p: Props) {
     return ordered.every((clip, index) => {
       if (!index) return true;
       const previous = ordered[index - 1];
-      return Math.abs(clip.start - (previous.start + previous.duration)) <= tolerance;
+      return (
+        Math.abs(clip.start - (previous.start + previous.duration)) <= tolerance
+      );
     });
   };
 
-  // Para blocos originados de cortes sequenciais, arrastar significa REORDENAR.
-  // O clipe pode ir antes/depois de qualquer outro, e toda a sequência permanece sem sobreposição.
   const reorderContiguousTrack = (
     track: Track,
     id: string,
@@ -258,8 +268,6 @@ export default function Timeline(p: Props) {
     return movedStart;
   };
 
-  // Em faixas com espaços livres, mantém a posição escolhida sempre que possível.
-  // Se houver colisão, escolhe o espaço válido MAIS PRÓXIMO em vez de jogar o clipe para o fim.
   const nearestFreeStart = (
     track: Track,
     id: string,
@@ -271,7 +279,9 @@ export default function Timeline(p: Props) {
       .sort((a, b) => a.start - b.start);
     const collides = (start: number) =>
       others.some(
-        (c) => start < c.start + c.duration - EPS && start + duration > c.start + EPS,
+        (c) =>
+          start < c.start + c.duration - EPS &&
+          start + duration > c.start + EPS,
       );
 
     const direct = Math.max(0, proposed);
@@ -282,7 +292,10 @@ export default function Timeline(p: Props) {
       ...others.map((c) => c.start + c.duration),
       ...others.map((c) => Math.max(0, c.start - duration)),
     ]
-      .filter((value, index, all) => all.findIndex((n) => Math.abs(n - value) < EPS) === index)
+      .filter(
+        (value, index, all) =>
+          all.findIndex((n) => Math.abs(n - value) < EPS) === index,
+      )
       .filter((value) => !collides(value));
 
     if (!options.length) return direct;
@@ -304,7 +317,10 @@ export default function Timeline(p: Props) {
       const previousEnd = others
         .filter((c) => c.start < clip.start)
         .reduce((max, c) => Math.max(max, c.start + c.duration), 0);
-      return Math.max(previousEnd, Math.min(value, clip.start + clip.duration - EPS));
+      return Math.max(
+        previousEnd,
+        Math.min(value, clip.start + clip.duration - EPS),
+      );
     }
     const nextStart = others
       .filter((c) => c.start >= clip.start + clip.duration - EPS)
@@ -325,7 +341,9 @@ export default function Timeline(p: Props) {
         : snap(target, [], 0, p.project.settings.fps);
     let snapped = Math.abs(next - target) > EPS;
 
-    const track = p.project.tracks.find((t) => t.clips.some((c) => c.id === d.id));
+    const track = p.project.tracks.find((t) =>
+      t.clips.some((c) => c.id === d.id),
+    );
 
     if (!d.edge) {
       if (snapping && !e.altKey) {
@@ -343,7 +361,12 @@ export default function Timeline(p: Props) {
       }
 
       if (track && isContiguousTrack(track)) {
-        const reorderedStart = reorderContiguousTrack(track, d.id, next, d.duration);
+        const reorderedStart = reorderContiguousTrack(
+          track,
+          d.id,
+          next,
+          d.duration,
+        );
         if (reorderedStart !== null) {
           setDragVisual({
             id: d.id,
@@ -407,24 +430,53 @@ export default function Timeline(p: Props) {
     <section className="timeline-shell timeline-premium" aria-label="Timeline">
       <div className="timeline-toolbar">
         <div className="tool-group timeline-edit-tools">
-          <button aria-label="Desfazer" title="Desfazer (Ctrl+Z)" onClick={p.onUndo} disabled={!p.canUndo}>
+          <button
+            aria-label="Desfazer"
+            title="Desfazer (Ctrl+Z)"
+            onClick={p.onUndo}
+            disabled={!p.canUndo}
+          >
             <Undo2 size={17} />
           </button>
-          <button aria-label="Refazer" title="Refazer (Ctrl+Y)" onClick={p.onRedo} disabled={!p.canRedo}>
+          <button
+            aria-label="Refazer"
+            title="Refazer (Ctrl+Y)"
+            onClick={p.onRedo}
+            disabled={!p.canRedo}
+          >
             <Redo2 size={17} />
           </button>
           <span className="separator" />
-          <button onClick={p.onSplit} disabled={!p.selected.length} title="Dividir clipe no cursor">
-            <Scissors size={16} /><span>Dividir</span>
+          <button
+            onClick={p.onSplit}
+            disabled={!p.selected.length}
+            title="Dividir clipe no cursor"
+          >
+            <Scissors size={16} />
+            <span>Dividir</span>
           </button>
-          <button onClick={p.onDuplicate} disabled={!p.selected.length} title="Duplicar seleção">
-            <Copy size={16} /><span>Duplicar</span>
+          <button
+            onClick={p.onDuplicate}
+            disabled={!p.selected.length}
+            title="Duplicar seleção"
+          >
+            <Copy size={16} />
+            <span>Duplicar</span>
           </button>
-          <button aria-label="Excluir seleção" title="Excluir seleção" onClick={() => p.onDelete(ripple)} disabled={!p.selected.length}>
+          <button
+            aria-label="Excluir seleção"
+            title="Excluir seleção"
+            onClick={() => p.onDelete(ripple)}
+            disabled={!p.selected.length}
+          >
             <Trash2 size={17} />
           </button>
           <span className="separator" />
-          <button className="active" aria-label="Ferramenta de seleção" title="Selecionar e mover clipes">
+          <button
+            className="active"
+            aria-label="Ferramenta de seleção"
+            title="Selecionar e mover clipes"
+          >
             <MousePointer2 size={16} />
           </button>
           <button
@@ -448,9 +500,15 @@ export default function Timeline(p: Props) {
           {selectedClip && sourceTrack && compatibleTracks.length > 1 && (
             <label className="layer-picker">
               Camada
-              <select aria-label="Mover para camada" value={sourceTrack.id} onChange={(e) => moveToLayer(e.target.value)}>
+              <select
+                aria-label="Mover para camada"
+                value={sourceTrack.id}
+                onChange={(e) => moveToLayer(e.target.value)}
+              >
                 {compatibleTracks.map((t) => (
-                  <option value={t.id} key={t.id}>{t.name}</option>
+                  <option value={t.id} key={t.id}>
+                    {t.name}
+                  </option>
                 ))}
               </select>
             </label>
@@ -467,151 +525,232 @@ export default function Timeline(p: Props) {
           >
             <Magnet size={17} />
           </button>
-          <button className="zoom-step" aria-label="Diminuir zoom" title="Diminuir zoom" onClick={() => changeZoom(-Math.max(1, zoom * 0.18))}>
+          <button
+            className="zoom-step"
+            aria-label="Diminuir zoom"
+            title="Diminuir zoom"
+            onClick={() => changeZoom(-Math.max(0.1, Math.max(zoom, 0.5) * 0.18))}
+          >
             <Minus size={15} />
           </button>
-          <label className="zoom" title="O zoom só muda por estes controles">
+          <label className="zoom" title="Zoom da linha do tempo">
             <span>Zoom</span>
             <input
               aria-label="Zoom da timeline"
               type="range"
-              min={0.25}
-              max={240}
-              step={0.25}
+              min={MIN_ZOOM}
+              max={MAX_ZOOM}
+              step={0.05}
               value={zoom}
               onChange={(e) => setZoom(Number(e.target.value))}
             />
           </label>
-          <button className="zoom-step" aria-label="Aumentar zoom" title="Aumentar zoom" onClick={() => changeZoom(Math.max(1, zoom * 0.18))}>
+          <button
+            className="zoom-step"
+            aria-label="Aumentar zoom"
+            title="Aumentar zoom"
+            onClick={() => changeZoom(Math.max(0.1, Math.max(zoom, 0.5) * 0.18))}
+          >
             <Plus size={15} />
           </button>
-          <button className="fit-timeline" onClick={fitAll} title="Mostrar o projeto inteiro na timeline">Ver tudo</button>
+          <button
+            className="fit-timeline"
+            onClick={fitAll}
+            title="Mostrar o projeto inteiro na timeline"
+          >
+            Ver tudo
+          </button>
           <button onClick={() => p.onAddTrack("video")} title="Nova camada de vídeo">
-            <Plus size={16} /><span>Camada</span>
+            <Plus size={16} />
+            <span>Camada</span>
           </button>
           <button onClick={() => p.onAddTrack("audio")} title="Nova camada de áudio">
-            <Plus size={16} /><span>Áudio</span>
+            <Plus size={16} />
+            <span>Áudio</span>
           </button>
         </div>
       </div>
 
       <div className="timeline-scroll" ref={scroll}>
         <div className="timeline-content" style={{ width: width + label }}>
-          <div className="ruler-row" style={{ gridTemplateColumns: `${label}px ${width}px` }}>
+          <div
+            className="ruler-row"
+            style={{ gridTemplateColumns: `${label}px ${width}px` }}
+          >
             <div className="ruler-label">{p.project.settings.fps} FPS</div>
             <div className="ruler" {...scrubProps}>
               {Array.from(
-                { length: Math.min(2000, Math.ceil(width / zoom / tick) + 1) },
-                (_, i) => (
-                  <span className="ruler-tick" key={i} style={{ left: i * tick * zoom }}>
-                    {format(i * tick)}
-                  </span>
-                ),
+                {
+                  length: Math.min(2000, Math.ceil(width / zoom / tick) + 1),
+                },
+                (_, i) => {
+                  const at = i * tick;
+                  return (
+                    <span
+                      className={`ruler-tick ${i === 0 ? "first" : ""}`}
+                      key={i}
+                      style={{ left: at * zoom }}
+                    >
+                      {formatRulerTime(at)}
+                    </span>
+                  );
+                },
               )}
-              <div className="ruler-playhead" style={{ left: p.time * zoom }}><span /></div>
+              <div className="ruler-playhead" style={{ left: p.time * zoom }}>
+                <span />
+              </div>
             </div>
           </div>
 
-          {p.project.tracks.map((t, index) => (
-            <div
-              className={`track-row ${t.locked ? "locked" : ""} ${dragVisual?.trackId === t.id ? "drop-active" : ""}`}
-              key={t.id}
-              style={{ gridTemplateColumns: `${label}px ${width}px` }}
-            >
-              <div className="track-name">
-                <small className="layer-number">{t.type === "video" ? `V${index + 1}` : t.type === "audio" ? "A" : "T"}</small>
-                <strong title={t.name}>{t.name}</strong>
-                <div>
-                  <button
-                    aria-label={`${t.type === "text" ? (t.muted ? "Mostrar" : "Ocultar") : (t.muted ? "Ativar" : "Silenciar")} ${t.name}`}
-                    onClick={() => p.onTrack(t.id, { muted: !t.muted })}
-                  >
-                    {t.type === "text"
-                      ? t.muted ? <EyeOff size={13} /> : <Eye size={13} />
-                      : t.muted ? <VolumeX size={13} /> : <Volume2 size={13} />}
-                  </button>
-                  <button
-                    aria-label={`${t.locked ? "Desbloquear" : "Bloquear"} ${t.name}`}
-                    onClick={() => p.onTrack(t.id, { locked: !t.locked })}
-                  >
-                    {t.locked ? <Lock size={13} /> : <Unlock size={13} />}
-                  </button>
+          {p.project.tracks.map((t, index) => {
+            const code = trackCode(p.project.tracks, index, t.type);
+            const kind = t.type === "video" ? "▶" : t.type === "audio" ? "♪" : "T";
+            return (
+              <div
+                className={`track-row ${t.locked ? "locked" : ""} ${dragVisual?.trackId === t.id ? "drop-active" : ""}`}
+                key={t.id}
+                style={{ gridTemplateColumns: `${label}px ${width}px` }}
+              >
+                <div className="track-name" data-track-type={t.type}>
+                  <span className="track-kind" aria-hidden="true">
+                    {kind}
+                  </span>
+                  <div className="track-title-block">
+                    <strong title={t.name}>{t.name}</strong>
+                    <small>{code}</small>
+                  </div>
+                  <div className="track-actions">
+                    <button
+                      aria-label={`${
+                        t.type === "text"
+                          ? t.muted
+                            ? "Mostrar"
+                            : "Ocultar"
+                          : t.muted
+                            ? "Ativar"
+                            : "Silenciar"
+                      } ${t.name}`}
+                      title={
+                        t.type === "text"
+                          ? t.muted
+                            ? "Mostrar trilha"
+                            : "Ocultar trilha"
+                          : t.muted
+                            ? "Ativar áudio"
+                            : "Silenciar áudio"
+                      }
+                      onClick={() => p.onTrack(t.id, { muted: !t.muted })}
+                    >
+                      {t.type === "text" ? (
+                        t.muted ? <EyeOff size={13} /> : <Eye size={13} />
+                      ) : t.muted ? (
+                        <VolumeX size={13} />
+                      ) : (
+                        <Volume2 size={13} />
+                      )}
+                    </button>
+                    <button
+                      aria-label={`${t.locked ? "Desbloquear" : "Bloquear"} ${t.name}`}
+                      title={t.locked ? "Desbloquear trilha" : "Bloquear trilha"}
+                      onClick={() => p.onTrack(t.id, { locked: !t.locked })}
+                    >
+                      {t.locked ? <Lock size={13} /> : <Unlock size={13} />}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="track-lane" {...scrubProps}>
+                  {dragVisual?.trackId === t.id && dragVisual.mode === "move" && (
+                    <div
+                      className={`clip-drop-slot ${dragVisual.snapped ? "snapped" : ""}`}
+                      style={{
+                        left: dragVisual.start * zoom,
+                        width: Math.max(4, dragVisual.duration * zoom),
+                      }}
+                      aria-hidden="true"
+                    >
+                      <i />
+                    </div>
+                  )}
+
+                  {t.clips.map((c) => {
+                    const asset = p.project.assets.find((a) => a.id === c.assetId);
+                    const dragging = dragVisual?.id === c.id;
+                    return (
+                      <div
+                        role="button"
+                        tabIndex={0}
+                        aria-label={`Clipe ${c.name}`}
+                        aria-pressed={p.selected.includes(c.id)}
+                        key={c.id}
+                        className={`clip clip-${t.type} ${p.selected.includes(c.id) ? "selected" : ""} ${dragging ? "dragging" : ""}`}
+                        style={{
+                          left: c.start * zoom,
+                          width: Math.max(4, c.duration * zoom),
+                        }}
+                        onPointerDown={(e) => start(e, c, !!t.locked)}
+                        onPointerMove={move}
+                        onPointerUp={end}
+                        onPointerCancel={end}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault();
+                            p.onSelect(c, e.shiftKey);
+                          }
+                        }}
+                      >
+                        {asset?.thumbnail && (
+                          <div
+                            className="clip-film"
+                            style={{ backgroundImage: `url(${asset.thumbnail})` }}
+                          />
+                        )}
+                        {asset?.peaks && (
+                          <svg
+                            className="clip-wave"
+                            viewBox="0 0 160 40"
+                            preserveAspectRatio="none"
+                            aria-hidden="true"
+                          >
+                            {asset.peaks.map((peak, i) => (
+                              <line
+                                key={i}
+                                x1={i}
+                                x2={i}
+                                y1={20 - peak * 20}
+                                y2={20 + peak * 20}
+                              />
+                            ))}
+                          </svg>
+                        )}
+                        <strong>{c.name}</strong>
+                        <small>{formatDuration(c.duration)}</small>
+                        <button
+                          className="trim-handle start"
+                          aria-label={`Cortar início de ${c.name}`}
+                          disabled={t.locked}
+                          onPointerDown={(e) => start(e, c, !!t.locked, "start")}
+                          onPointerMove={move}
+                          onPointerUp={end}
+                          onPointerCancel={end}
+                        />
+                        <button
+                          className="trim-handle end"
+                          aria-label={`Cortar final de ${c.name}`}
+                          disabled={t.locked}
+                          onPointerDown={(e) => start(e, c, !!t.locked, "end")}
+                          onPointerMove={move}
+                          onPointerUp={end}
+                          onPointerCancel={end}
+                        />
+                      </div>
+                    );
+                  })}
+                  <div className="playhead" style={{ left: p.time * zoom }} />
                 </div>
               </div>
-
-              <div className="track-lane" {...scrubProps}>
-                {dragVisual?.trackId === t.id && dragVisual.mode === "move" && (
-                  <div
-                    className={`clip-drop-slot ${dragVisual.snapped ? "snapped" : ""}`}
-                    style={{
-                      left: dragVisual.start * zoom,
-                      width: Math.max(4, dragVisual.duration * zoom),
-                    }}
-                    aria-hidden="true"
-                  >
-                    <i />
-                  </div>
-                )}
-                {t.clips.map((c) => {
-                  const asset = p.project.assets.find((a) => a.id === c.assetId);
-                  const dragging = dragVisual?.id === c.id;
-                  return (
-                    <div
-                      role="button"
-                      tabIndex={0}
-                      aria-label={`Clipe ${c.name}`}
-                      aria-pressed={p.selected.includes(c.id)}
-                      key={c.id}
-                      className={`clip clip-${t.type} ${p.selected.includes(c.id) ? "selected" : ""} ${dragging ? "dragging" : ""}`}
-                      style={{ left: c.start * zoom, width: Math.max(4, c.duration * zoom) }}
-                      onPointerDown={(e) => start(e, c, !!t.locked)}
-                      onPointerMove={move}
-                      onPointerUp={end}
-                      onPointerCancel={end}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter" || e.key === " ") {
-                          e.preventDefault();
-                          p.onSelect(c, e.shiftKey);
-                        }
-                      }}
-                    >
-                      {asset?.thumbnail && (
-                        <div className="clip-film" style={{ backgroundImage: `url(${asset.thumbnail})` }} />
-                      )}
-                      {asset?.peaks && (
-                        <svg className="clip-wave" viewBox="0 0 160 40" preserveAspectRatio="none" aria-hidden="true">
-                          {asset.peaks.map((peak, i) => (
-                            <line key={i} x1={i} x2={i} y1={20 - peak * 20} y2={20 + peak * 20} />
-                          ))}
-                        </svg>
-                      )}
-                      <strong>{c.name}</strong>
-                      <small>{formatDuration(c.duration)}</small>
-                      <button
-                        className="trim-handle start"
-                        aria-label={`Cortar início de ${c.name}`}
-                        disabled={t.locked}
-                        onPointerDown={(e) => start(e, c, !!t.locked, "start")}
-                        onPointerMove={move}
-                        onPointerUp={end}
-                        onPointerCancel={end}
-                      />
-                      <button
-                        className="trim-handle end"
-                        aria-label={`Cortar final de ${c.name}`}
-                        disabled={t.locked}
-                        onPointerDown={(e) => start(e, c, !!t.locked, "end")}
-                        onPointerMove={move}
-                        onPointerUp={end}
-                        onPointerCancel={end}
-                      />
-                    </div>
-                  );
-                })}
-                <div className="playhead" style={{ left: p.time * zoom }} />
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
 
@@ -625,17 +764,39 @@ export default function Timeline(p: Props) {
               ? `${p.selected.length} selecionado(s)`
               : "Selecione um clipe"}
         </span>
-        <span>Arraste para reordenar cortes · guia verde mostra o encaixe · Alt ignora encaixe · Espaço reproduz</span>
+        <span>
+          Arraste para reordenar cortes · guia verde mostra o encaixe · Alt ignora encaixe · Espaço reproduz
+        </span>
       </div>
     </section>
   );
 }
 
-function format(n: number) {
-  return `${Math.floor(n / 60)}:${String(Math.floor(n % 60)).padStart(2, "0")}`;
+function chooseRulerStep(pxPerSecond: number) {
+  const steps = [1, 2, 5, 10, 15, 30, 60, 120, 300, 600, 900, 1800, 3600, 7200];
+  return (
+    steps.find((seconds) => seconds * pxPerSecond >= RULER_MIN_LABEL_GAP) ??
+    steps[steps.length - 1]
+  );
+}
+
+function formatRulerTime(n: number) {
+  const seconds = Math.max(0, Math.round(n));
+  const h = Math.floor(seconds / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  const s = seconds % 60;
+  if (h > 0)
+    return `${h}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+  return `${m}:${String(s).padStart(2, "0")}`;
+}
+
+function trackCode(tracks: Track[], index: number, type: Track["type"]) {
+  const ordinal = tracks.slice(0, index + 1).filter((t) => t.type === type).length;
+  const prefix = type === "video" ? "V" : type === "audio" ? "A" : "T";
+  return `${prefix}${ordinal}`;
 }
 
 function formatDuration(n: number) {
   if (n < 60) return `${n.toFixed(1)} s`;
-  return format(n);
+  return formatRulerTime(n);
 }
