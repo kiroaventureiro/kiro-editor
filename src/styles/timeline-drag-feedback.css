@@ -5,7 +5,8 @@
 }
 
 .timeline-premium .track-row.drop-active .track-lane {
-  box-shadow: inset 0 0 0 1px rgba(119, 230, 194, 0.18);
+  box-shadow: inset 0 0 0 1px rgba(119, 230, 194, 0.24);
+  background-color: #0d1718;
 }
 
 .timeline-premium .clip.dragging {
@@ -27,8 +28,8 @@
 
 .timeline-premium .clip-drop-slot {
   position: absolute;
-  top: 3px;
-  height: 38px;
+  top: 4px;
+  height: 44px;
   min-width: 4px;
   pointer-events: none;
   z-index: 7;
@@ -102,7 +103,7 @@
 
 @media (min-width: 851px) and (max-height: 680px) {
   .timeline-premium .clip-drop-slot {
-    height: 34px;
+    height: 40px;
   }
 }
 
