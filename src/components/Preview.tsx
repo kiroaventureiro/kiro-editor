@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import type { Clip, KiroProject } from "../editor/types";
-import { Composition } from "../editor/engine";
+import { Composition, visualTrackStack } from "../editor/engine";
 import { activeAt, clamp, projectDuration } from "../editor/operations";
 
 interface Props {
@@ -100,7 +100,7 @@ export default function Preview({
       ]),
   );
 
-  const activeVisualClips = project.tracks.flatMap((track) =>
+  const activeVisualClips = visualTrackStack(project.tracks).flatMap((track) =>
     track.clips
       .filter(
         (clip) =>
