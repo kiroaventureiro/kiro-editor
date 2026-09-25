@@ -54,7 +54,7 @@ export default function Timeline(p: Props) {
     edge?: "start" | "end";
   } | null>(null);
   const total = projectDuration(p.project),
-    label = 132,
+    label = 150,
     available = Math.max(260, viewport - label - 18),
     width = Math.max(available, Math.max(1, total) * zoom),
     fitZoom = Math.max(0.25, Math.min(240, available / Math.max(1, total)));
