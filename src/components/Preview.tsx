@@ -248,7 +248,7 @@ export default function Preview({
         </div>
       </div>
 
-      <div className="preview-stage canvas-monitor">
+      <div className={`preview-stage canvas-monitor ${!duration ? "canvas-monitor-empty" : ""}`}>
         <div className="canvas-shell" data-aspect={project.settings.aspectRatio}>
           <canvas
             ref={canvas}
