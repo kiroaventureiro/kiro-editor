@@ -35,21 +35,21 @@
     padding: 5px 10px !important;
   }
 
-  /* A rail existe apenas onde há ferramentas. Ela termina em "Mais" e não
-     continua por trás da timeline. */
+  /* A rail visual desce até a base do workspace, mas para exatamente antes da
+     timeline. Os botões continuam concentrados no topo e a timeline fica livre. */
   .workspace-tools {
     top: var(--kiro-topbar) !important;
-    bottom: auto !important;
+    bottom: calc(min(var(--timeline-height), var(--kiro-timeline-cap)) + 6px) !important;
     width: var(--kiro-rail) !important;
     height: auto !important;
     min-height: 0 !important;
     max-height: none !important;
     padding: 7px 4px 8px !important;
     justify-content: flex-start !important;
-    align-self: flex-start !important;
+    align-self: stretch !important;
     border-bottom: 1px solid #25303a !important;
-    border-bottom-right-radius: 8px !important;
-    box-shadow: 8px 10px 22px rgba(0,0,0,.16) !important;
+    border-bottom-right-radius: 0 !important;
+    box-shadow: 8px 0 22px rgba(0,0,0,.16) !important;
   }
 
   .workspace-tools > div {
@@ -243,8 +243,8 @@
   .inspector select,
   .inspector textarea { min-height: 31px !important; }
 
-  /* A timeline atravessa toda a largura real do editor. A rail já terminou em
-     "Mais", então nada cobre o canto inferior esquerdo. */
+  /* A timeline atravessa toda a largura real do editor. A rail para exatamente
+     acima dela, então não cobre o canto inferior esquerdo. */
   .timeline-resizer,
   .timeline-region {
     margin-left: 0 !important;
