@@ -2,8 +2,11 @@ import {
   Copy,
   Eye,
   EyeOff,
+  Link2,
   Lock,
   Magnet,
+  Minus,
+  MousePointer2,
   Plus,
   Redo2,
   Scissors,
@@ -51,7 +54,7 @@ export default function Timeline(p: Props) {
     edge?: "start" | "end";
   } | null>(null);
   const total = projectDuration(p.project),
-    label = 112,
+    label = 132,
     available = Math.max(260, viewport - label - 18),
     width = Math.max(available, Math.max(1, total) * zoom),
     fitZoom = Math.max(0.25, Math.min(240, available / Math.max(1, total)));
@@ -91,6 +94,8 @@ export default function Timeline(p: Props) {
     setZoom(fitZoom);
     if (scroll.current) scroll.current.scrollLeft = 0;
   };
+  const changeZoom = (delta: number) =>
+    setZoom((value) => Math.max(0.25, Math.min(240, value + delta)));
   const moveToLayer = (targetId: string) => {
     if (!selectedClip || !sourceTrack || targetId === sourceTrack.id) return;
     const target = compatibleTracks.find((t) => t.id === targetId);
@@ -103,6 +108,10 @@ export default function Timeline(p: Props) {
       clips: [...target.clips, selectedClip].sort((a, b) => a.start - b.start),
     });
     p.onEnd();
+  };
+  const toggleSelectedTrackLock = () => {
+    if (!sourceTrack) return;
+    p.onTrack(sourceTrack.id, { locked: !sourceTrack.locked });
   };
   const candidates = [
     0,
@@ -187,52 +196,51 @@ export default function Timeline(p: Props) {
     }
   };
   return (
-    <section className="timeline-shell" aria-label="Timeline">
+    <section className="timeline-shell timeline-premium" aria-label="Timeline">
       <div className="timeline-toolbar">
-        <div className="tool-group">
-          <button
-            aria-label="Desfazer"
-            title="Desfazer (Ctrl+Z)"
-            onClick={p.onUndo}
-            disabled={!p.canUndo}
-          >
+        <div className="tool-group timeline-edit-tools">
+          <button aria-label="Desfazer" title="Desfazer (Ctrl+Z)" onClick={p.onUndo} disabled={!p.canUndo}>
             <Undo2 size={17} />
           </button>
-          <button aria-label="Refazer" onClick={p.onRedo} disabled={!p.canRedo}>
+          <button aria-label="Refazer" title="Refazer (Ctrl+Y)" onClick={p.onRedo} disabled={!p.canRedo}>
             <Redo2 size={17} />
           </button>
           <span className="separator" />
-          <button onClick={p.onSplit} disabled={!p.selected.length}>
-            <Scissors size={16} />
-            Dividir
+          <button onClick={p.onSplit} disabled={!p.selected.length} title="Dividir clipe no cursor">
+            <Scissors size={16} /><span>Dividir</span>
           </button>
-          <button onClick={p.onDuplicate} disabled={!p.selected.length}>
-            <Copy size={16} />
-            Duplicar
+          <button onClick={p.onDuplicate} disabled={!p.selected.length} title="Duplicar seleção">
+            <Copy size={16} /><span>Duplicar</span>
           </button>
-          <button
-            aria-label="Excluir seleção"
-            onClick={() => p.onDelete(ripple)}
-            disabled={!p.selected.length}
-          >
+          <button aria-label="Excluir seleção" title="Excluir seleção" onClick={() => p.onDelete(ripple)} disabled={!p.selected.length}>
             <Trash2 size={17} />
           </button>
-          <label className="check">
-            <input
-              type="checkbox"
-              checked={ripple}
-              onChange={(e) => setRipple(e.target.checked)}
-            />
-            Fechar espaço
-          </label>
+          <span className="separator" />
+          <button className="active" aria-label="Ferramenta de seleção" title="Selecionar e mover clipes">
+            <MousePointer2 size={16} />
+          </button>
+          <button
+            className={ripple ? "active" : ""}
+            aria-label="Fechar espaço ao excluir"
+            aria-pressed={ripple}
+            title={ripple ? "Fechar espaço: ligado" : "Fechar espaço: desligado"}
+            onClick={() => setRipple(!ripple)}
+          >
+            <Link2 size={16} />
+          </button>
+          <button
+            className={sourceTrack?.locked ? "active" : ""}
+            aria-label="Bloquear trilha selecionada"
+            title={sourceTrack?.locked ? "Desbloquear trilha" : "Bloquear trilha selecionada"}
+            disabled={!sourceTrack}
+            onClick={toggleSelectedTrackLock}
+          >
+            {sourceTrack?.locked ? <Lock size={16} /> : <Unlock size={16} />}
+          </button>
           {selectedClip && sourceTrack && compatibleTracks.length > 1 && (
             <label className="layer-picker">
               Camada
-              <select
-                aria-label="Mover para camada"
-                value={sourceTrack.id}
-                onChange={(e) => moveToLayer(e.target.value)}
-              >
+              <select aria-label="Mover para camada" value={sourceTrack.id} onChange={(e) => moveToLayer(e.target.value)}>
                 {compatibleTracks.map((t) => (
                   <option value={t.id} key={t.id}>{t.name}</option>
                 ))}
@@ -245,12 +253,16 @@ export default function Timeline(p: Props) {
             className={snapping ? "active" : ""}
             aria-label="Encaixe automático"
             aria-pressed={snapping}
+            title={snapping ? "Encaixe automático ligado" : "Encaixe automático desligado"}
             onClick={() => setSnapping(!snapping)}
           >
             <Magnet size={17} />
           </button>
+          <button className="zoom-step" aria-label="Diminuir zoom" title="Diminuir zoom" onClick={() => changeZoom(-Math.max(1, zoom * 0.18))}>
+            <Minus size={15} />
+          </button>
           <label className="zoom">
-            Zoom
+            <span>Zoom</span>
             <input
               aria-label="Zoom da timeline"
               type="range"
@@ -261,50 +273,36 @@ export default function Timeline(p: Props) {
               onChange={(e) => setZoom(Number(e.target.value))}
             />
           </label>
-          <button className="fit-timeline" onClick={fitAll} title="Mostrar o projeto inteiro na timeline">
-            Ver tudo
+          <button className="zoom-step" aria-label="Aumentar zoom" title="Aumentar zoom" onClick={() => changeZoom(Math.max(1, zoom * 0.18))}>
+            <Plus size={15} />
           </button>
+          <button className="fit-timeline" onClick={fitAll} title="Mostrar o projeto inteiro na timeline">Ver tudo</button>
           <button onClick={() => p.onAddTrack("video")} title="Nova camada de vídeo">
-            <Plus size={16} />
-            Camada
+            <Plus size={16} /><span>Camada</span>
           </button>
           <button onClick={() => p.onAddTrack("audio")} title="Nova camada de áudio">
-            <Plus size={16} />
-            Áudio
+            <Plus size={16} /><span>Áudio</span>
           </button>
         </div>
       </div>
       <div className="timeline-scroll" ref={scroll}>
         <div className="timeline-content" style={{ width: width + label }}>
-          <div
-            className="ruler-row"
-            style={{ gridTemplateColumns: `${label}px ${width}px` }}
-          >
+          <div className="ruler-row" style={{ gridTemplateColumns: `${label}px ${width}px` }}>
             <div className="ruler-label">{p.project.settings.fps} FPS</div>
             <div className="ruler" {...scrubProps}>
               {Array.from(
                 { length: Math.min(2000, Math.ceil(width / zoom / tick) + 1) },
                 (_, i) => (
-                  <span
-                    className="ruler-tick"
-                    key={i}
-                    style={{ left: i * tick * zoom }}
-                  >
+                  <span className="ruler-tick" key={i} style={{ left: i * tick * zoom }}>
                     {format(i * tick)}
                   </span>
                 ),
               )}
-              <div className="ruler-playhead" style={{ left: p.time * zoom }}>
-                <span />
-              </div>
+              <div className="ruler-playhead" style={{ left: p.time * zoom }}><span /></div>
             </div>
           </div>
           {p.project.tracks.map((t, index) => (
-            <div
-              className={`track-row ${t.locked ? "locked" : ""}`}
-              key={t.id}
-              style={{ gridTemplateColumns: `${label}px ${width}px` }}
-            >
+            <div className={`track-row ${t.locked ? "locked" : ""}`} key={t.id} style={{ gridTemplateColumns: `${label}px ${width}px` }}>
               <div className="track-name">
                 <small className="layer-number">{t.type === "video" ? `V${index + 1}` : t.type === "audio" ? "A" : "T"}</small>
                 <strong title={t.name}>{t.name}</strong>
@@ -334,10 +332,7 @@ export default function Timeline(p: Props) {
                       aria-pressed={p.selected.includes(c.id)}
                       key={c.id}
                       className={`clip clip-${t.type} ${p.selected.includes(c.id) ? "selected" : ""}`}
-                      style={{
-                        left: c.start * zoom,
-                        width: Math.max(4, c.duration * zoom),
-                      }}
+                      style={{ left: c.start * zoom, width: Math.max(4, c.duration * zoom) }}
                       onPointerDown={(e) => start(e, c, !!t.locked)}
                       onPointerMove={move}
                       onPointerUp={end}
@@ -349,9 +344,7 @@ export default function Timeline(p: Props) {
                         }
                       }}
                     >
-                      {asset?.thumbnail && (
-                        <div className="clip-film" style={{ backgroundImage: `url(${asset.thumbnail})` }} />
-                      )}
+                      {asset?.thumbnail && <div className="clip-film" style={{ backgroundImage: `url(${asset.thumbnail})` }} />}
                       {asset?.peaks && (
                         <svg className="clip-wave" viewBox="0 0 160 40" preserveAspectRatio="none" aria-hidden="true">
                           {asset.peaks.map((peak, i) => (
@@ -361,24 +354,8 @@ export default function Timeline(p: Props) {
                       )}
                       <strong>{c.name}</strong>
                       <small>{formatDuration(c.duration)}</small>
-                      <button
-                        className="trim-handle start"
-                        aria-label={`Cortar início de ${c.name}`}
-                        disabled={t.locked}
-                        onPointerDown={(e) => start(e, c, !!t.locked, "start")}
-                        onPointerMove={move}
-                        onPointerUp={end}
-                        onPointerCancel={end}
-                      />
-                      <button
-                        className="trim-handle end"
-                        aria-label={`Cortar final de ${c.name}`}
-                        disabled={t.locked}
-                        onPointerDown={(e) => start(e, c, !!t.locked, "end")}
-                        onPointerMove={move}
-                        onPointerUp={end}
-                        onPointerCancel={end}
-                      />
+                      <button className="trim-handle start" aria-label={`Cortar início de ${c.name}`} disabled={t.locked} onPointerDown={(e) => start(e, c, !!t.locked, "start")} onPointerMove={move} onPointerUp={end} onPointerCancel={end} />
+                      <button className="trim-handle end" aria-label={`Cortar final de ${c.name}`} disabled={t.locked} onPointerDown={(e) => start(e, c, !!t.locked, "end")} onPointerMove={move} onPointerUp={end} onPointerCancel={end} />
                     </div>
                   );
                 })}
@@ -390,7 +367,7 @@ export default function Timeline(p: Props) {
       </div>
       <div className="timeline-footer">
         <span>{p.selected.length ? `${p.selected.length} selecionado(s)` : "Selecione um clipe"}</span>
-        <span>Ver tudo enquadra o projeto inteiro · Shift: seleção múltipla · Espaço: reproduzir</span>
+        <span>Arraste para mover · bordas para aparar · Shift: múltipla · Alt: ignora encaixe · Espaço: reproduzir</span>
       </div>
     </section>
   );
