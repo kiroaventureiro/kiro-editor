@@ -9,9 +9,9 @@
     max-height: 430px !important;
     min-width: 0 !important;
     min-height: 390px !important;
-    justify-self: start !important;
+    justify-self: center !important;
     align-self: start !important;
-    margin: 8px 0 0 8px !important;
+    margin: 6px auto 0 !important;
     padding: 6px 8px 6px !important;
     grid-template-rows: 32px minmax(0, 1fr) 50px !important;
     background: #0d141b !important;
