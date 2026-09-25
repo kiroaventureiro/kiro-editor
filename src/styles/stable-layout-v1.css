@@ -39,6 +39,14 @@
     top: var(--kiro-topbar) !important;
     width: var(--kiro-rail) !important;
     padding: 7px 4px !important;
+    justify-content: flex-start !important;
+  }
+
+  .workspace-tools > div {
+    display: flex !important;
+    flex-direction: column !important;
+    width: 100% !important;
+    gap: 2px !important;
   }
 
   .workspace-tools button,
@@ -46,6 +54,45 @@
     min-height: 44px !important;
     padding: 5px 2px !important;
     font-size: 8px !important;
+  }
+
+  /* O antigo botão isolado de Propriedades vira a entrada "Mais" da rail.
+     Ele continua abrindo o Inspector, mas agora ocupa a posição correta da referência. */
+  .workspace-tools > button:last-child {
+    order: 20 !important;
+    width: 100% !important;
+    margin-top: 2px !important;
+    min-height: 44px !important;
+    font-size: 0 !important;
+    background: transparent !important;
+    border-color: transparent !important;
+  }
+
+  .workspace-tools > button:last-child svg {
+    display: none !important;
+  }
+
+  .workspace-tools > button:last-child::before {
+    content: "•••";
+    display: block;
+    font-size: 15px;
+    line-height: 12px;
+    letter-spacing: 1px;
+    color: #c8d2d9;
+  }
+
+  .workspace-tools > button:last-child::after {
+    content: "Mais";
+    display: block;
+    margin-top: 3px;
+    font-size: 8px;
+    line-height: 10px;
+    color: #c8d2d9;
+  }
+
+  .workspace-tools > button:last-child:hover::before,
+  .workspace-tools > button:last-child:hover::after {
+    color: #86e9c8;
   }
 
   .workspace {
@@ -186,10 +233,12 @@
   .inspector select,
   .inspector textarea { min-height: 31px !important; }
 
+  /* A timeline agora atravessa toda a largura do editor, inclusive sob a rail,
+     como na referência. */
   .timeline-resizer,
   .timeline-region {
-    margin-left: var(--kiro-rail) !important;
-    width: calc(100% - var(--kiro-rail)) !important;
+    margin-left: 0 !important;
+    width: 100% !important;
   }
 
   .timeline-toolbar {
@@ -262,16 +311,21 @@
 
   .track-row { height: 44px !important; }
 
+  /* Mais folga para nomes e controles de Vídeo / Áudio / Texto. */
+  .track-name,
+  .ruler-label {
+    width: 150px !important;
+    min-width: 150px !important;
+  }
+
   .track-name {
     font-size: 9px !important;
-    width: 132px !important;
-    min-width: 132px !important;
-    padding-inline: 7px !important;
-    gap: 5px !important;
+    padding-inline: 9px !important;
+    gap: 7px !important;
   }
 
   .track-name strong {
-    max-width: 64px !important;
+    max-width: 76px !important;
     overflow: hidden !important;
     text-overflow: ellipsis !important;
     white-space: nowrap !important;
