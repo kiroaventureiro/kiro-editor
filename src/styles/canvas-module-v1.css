@@ -121,7 +121,6 @@
     min-width: 0 !important;
     min-height: 0 !important;
     margin: 0 !important;
-    padding: 3px !important;
     display: grid !important;
     place-items: center !important;
     position: relative !important;
@@ -130,6 +129,15 @@
     border-radius: 7px !important;
     background: #080c10 !important;
     box-sizing: border-box !important;
+    transition: padding .18s ease !important;
+  }
+
+  .canvas-fit-view .canvas-monitor {
+    padding: 18px 24px !important;
+  }
+
+  .canvas-fill-view .canvas-monitor {
+    padding: 2px !important;
   }
 
   .canvas-monitor .canvas-shell {
@@ -144,35 +152,54 @@
     background: #000 !important;
     box-shadow: 0 7px 22px rgba(0,0,0,.32) !important;
     overflow: hidden !important;
+    transition: width .18s ease, height .18s ease, max-width .18s ease, max-height .18s ease !important;
   }
 
   .canvas-fit-view .canvas-monitor .canvas-shell[data-aspect="16:9"] {
-    width: min(calc(100% - 4px), calc((100% - 4px) * 1)) !important;
+    width: 86% !important;
+    height: auto !important;
+    max-height: 86% !important;
+    aspect-ratio: 16 / 9 !important;
+  }
+
+  .canvas-fill-view .canvas-monitor .canvas-shell[data-aspect="16:9"] {
+    width: calc(100% - 4px) !important;
     height: auto !important;
     max-height: calc(100% - 4px) !important;
     aspect-ratio: 16 / 9 !important;
   }
 
-  .canvas-fill-view .canvas-monitor .canvas-shell[data-aspect="16:9"] {
-    width: 100% !important;
-    height: auto !important;
-    max-height: 100% !important;
-    aspect-ratio: 16 / 9 !important;
+  .canvas-fit-view .canvas-monitor .canvas-shell[data-aspect="9:16"] {
+    height: 86% !important;
+    width: auto !important;
+    aspect-ratio: 9 / 16 !important;
   }
 
-  .canvas-monitor .canvas-shell[data-aspect="9:16"] {
+  .canvas-fill-view .canvas-monitor .canvas-shell[data-aspect="9:16"] {
     height: calc(100% - 4px) !important;
     width: auto !important;
     aspect-ratio: 9 / 16 !important;
   }
 
-  .canvas-monitor .canvas-shell[data-aspect="4:5"] {
+  .canvas-fit-view .canvas-monitor .canvas-shell[data-aspect="4:5"] {
+    height: 86% !important;
+    width: auto !important;
+    aspect-ratio: 4 / 5 !important;
+  }
+
+  .canvas-fill-view .canvas-monitor .canvas-shell[data-aspect="4:5"] {
     height: calc(100% - 4px) !important;
     width: auto !important;
     aspect-ratio: 4 / 5 !important;
   }
 
-  .canvas-monitor .canvas-shell[data-aspect="1:1"] {
+  .canvas-fit-view .canvas-monitor .canvas-shell[data-aspect="1:1"] {
+    height: 84% !important;
+    width: auto !important;
+    aspect-ratio: 1 / 1 !important;
+  }
+
+  .canvas-fill-view .canvas-monitor .canvas-shell[data-aspect="1:1"] {
     height: calc(100% - 4px) !important;
     width: auto !important;
     aspect-ratio: 1 / 1 !important;
@@ -373,18 +400,33 @@
     width: 100% !important;
   }
 
-  .canvas-monitor {
+  .canvas-fit-view .canvas-monitor {
+    padding: 12px 18px !important;
+  }
+
+  .canvas-fill-view .canvas-monitor {
     padding: 2px !important;
   }
 
   .canvas-fit-view .canvas-monitor .canvas-shell[data-aspect="16:9"] {
+    width: 88% !important;
+    max-height: 88% !important;
+  }
+
+  .canvas-fill-view .canvas-monitor .canvas-shell[data-aspect="16:9"] {
     width: calc(100% - 4px) !important;
     max-height: calc(100% - 4px) !important;
   }
 
-  .canvas-monitor .canvas-shell[data-aspect="9:16"],
-  .canvas-monitor .canvas-shell[data-aspect="4:5"],
-  .canvas-monitor .canvas-shell[data-aspect="1:1"] {
+  .canvas-fit-view .canvas-monitor .canvas-shell[data-aspect="9:16"],
+  .canvas-fit-view .canvas-monitor .canvas-shell[data-aspect="4:5"],
+  .canvas-fit-view .canvas-monitor .canvas-shell[data-aspect="1:1"] {
+    height: 88% !important;
+  }
+
+  .canvas-fill-view .canvas-monitor .canvas-shell[data-aspect="9:16"],
+  .canvas-fill-view .canvas-monitor .canvas-shell[data-aspect="4:5"],
+  .canvas-fill-view .canvas-monitor .canvas-shell[data-aspect="1:1"] {
     height: calc(100% - 4px) !important;
   }
 
