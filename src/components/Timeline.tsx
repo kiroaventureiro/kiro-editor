@@ -193,30 +193,78 @@ export default function Timeline(p: Props) {
     };
   };
 
-  const preventOverlap = (
+  const isContiguousTrack = (track: Track) => {
+    if (track.clips.length < 2) return false;
+    const ordered = [...track.clips].sort((a, b) => a.start - b.start);
+    const tolerance = Math.max(EPS, 1 / p.project.settings.fps + EPS);
+    return ordered.every((clip, index) => {
+      if (!index) return true;
+      const previous = ordered[index - 1];
+      return Math.abs(clip.start - (previous.start + previous.duration)) <= tolerance;
+    });
+  };
+
+  // Para blocos originados de cortes sequenciais, arrastar significa REORDENAR.
+  // O clipe pode ir antes/depois de qualquer outro, e toda a sequência permanece sem sobreposição.
+  const reorderContiguousTrack = (
+    track: Track,
+    id: string,
+    proposedStart: number,
+    duration: number,
+  ) => {
+    const moved = track.clips.find((c) => c.id === id);
+    if (!moved) return false;
+
+    const others = track.clips
+      .filter((c) => c.id !== id)
+      .sort((a, b) => a.start - b.start);
+    const center = proposedStart + duration / 2;
+    let index = others.findIndex((c) => center < c.start + c.duration / 2);
+    if (index < 0) index = others.length;
+
+    const ordered = [...others.slice(0, index), moved, ...others.slice(index)];
+    let cursor = Math.min(...track.clips.map((c) => c.start));
+    const clips = ordered.map((clip) => {
+      const next = { ...clip, start: cursor };
+      cursor += clip.duration;
+      return next;
+    });
+
+    p.onTrack(track.id, { clips });
+    return true;
+  };
+
+  // Em faixas com espaços livres, mantém a posição escolhida sempre que possível.
+  // Se houver colisão, escolhe o espaço válido MAIS PRÓXIMO em vez de jogar o clipe para o fim.
+  const nearestFreeStart = (
     track: Track,
     id: string,
     proposed: number,
     duration: number,
-    direction: number,
   ) => {
-    let next = Math.max(0, proposed);
     const others = track.clips
       .filter((c) => c.id !== id)
       .sort((a, b) => a.start - b.start);
-
-    // Resolve colisões repetidamente, inclusive quando o clipe cruza mais de um bloco.
-    for (let guard = 0; guard < others.length + 2; guard += 1) {
-      const hit = others.find(
-        (c) => next < c.start + c.duration - EPS && next + duration > c.start + EPS,
+    const collides = (start: number) =>
+      others.some(
+        (c) => start < c.start + c.duration - EPS && start + duration > c.start + EPS,
       );
-      if (!hit) break;
-      next =
-        direction >= 0
-          ? hit.start + hit.duration
-          : Math.max(0, hit.start - duration);
-    }
-    return next;
+
+    const direct = Math.max(0, proposed);
+    if (!collides(direct)) return direct;
+
+    const options = [
+      0,
+      ...others.map((c) => c.start + c.duration),
+      ...others.map((c) => Math.max(0, c.start - duration)),
+    ]
+      .filter((value, index, all) => all.findIndex((n) => Math.abs(n - value) < EPS) === index)
+      .filter((value) => !collides(value));
+
+    if (!options.length) return direct;
+    return options.reduce((best, value) =>
+      Math.abs(value - proposed) < Math.abs(best - proposed) ? value : best,
+    );
   };
 
   const constrainTrim = (
@@ -266,7 +314,13 @@ export default function Timeline(p: Props) {
         if (Math.abs(snappedEnd - target) < Math.abs(next - target))
           next = Math.max(0, snappedEnd);
       }
-      if (track) next = preventOverlap(track, d.id, next, d.duration, delta);
+
+      if (track && isContiguousTrack(track)) {
+        reorderContiguousTrack(track, d.id, next, d.duration);
+        return;
+      }
+
+      if (track) next = nearestFreeStart(track, d.id, next, d.duration);
     } else if (track) {
       next = constrainTrim(track, d.id, d.edge, next);
     }
@@ -482,7 +536,7 @@ export default function Timeline(p: Props) {
 
       <div className="timeline-footer">
         <span>{p.selected.length ? `${p.selected.length} selecionado(s)` : "Selecione um clipe"}</span>
-        <span>Arraste para mover · não sobrepõe clipes · bordas para aparar · Alt: ignora encaixe · Espaço: reproduzir</span>
+        <span>Arraste para reordenar cortes · sem sobreposição · Alt ignora encaixe · Espaço reproduz</span>
       </div>
     </section>
   );
