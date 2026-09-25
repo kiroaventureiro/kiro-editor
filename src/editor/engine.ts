@@ -54,13 +54,18 @@ export class Composition {
               };
               element.onerror = () => {
                 cleanup();
-                reject(new Error(`Não foi possível ler ${asset.name}.`));
+                reject(new Error(`Não foi possível ler ${asset.name}. Verifique o codec do arquivo.`));
               };
-              if (element.readyState >= 2) {
+              if (element.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA) {
                 cleanup();
                 resolve();
               }
             });
+            if (
+              element instanceof HTMLVideoElement &&
+              (!element.videoWidth || !element.videoHeight)
+            )
+              throw new Error(`${asset.name}: o navegador abriu o arquivo, mas não conseguiu decodificar a imagem do vídeo.`);
           }
           if (
             !this.disposed &&
@@ -158,21 +163,45 @@ export class Composition {
   async seek(time: number) {
     this.sync(time, false);
     await Promise.all(
-      [...this.resources.values()].map((resource) => {
-        if (!(resource instanceof HTMLMediaElement) || !resource.seeking)
-          return;
-        return new Promise<void>((resolve, reject) => {
-          const done = () => {
-            clearTimeout(timer);
-            resource.removeEventListener("seeked", done);
-            resolve();
-          };
-          const timer = setTimeout(() => {
-            resource.removeEventListener("seeked", done);
-            reject(new Error("A mídia não respondeu ao posicionamento."));
-          }, 5000);
-          resource.addEventListener("seeked", done, { once: true });
-        });
+      [...this.resources.values()].map(async (resource) => {
+        if (!(resource instanceof HTMLMediaElement)) return;
+        if (resource.seeking || resource.readyState < HTMLMediaElement.HAVE_CURRENT_DATA) {
+          await new Promise<void>((resolve, reject) => {
+            const done = () => {
+              cleanup();
+              resolve();
+            };
+            const failed = () => {
+              cleanup();
+              reject(new Error("A mídia não respondeu ao posicionamento."));
+            };
+            const cleanup = () => {
+              clearTimeout(timer);
+              resource.removeEventListener("seeked", done);
+              resource.removeEventListener("loadeddata", done);
+              resource.removeEventListener("error", failed);
+            };
+            const timer = setTimeout(done, 3500);
+            resource.addEventListener("seeked", done, { once: true });
+            resource.addEventListener("loadeddata", done, { once: true });
+            resource.addEventListener("error", failed, { once: true });
+          });
+        }
+        if (resource instanceof HTMLVideoElement && "requestVideoFrameCallback" in resource) {
+          await new Promise<void>((resolve) => {
+            let settled = false;
+            const finish = () => {
+              if (settled) return;
+              settled = true;
+              resolve();
+            };
+            const timer = setTimeout(finish, 180);
+            resource.requestVideoFrameCallback(() => {
+              clearTimeout(timer);
+              finish();
+            });
+          });
+        }
       }),
     );
     this.draw(time);
@@ -230,7 +259,9 @@ export class Composition {
                 ? source.videoHeight
                 : source.naturalHeight;
             if (sw && sh) {
-              const fit = Math.min(w / sw, h / sh);
+              // Fill the project frame by default. The user can reposition/scale
+              // the selected clip afterwards in the canvas/inspector.
+              const fit = Math.max(w / sw, h / sh);
               ctx.drawImage(
                 source,
                 (-sw * fit) / 2,
@@ -318,78 +349,43 @@ export async function renderVideo(
     recorder = new MediaRecorder(stream, {
       mimeType: format.mime,
       videoBitsPerSecond: resolution === 1080 ? 8_000_000 : 4_000_000,
-      audioBitsPerSecond: 192000,
     });
-    const chunks: Blob[] = [];
+    const chunks: BlobPart[] = [];
+    recorder.ondataavailable = (e) => {
+      if (e.data.size) chunks.push(e.data);
+    };
+    const stopped = new Promise<void>((resolve, reject) => {
+      recorder!.onstop = () => resolve();
+      recorder!.onerror = () => reject(new Error("Falha ao gravar a exportação."));
+    });
+    recorder.start(1000);
+    const start = performance.now();
     await new Promise<void>((resolve, reject) => {
-      const cleanup = () => {
-        cancelAnimationFrame(frame);
-        signal.removeEventListener("abort", abort);
-        document.removeEventListener("visibilitychange", visibility);
-      };
-      const fail = (error: Error) => {
-        cleanup();
-        recorder!.onstop = null;
-        if (recorder!.state !== "inactive") recorder!.stop();
-        reject(error);
-      };
-      const abort = () => fail(abortError());
-      const visibility = () => {
-        if (document.hidden)
-          fail(
-            new Error(
-              "Exportação interrompida: mantenha esta aba visível para preservar o ritmo do vídeo.",
-            ),
-          );
-      };
-      signal.addEventListener("abort", abort, { once: true });
-      document.addEventListener("visibilitychange", visibility);
-      recorder!.ondataavailable = (e) => {
-        if (e.data.size) chunks.push(e.data);
-      };
-      recorder!.onerror = () =>
-        fail(new Error("O navegador não conseguiu codificar o vídeo."));
-      recorder!.onstop = () => {
-        cleanup();
-        resolve();
-      };
-      let start = 0;
       const tick = (now: number) => {
-        if (!start) start = now;
-        const time = Math.min(duration, (now - start) / 1000);
+        if (signal.aborted) return reject(abortError());
+        const t = Math.min(duration, (now - start) / 1000);
         try {
-          engine.sync(time, true);
-          engine.draw(
-            Math.min(time, Math.max(0, duration - 1 / project.settings.fps)),
-          );
+          engine.sync(t, true);
+          engine.draw(t);
         } catch (e) {
-          fail(e instanceof Error ? e : new Error("Falha na renderização."));
+          reject(e);
           return;
         }
-        onProgress(Math.min(99, (time / duration) * 100));
-        if (time >= duration) {
-          engine.pause();
-          recorder!.stop();
-          return;
-        }
-        frame = requestAnimationFrame(tick);
+        onProgress((t / duration) * 100);
+        if (t >= duration) resolve();
+        else frame = requestAnimationFrame(tick);
       };
-      recorder!.start(250);
       frame = requestAnimationFrame(tick);
     });
-    if (signal.aborted) throw abortError();
-    let blob = new Blob(chunks, { type: format.mime });
-    if (format.extension === "webm") {
-      const { default: fixDuration } = await import("fix-webm-duration");
-      blob = await fixDuration(blob, duration * 1000, { logger: false });
-    }
-    if (signal.aborted) throw abortError();
-    onProgress(100);
-    return { blob, extension: format.extension };
+    engine.pause();
+    await new Promise((r) => setTimeout(r, 120));
+    recorder.stop();
+    await stopped;
+    return { blob: new Blob(chunks, { type: format.mime }), extension: format.extension };
   } finally {
     cancelAnimationFrame(frame);
-    if (recorder?.state === "recording") recorder.stop();
-    stream?.getTracks().forEach((t) => t.stop());
     engine.dispose();
+    stream?.getTracks().forEach((t) => t.stop());
+    if (recorder?.state === "recording") recorder.stop();
   }
 }
