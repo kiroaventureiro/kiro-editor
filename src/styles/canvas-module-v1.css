@@ -31,7 +31,6 @@
     gap: 10px !important;
     padding: 0 3px !important;
     color: #aab6c2 !important;
-    box-sizing: border-box !important;
   }
 
   .canvas-meta,
@@ -65,7 +64,7 @@
 
   .canvas-meta .canvas-hint {
     min-width: 0;
-    max-width: 140px;
+    max-width: 180px;
     overflow: hidden;
     text-overflow: ellipsis;
     color: #6f8496;
@@ -80,8 +79,8 @@
 
   .canvas-actions select,
   .canvas-actions button {
-    height: 27px !important;
-    min-height: 27px !important;
+    height: 29px !important;
+    min-height: 29px !important;
     border-radius: 6px !important;
     border: 1px solid #2a3742 !important;
     background: #101820 !important;
@@ -89,16 +88,24 @@
   }
 
   .canvas-actions select {
-    width: 112px;
+    width: 116px;
     padding: 0 7px !important;
     font-size: 9px !important;
   }
 
   .canvas-actions button {
-    width: 29px !important;
+    width: 31px !important;
     padding: 0 !important;
     display: grid !important;
     place-items: center !important;
+  }
+
+  .canvas-actions button:hover,
+  .canvas-view-controls button:hover,
+  .canvas-playback-controls > button:not(.play):hover {
+    border-color: #4f6d68 !important;
+    background: #16221f !important;
+    color: #86e9c8 !important;
   }
 
   .canvas-actions button.active {
@@ -112,7 +119,7 @@
     min-width: 0 !important;
     min-height: 0 !important;
     margin: 0 !important;
-    padding: 5px !important;
+    padding: 3px !important;
     display: grid !important;
     place-items: center !important;
     position: relative !important;
@@ -138,7 +145,7 @@
   }
 
   .canvas-fit-view .canvas-monitor .canvas-shell[data-aspect="16:9"] {
-    width: calc(100% - 4px) !important;
+    width: min(calc(100% - 4px), calc((100% - 4px) * 1)) !important;
     height: auto !important;
     max-height: calc(100% - 4px) !important;
     aspect-ratio: 16 / 9 !important;
@@ -210,12 +217,11 @@
     margin: 0 !important;
     padding: 6px 3px 0 !important;
     display: grid !important;
-    grid-template-columns: minmax(110px, 1fr) auto minmax(170px, 1fr) !important;
+    grid-template-columns: minmax(120px, 1fr) auto minmax(230px, 1fr) !important;
     align-items: center !important;
-    gap: 7px !important;
+    gap: 10px !important;
     border-top: 0 !important;
     background: transparent !important;
-    box-sizing: border-box !important;
   }
 
   .canvas-time-readout {
@@ -244,15 +250,15 @@
 
   .canvas-playback-controls {
     justify-self: center;
-    gap: 8px;
+    gap: 9px;
   }
 
   .canvas-playback-controls > button:not(.play),
   .canvas-view-controls button {
-    width: 30px !important;
-    min-width: 30px !important;
-    height: 30px !important;
-    min-height: 30px !important;
+    width: 32px !important;
+    min-width: 32px !important;
+    height: 32px !important;
+    min-height: 32px !important;
     padding: 0 !important;
     display: grid !important;
     place-items: center !important;
@@ -268,10 +274,10 @@
   }
 
   .canvas-playback-controls .play {
-    width: 42px !important;
-    height: 42px !important;
-    min-width: 42px !important;
-    min-height: 42px !important;
+    width: 44px !important;
+    height: 44px !important;
+    min-width: 44px !important;
+    min-height: 44px !important;
     border-radius: 50% !important;
     padding: 0 !important;
     display: grid !important;
@@ -284,7 +290,7 @@
 
   .canvas-view-controls {
     justify-self: end;
-    gap: 5px;
+    gap: 6px;
   }
 
   .canvas-view-controls button.is-muted {
@@ -292,15 +298,16 @@
   }
 
   .canvas-volume-slider {
-    width: 56px;
-    height: 4px;
+    width: 96px !important;
+    min-width: 96px !important;
+    height: 5px !important;
     accent-color: #77e6c2;
     cursor: pointer;
   }
 
   .canvas-aspect-chip {
-    min-width: 49px;
-    min-height: 30px;
+    min-width: 52px;
+    min-height: 32px;
     padding: 0 8px;
     display: inline-flex;
     align-items: center;
@@ -310,6 +317,39 @@
     background: #0c1319;
     color: #b9c5ce;
     font-size: 10px;
+  }
+
+  /* Focus/expand must actually enlarge the canvas instead of collapsing into
+     the old four-column workspace declared by later layout layers. */
+  .focus .workspace {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  .focus .workspace .media-panel,
+  .focus .workspace .inspector,
+  .focus .workspace .library-resizer {
+    display: none !important;
+  }
+
+  .focus .canvas-module {
+    grid-column: 1 !important;
+    width: 100% !important;
+    max-width: none !important;
+    height: 100% !important;
+    margin: 0 !important;
+    padding: 10px 16px 8px !important;
+  }
+
+  .focus .canvas-monitor {
+    width: min(100%, 1120px) !important;
+    justify-self: center !important;
+    margin: 0 auto !important;
+  }
+
+  .focus .canvas-module-heading,
+  .focus .canvas-transport {
+    width: min(100%, 1120px) !important;
+    margin-inline: auto !important;
   }
 }
 
@@ -332,27 +372,34 @@
   }
 
   .canvas-monitor {
-    padding: 4px !important;
+    padding: 2px !important;
   }
 
   .canvas-fit-view .canvas-monitor .canvas-shell[data-aspect="16:9"] {
-    width: calc(100% - 2px) !important;
-    max-height: calc(100% - 2px) !important;
+    width: calc(100% - 4px) !important;
+    max-height: calc(100% - 4px) !important;
   }
 
   .canvas-monitor .canvas-shell[data-aspect="9:16"],
   .canvas-monitor .canvas-shell[data-aspect="4:5"],
   .canvas-monitor .canvas-shell[data-aspect="1:1"] {
-    height: calc(100% - 2px) !important;
+    height: calc(100% - 4px) !important;
   }
 
   .canvas-transport {
     min-height: 46px !important;
     padding-top: 4px !important;
-    grid-template-columns: 106px auto minmax(160px, 1fr) !important;
+    grid-template-columns: minmax(100px, 1fr) auto minmax(220px, 1fr) !important;
   }
 
   .canvas-volume-slider {
-    width: 50px;
+    width: 88px !important;
+    min-width: 88px !important;
+  }
+
+  .focus .canvas-monitor,
+  .focus .canvas-module-heading,
+  .focus .canvas-transport {
+    width: min(100%, 980px) !important;
   }
 }
