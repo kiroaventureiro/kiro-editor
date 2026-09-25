@@ -22,15 +22,16 @@
   }
 
   .canvas-module-heading {
-    width: min(100%, 560px) !important;
+    width: 100% !important;
     min-width: 0 !important;
-    margin: 0 auto !important;
+    margin: 0 !important;
     display: flex !important;
     align-items: center !important;
     justify-content: space-between !important;
     gap: 10px !important;
     padding: 0 3px !important;
     color: #aab6c2 !important;
+    box-sizing: border-box !important;
   }
 
   .canvas-meta,
@@ -107,11 +108,11 @@
   }
 
   .canvas-monitor {
-    width: min(100%, 560px) !important;
+    width: 100% !important;
     min-width: 0 !important;
     min-height: 0 !important;
-    margin: 0 auto !important;
-    padding: 7px !important;
+    margin: 0 !important;
+    padding: 5px !important;
     display: grid !important;
     place-items: center !important;
     position: relative !important;
@@ -137,31 +138,33 @@
   }
 
   .canvas-fit-view .canvas-monitor .canvas-shell[data-aspect="16:9"] {
-    width: min(calc(100% - 10px), 520px) !important;
+    width: calc(100% - 4px) !important;
     height: auto !important;
+    max-height: calc(100% - 4px) !important;
     aspect-ratio: 16 / 9 !important;
   }
 
   .canvas-fill-view .canvas-monitor .canvas-shell[data-aspect="16:9"] {
     width: 100% !important;
     height: auto !important;
+    max-height: 100% !important;
     aspect-ratio: 16 / 9 !important;
   }
 
   .canvas-monitor .canvas-shell[data-aspect="9:16"] {
-    height: min(96%, 318px) !important;
+    height: calc(100% - 4px) !important;
     width: auto !important;
     aspect-ratio: 9 / 16 !important;
   }
 
   .canvas-monitor .canvas-shell[data-aspect="4:5"] {
-    height: min(96%, 314px) !important;
+    height: calc(100% - 4px) !important;
     width: auto !important;
     aspect-ratio: 4 / 5 !important;
   }
 
   .canvas-monitor .canvas-shell[data-aspect="1:1"] {
-    height: min(94%, 306px) !important;
+    height: calc(100% - 4px) !important;
     width: auto !important;
     aspect-ratio: 1 / 1 !important;
   }
@@ -201,10 +204,10 @@
   }
 
   .canvas-transport {
-    width: min(100%, 560px) !important;
+    width: 100% !important;
     min-width: 0 !important;
     min-height: 50px !important;
-    margin: 0 auto !important;
+    margin: 0 !important;
     padding: 6px 3px 0 !important;
     display: grid !important;
     grid-template-columns: minmax(110px, 1fr) auto minmax(170px, 1fr) !important;
@@ -212,6 +215,7 @@
     gap: 7px !important;
     border-top: 0 !important;
     background: transparent !important;
+    box-sizing: border-box !important;
   }
 
   .canvas-time-readout {
@@ -324,21 +328,22 @@
   .canvas-module-heading,
   .canvas-monitor,
   .canvas-transport {
-    width: min(100%, 540px) !important;
+    width: 100% !important;
   }
 
   .canvas-monitor {
-    padding: 5px !important;
+    padding: 4px !important;
   }
 
   .canvas-fit-view .canvas-monitor .canvas-shell[data-aspect="16:9"] {
-    width: min(calc(100% - 8px), 504px) !important;
+    width: calc(100% - 2px) !important;
+    max-height: calc(100% - 2px) !important;
   }
 
   .canvas-monitor .canvas-shell[data-aspect="9:16"],
   .canvas-monitor .canvas-shell[data-aspect="4:5"],
   .canvas-monitor .canvas-shell[data-aspect="1:1"] {
-    height: min(95%, 278px) !important;
+    height: calc(100% - 2px) !important;
   }
 
   .canvas-transport {
