@@ -58,7 +58,6 @@ export default function Preview({
 
   const [status, setStatus] = useState(""),
     [ready, setReady] = useState(false),
-    [quality, setQuality] = useState(540),
     [volume, setVolume] = useState(1),
     [fitView, setFitView] = useState(true);
 
@@ -67,6 +66,7 @@ export default function Preview({
   >(undefined);
 
   const duration = projectDuration(project);
+  const previewQuality = focus ? 1080 : 720;
   const resourceKey = JSON.stringify(
     project.tracks
       .flatMap((t) => t.clips)
@@ -118,7 +118,7 @@ export default function Preview({
       .catch((e: Error) => {
         if (version === seekVersion.current) setStatus(e.message);
       });
-  }, [project, time, playing, ready, quality]);
+  }, [project, time, playing, ready, previewQuality]);
 
   useEffect(() => {
     if (!ready) return;
@@ -185,7 +185,7 @@ export default function Preview({
 
   const movable = !!selectedClip && selectedClip.type !== "audio";
   const factor =
-    quality / Math.min(project.settings.width, project.settings.height);
+    previewQuality / Math.min(project.settings.width, project.settings.height);
 
   const toggleMute = () => {
     if (volume > 0) {
@@ -221,22 +221,14 @@ export default function Preview({
           )}
         </div>
         <div className="canvas-actions">
-          <select
-            aria-label="Qualidade da prévia"
-            value={quality}
-            onChange={(e) => setQuality(Number(e.target.value))}
-          >
-            <option value={360}>Prévia (leve)</option>
-            <option value={540}>Prévia (normal)</option>
-            <option value={1080}>Prévia (alta)</option>
-          </select>
           <button
-            className={fitView ? "active" : ""}
-            aria-label="Ajustar prévia à área"
-            title={fitView ? "Prévia ajustada" : "Ajustar prévia à área"}
+            className={`canvas-fit-toggle ${fitView ? "active" : ""}`}
+            aria-label={fitView ? "Modo Ajustar" : "Modo Preencher"}
+            title={fitView ? "Visualização: Ajustar" : "Visualização: Preencher"}
             onClick={() => setFitView((value) => !value)}
           >
             <Focus size={15} />
+            <span>{fitView ? "Ajustar" : "Preencher"}</span>
           </button>
           <button
             aria-label={focus ? "Sair do foco" : "Expandir canvas"}
