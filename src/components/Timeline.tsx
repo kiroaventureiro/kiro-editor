@@ -58,6 +58,8 @@ type DragVisual = {
   mode: "move" | "trim-start" | "trim-end";
 };
 
+type EditMode = "video" | "text" | "audio";
+
 const EPS = 1 / 1000;
 const MIN_ZOOM = 0.05;
 const MAX_ZOOM = 240;
@@ -70,6 +72,7 @@ export default function Timeline(p: Props) {
   const [ripple, setRipple] = useState(false);
   const [viewport, setViewport] = useState(900);
   const [dragVisual, setDragVisual] = useState<DragVisual | null>(null);
+  const [editMode, setEditMode] = useState<EditMode>("video");
 
   const scroll = useRef<HTMLDivElement>(null);
   const scrub = useRef<number | null>(null);
@@ -98,6 +101,25 @@ export default function Timeline(p: Props) {
     ? p.project.tracks.filter((t) => t.type === selectedClip.type && !t.locked)
     : [];
 
+  const orderedTracks = [...p.project.tracks].sort((a, b) => {
+    const rank = (track: Track) =>
+      track.type === "video" || track.type === "overlay"
+        ? 0
+        : track.type === "text"
+          ? 1
+          : 2;
+    const diff = rank(a) - rank(b);
+    if (diff) return diff;
+    return p.project.tracks.indexOf(a) - p.project.tracks.indexOf(b);
+  });
+  const primaryVideo = orderedTracks.find((track) => track.type === "video");
+  const visibleTracks = orderedTracks.filter((track) => {
+    if (editMode === "video")
+      return track.type === "video" || track.type === "overlay";
+    if (track.id === primaryVideo?.id) return true;
+    return track.type === editMode;
+  });
+
   const setVisual = (visual: DragVisual | null) => {
     dragVisualRef.current = visual;
     setDragVisual(visual);
@@ -117,8 +139,16 @@ export default function Timeline(p: Props) {
     if (projectId.current !== p.project.id) {
       projectId.current = p.project.id;
       autoFitDone.current = false;
+      setEditMode("video");
     }
   }, [p.project.id]);
+
+  useEffect(() => {
+    if (!selectedClip) return;
+    if (selectedClip.type === "text") setEditMode("text");
+    else if (selectedClip.type === "audio") setEditMode("audio");
+    else setEditMode("video");
+  }, [selectedClip?.id, selectedClip?.type]);
 
   useEffect(() => {
     const handleCanvasSelection = (event: Event) => {
@@ -587,6 +617,9 @@ export default function Timeline(p: Props) {
         </div>
 
         <div className="tool-group timeline-view-tools">
+          <span className="timeline-context" title="A timeline mostra apenas as trilhas úteis para a edição atual">
+            {editMode === "video" ? "Vídeo" : editMode === "text" ? "Texto" : "Áudio"}
+          </span>
           <button
             className={snapping ? "active" : ""}
             aria-label="Encaixe automático"
@@ -631,11 +664,23 @@ export default function Timeline(p: Props) {
           >
             Ver tudo
           </button>
-          <button onClick={() => p.onAddTrack("video")} title="Nova camada de vídeo">
+          <button
+            onClick={() => {
+              setEditMode("video");
+              p.onAddTrack("video");
+            }}
+            title="Nova camada de vídeo"
+          >
             <Plus size={16} />
             <span>Camada</span>
           </button>
-          <button onClick={() => p.onAddTrack("audio")} title="Nova camada de áudio">
+          <button
+            onClick={() => {
+              setEditMode("audio");
+              p.onAddTrack("audio");
+            }}
+            title="Nova camada de áudio"
+          >
             <Plus size={16} />
             <span>Áudio</span>
           </button>
@@ -673,8 +718,9 @@ export default function Timeline(p: Props) {
             </div>
           </div>
 
-          {p.project.tracks.map((t, index) => {
-            const code = trackCode(p.project.tracks, index, t.type);
+          {visibleTracks.map((t) => {
+            const index = orderedTracks.findIndex((track) => track.id === t.id);
+            const code = trackCode(orderedTracks, index, t.type);
             const kind = t.type === "video" ? "▶" : t.type === "audio" ? "♪" : "T";
             return (
               <div
@@ -838,10 +884,15 @@ export default function Timeline(p: Props) {
                 : "Movendo clipe — solte na posição desejada"
             : p.selected.length
               ? `${p.selected.length} selecionado(s)`
-              : "Selecione um clipe"}
+              : `Editando ${editMode === "video" ? "vídeo" : editMode === "text" ? "texto" : "áudio"}`}
         </span>
         <span>
-          Arraste horizontalmente para ordenar · arraste verticalmente para trocar de camada · Alt ignora encaixe
+          {editMode === "video"
+            ? "Vídeo principal + camadas de vídeo"
+            : editMode === "text"
+              ? "Vídeo principal + textos"
+              : "Vídeo principal + áudios"}
+          {" · "}Alt ignora encaixe
         </span>
       </div>
     </section>
