@@ -42,6 +42,7 @@ interface Props {
 
 type DragState = {
   id: string;
+  sourceTrackId: string;
   x: number;
   start: number;
   duration: number;
@@ -61,6 +62,7 @@ const EPS = 1 / 1000;
 const MIN_ZOOM = 0.05;
 const MAX_ZOOM = 240;
 const RULER_MIN_LABEL_GAP = 72;
+const CANVAS_SELECT_EVENT = "kiro-select-clip";
 
 export default function Timeline(p: Props) {
   const [zoom, setZoom] = useState(55);
@@ -72,11 +74,12 @@ export default function Timeline(p: Props) {
   const scroll = useRef<HTMLDivElement>(null);
   const scrub = useRef<number | null>(null);
   const drag = useRef<DragState | null>(null);
+  const dragVisualRef = useRef<DragVisual | null>(null);
   const autoFitDone = useRef(false);
   const projectId = useRef(p.project.id);
 
   const total = projectDuration(p.project);
-  const label = 158;
+  const label = 172;
   const available = Math.max(260, viewport - label - 18);
   const width = Math.max(available, Math.max(1, total) * zoom);
   const fitZoom = Math.max(
@@ -95,6 +98,11 @@ export default function Timeline(p: Props) {
     ? p.project.tracks.filter((t) => t.type === selectedClip.type && !t.locked)
     : [];
 
+  const setVisual = (visual: DragVisual | null) => {
+    dragVisualRef.current = visual;
+    setDragVisual(visual);
+  };
+
   useEffect(() => {
     const element = scroll.current;
     if (!element) return;
@@ -111,6 +119,25 @@ export default function Timeline(p: Props) {
       autoFitDone.current = false;
     }
   }, [p.project.id]);
+
+  useEffect(() => {
+    const handleCanvasSelection = (event: Event) => {
+      const clipId = (event as CustomEvent<string>).detail;
+      const clip = p.project.tracks
+        .flatMap((track) => track.clips)
+        .find((candidate) => candidate.id === clipId);
+      if (!clip) return;
+      const keepTime = p.time;
+      p.onSelect(clip, false);
+      p.onSeek(keepTime);
+    };
+    window.addEventListener(CANVAS_SELECT_EVENT, handleCanvasSelection as EventListener);
+    return () =>
+      window.removeEventListener(
+        CANVAS_SELECT_EVENT,
+        handleCanvasSelection as EventListener,
+      );
+  }, [p.project, p.time, p.onSelect, p.onSeek]);
 
   useEffect(() => {
     if (!total || autoFitDone.current) return;
@@ -194,34 +221,35 @@ export default function Timeline(p: Props) {
     e.stopPropagation();
     if (locked) return;
     e.preventDefault();
+    const track = p.project.tracks.find((t) =>
+      t.clips.some((clip) => clip.id === c.id),
+    );
+    if (!track) return;
+
     p.onSelect(c, e.shiftKey || e.metaKey || e.ctrlKey);
     p.onBegin();
     e.currentTarget.setPointerCapture(e.pointerId);
     drag.current = {
       id: c.id,
+      sourceTrackId: track.id,
       x: e.clientX,
       start: c.start,
       duration: c.duration,
       edge,
     };
-    const track = p.project.tracks.find((t) =>
-      t.clips.some((clip) => clip.id === c.id),
-    );
-    if (track) {
-      setDragVisual({
-        id: c.id,
-        trackId: track.id,
-        start: c.start,
-        duration: c.duration,
-        snapped: false,
-        mode:
-          edge === "start"
-            ? "trim-start"
-            : edge === "end"
-              ? "trim-end"
-              : "move",
-      });
-    }
+    setVisual({
+      id: c.id,
+      trackId: track.id,
+      start: c.start,
+      duration: c.duration,
+      snapped: false,
+      mode:
+        edge === "start"
+          ? "trim-start"
+          : edge === "end"
+            ? "trim-end"
+            : "move",
+    });
   };
 
   const isContiguousTrack = (track: Track) => {
@@ -328,10 +356,25 @@ export default function Timeline(p: Props) {
     return Math.min(value, nextStart);
   };
 
+  const trackUnderPointer = (x: number, y: number, clipType: Clip["type"]) => {
+    const element = document
+      .elementsFromPoint(x, y)
+      .find((node) => node instanceof HTMLElement && node.matches(".track-row[data-track-id]"));
+    if (!(element instanceof HTMLElement)) return undefined;
+    const id = element.dataset.trackId;
+    const track = p.project.tracks.find((candidate) => candidate.id === id);
+    if (!track || track.locked || track.type !== clipType) return undefined;
+    return track;
+  };
+
   const move = (e: React.PointerEvent<HTMLElement>) => {
     const d = drag.current;
     if (!d) return;
     e.stopPropagation();
+
+    const source = p.project.tracks.find((track) => track.id === d.sourceTrackId);
+    const clip = source?.clips.find((candidate) => candidate.id === d.id);
+    if (!source || !clip) return;
 
     const delta = (e.clientX - d.x) / zoom;
     const target = d.start + (d.edge === "end" ? d.duration : 0) + delta;
@@ -340,10 +383,6 @@ export default function Timeline(p: Props) {
         ? snap(target, candidates, 8 / zoom, p.project.settings.fps)
         : snap(target, [], 0, p.project.settings.fps);
     let snapped = Math.abs(next - target) > EPS;
-
-    const track = p.project.tracks.find((t) =>
-      t.clips.some((c) => c.id === d.id),
-    );
 
     if (!d.edge) {
       if (snapping && !e.altKey) {
@@ -360,17 +399,36 @@ export default function Timeline(p: Props) {
         }
       }
 
-      if (track && isContiguousTrack(track)) {
+      const hoveredTrack = trackUnderPointer(e.clientX, e.clientY, clip.type);
+      if (hoveredTrack && hoveredTrack.id !== source.id) {
+        const freeStart = nearestFreeStart(
+          hoveredTrack,
+          d.id,
+          Math.max(0, next),
+          d.duration,
+        );
+        setVisual({
+          id: d.id,
+          trackId: hoveredTrack.id,
+          start: freeStart,
+          duration: d.duration,
+          snapped: snapped || Math.abs(freeStart - next) > EPS,
+          mode: "move",
+        });
+        return;
+      }
+
+      if (isContiguousTrack(source)) {
         const reorderedStart = reorderContiguousTrack(
-          track,
+          source,
           d.id,
           next,
           d.duration,
         );
         if (reorderedStart !== null) {
-          setDragVisual({
+          setVisual({
             id: d.id,
-            trackId: track.id,
+            trackId: source.id,
             start: reorderedStart,
             duration: d.duration,
             snapped: true,
@@ -380,50 +438,63 @@ export default function Timeline(p: Props) {
         return;
       }
 
-      if (track) {
-        const freeStart = nearestFreeStart(track, d.id, next, d.duration);
-        if (Math.abs(freeStart - next) > EPS) snapped = true;
-        next = freeStart;
-        setDragVisual({
-          id: d.id,
-          trackId: track.id,
-          start: next,
-          duration: d.duration,
-          snapped,
-          mode: "move",
-        });
-      }
-    } else if (track) {
-      const constrained = constrainTrim(track, d.id, d.edge, next);
+      const freeStart = nearestFreeStart(source, d.id, next, d.duration);
+      if (Math.abs(freeStart - next) > EPS) snapped = true;
+      next = freeStart;
+      setVisual({
+        id: d.id,
+        trackId: source.id,
+        start: next,
+        duration: d.duration,
+        snapped,
+        mode: "move",
+      });
+    } else {
+      const constrained = constrainTrim(source, d.id, d.edge, next);
       if (Math.abs(constrained - next) > EPS) snapped = true;
       next = constrained;
-      const clip = track.clips.find((c) => c.id === d.id);
-      if (clip) {
-        const start = d.edge === "start" ? next : clip.start;
-        const duration =
-          d.edge === "start"
-            ? Math.max(EPS, clip.start + clip.duration - next)
-            : Math.max(EPS, next - clip.start);
-        setDragVisual({
-          id: d.id,
-          trackId: track.id,
-          start,
-          duration,
-          snapped,
-          mode: d.edge === "start" ? "trim-start" : "trim-end",
-        });
-      }
+      const start = d.edge === "start" ? next : clip.start;
+      const duration =
+        d.edge === "start"
+          ? Math.max(EPS, clip.start + clip.duration - next)
+          : Math.max(EPS, next - clip.start);
+      setVisual({
+        id: d.id,
+        trackId: source.id,
+        start,
+        duration,
+        snapped,
+        mode: d.edge === "start" ? "trim-start" : "trim-end",
+      });
     }
 
     p.onMove(d.id, next, d.edge);
   };
 
   const end = () => {
-    if (drag.current) {
-      drag.current = null;
-      setDragVisual(null);
-      p.onEnd();
+    const d = drag.current;
+    const visual = dragVisualRef.current;
+    if (!d) return;
+
+    if (!d.edge && visual && visual.trackId !== d.sourceTrackId) {
+      const source = p.project.tracks.find((track) => track.id === d.sourceTrackId);
+      const target = p.project.tracks.find((track) => track.id === visual.trackId);
+      const clip = source?.clips.find((candidate) => candidate.id === d.id);
+      if (source && target && clip && !target.locked && target.type === clip.type) {
+        p.onTrack(source.id, {
+          clips: source.clips.filter((candidate) => candidate.id !== clip.id),
+        });
+        p.onTrack(target.id, {
+          clips: [...target.clips, { ...clip, start: visual.start }].sort(
+            (a, b) => a.start - b.start,
+          ),
+        });
+      }
     }
+
+    drag.current = null;
+    setVisual(null);
+    p.onEnd();
   };
 
   return (
@@ -609,6 +680,8 @@ export default function Timeline(p: Props) {
               <div
                 className={`track-row ${t.locked ? "locked" : ""} ${dragVisual?.trackId === t.id ? "drop-active" : ""}`}
                 key={t.id}
+                data-track-id={t.id}
+                data-track-type={t.type}
                 style={{ gridTemplateColumns: `${label}px ${width}px` }}
               >
                 <div className="track-name" data-track-type={t.type}>
@@ -683,6 +756,7 @@ export default function Timeline(p: Props) {
                         aria-label={`Clipe ${c.name}`}
                         aria-pressed={p.selected.includes(c.id)}
                         key={c.id}
+                        data-clip-id={c.id}
                         className={`clip clip-${t.type} ${p.selected.includes(c.id) ? "selected" : ""} ${dragging ? "dragging" : ""}`}
                         style={{
                           left: c.start * zoom,
@@ -757,15 +831,17 @@ export default function Timeline(p: Props) {
       <div className="timeline-footer">
         <span>
           {dragVisual
-            ? dragVisual.snapped
-              ? "Encaixe encontrado — solte para posicionar"
-              : "Movendo clipe — solte na posição desejada"
+            ? dragVisual.trackId !== drag.current?.sourceTrackId
+              ? "Mover para outra camada — solte para transferir"
+              : dragVisual.snapped
+                ? "Encaixe encontrado — solte para posicionar"
+                : "Movendo clipe — solte na posição desejada"
             : p.selected.length
               ? `${p.selected.length} selecionado(s)`
               : "Selecione um clipe"}
         </span>
         <span>
-          Arraste para reordenar cortes · guia verde mostra o encaixe · Alt ignora encaixe · Espaço reproduz
+          Arraste horizontalmente para ordenar · arraste verticalmente para trocar de camada · Alt ignora encaixe
         </span>
       </div>
     </section>
