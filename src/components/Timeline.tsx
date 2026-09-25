@@ -19,6 +19,7 @@ import {
 import { useEffect, useRef, useState } from "react";
 import type { Clip, KiroProject, Track } from "../editor/types";
 import { projectDuration, snap } from "../editor/operations";
+
 interface Props {
   project: KiroProject;
   selected: string[];
@@ -38,28 +39,37 @@ interface Props {
   onTrack: (id: string, patch: Partial<Track>) => void;
   onAddTrack: (type: "video" | "audio") => void;
 }
+
+type DragState = {
+  id: string;
+  x: number;
+  start: number;
+  duration: number;
+  edge?: "start" | "end";
+};
+
+const EPS = 1 / 1000;
+
 export default function Timeline(p: Props) {
-  const [zoom, setZoom] = useState(55),
-    [snapping, setSnapping] = useState(true),
-    [ripple, setRipple] = useState(false),
-    [viewport, setViewport] = useState(900);
-  const scroll = useRef<HTMLDivElement>(null),
-    scrub = useRef<number | null>(null),
-    fittedForDuration = useRef(-1);
-  const drag = useRef<{
-    id: string;
-    x: number;
-    start: number;
-    duration: number;
-    edge?: "start" | "end";
-  } | null>(null);
-  const total = projectDuration(p.project),
-    label = 150,
-    available = Math.max(260, viewport - label - 18),
-    width = Math.max(available, Math.max(1, total) * zoom),
-    fitZoom = Math.max(0.25, Math.min(240, available / Math.max(1, total)));
+  const [zoom, setZoom] = useState(55);
+  const [snapping, setSnapping] = useState(true);
+  const [ripple, setRipple] = useState(false);
+  const [viewport, setViewport] = useState(900);
+
+  const scroll = useRef<HTMLDivElement>(null);
+  const scrub = useRef<number | null>(null);
+  const drag = useRef<DragState | null>(null);
+  const autoFitDone = useRef(false);
+  const projectId = useRef(p.project.id);
+
+  const total = projectDuration(p.project);
+  const label = 150;
+  const available = Math.max(260, viewport - label - 18);
+  const width = Math.max(available, Math.max(1, total) * zoom);
+  const fitZoom = Math.max(0.25, Math.min(240, available / Math.max(1, total)));
   const tick =
     zoom >= 100 ? 1 : zoom >= 40 ? 2 : zoom >= 15 ? 5 : zoom >= 5 ? 10 : zoom >= 2 ? 30 : 60;
+
   const selectedClip = p.project.tracks
     .flatMap((t) => t.clips)
     .find((c) => p.selected.includes(c.id));
@@ -81,8 +91,17 @@ export default function Timeline(p: Props) {
   }, []);
 
   useEffect(() => {
-    if (!total || fittedForDuration.current === total) return;
-    fittedForDuration.current = total;
+    if (projectId.current !== p.project.id) {
+      projectId.current = p.project.id;
+      autoFitDone.current = false;
+    }
+  }, [p.project.id]);
+
+  // Enquadra automaticamente apenas na primeira vez em que o projeto ganha conteúdo.
+  // Depois disso o zoom é totalmente manual: mover/dividir clipes nunca altera o zoom.
+  useEffect(() => {
+    if (!total || autoFitDone.current) return;
+    autoFitDone.current = true;
     const id = requestAnimationFrame(() => {
       setZoom(fitZoom);
       if (scroll.current) scroll.current.scrollLeft = 0;
@@ -94,8 +113,10 @@ export default function Timeline(p: Props) {
     setZoom(fitZoom);
     if (scroll.current) scroll.current.scrollLeft = 0;
   };
+
   const changeZoom = (delta: number) =>
     setZoom((value) => Math.max(0.25, Math.min(240, value + delta)));
+
   const moveToLayer = (targetId: string) => {
     if (!selectedClip || !sourceTrack || targetId === sourceTrack.id) return;
     const target = compatibleTracks.find((t) => t.id === targetId);
@@ -109,10 +130,12 @@ export default function Timeline(p: Props) {
     });
     p.onEnd();
   };
+
   const toggleSelectedTrackLock = () => {
     if (!sourceTrack) return;
     p.onTrack(sourceTrack.id, { locked: !sourceTrack.locked });
   };
+
   const candidates = [
     0,
     p.time,
@@ -122,10 +145,12 @@ export default function Timeline(p: Props) {
         .flatMap((c) => [c.start, c.start + c.duration]),
     ),
   ];
+
   const seek = (event: React.PointerEvent<HTMLDivElement>) => {
     const rect = event.currentTarget.getBoundingClientRect();
     p.onSeek(Math.max(0, Math.min(total, (event.clientX - rect.left) / zoom)));
   };
+
   const scrubProps = {
     onPointerDown: (e: React.PointerEvent<HTMLDivElement>) => {
       e.preventDefault();
@@ -146,6 +171,7 @@ export default function Timeline(p: Props) {
       scrub.current = null;
     },
   };
+
   const start = (
     e: React.PointerEvent<HTMLElement>,
     c: Clip,
@@ -166,35 +192,95 @@ export default function Timeline(p: Props) {
       edge,
     };
   };
+
+  const preventOverlap = (
+    track: Track,
+    id: string,
+    proposed: number,
+    duration: number,
+    direction: number,
+  ) => {
+    let next = Math.max(0, proposed);
+    const others = track.clips
+      .filter((c) => c.id !== id)
+      .sort((a, b) => a.start - b.start);
+
+    // Resolve colisões repetidamente, inclusive quando o clipe cruza mais de um bloco.
+    for (let guard = 0; guard < others.length + 2; guard += 1) {
+      const hit = others.find(
+        (c) => next < c.start + c.duration - EPS && next + duration > c.start + EPS,
+      );
+      if (!hit) break;
+      next =
+        direction >= 0
+          ? hit.start + hit.duration
+          : Math.max(0, hit.start - duration);
+    }
+    return next;
+  };
+
+  const constrainTrim = (
+    track: Track,
+    id: string,
+    edge: "start" | "end",
+    value: number,
+  ) => {
+    const clip = track.clips.find((c) => c.id === id);
+    if (!clip) return value;
+    const others = track.clips.filter((c) => c.id !== id);
+    if (edge === "start") {
+      const previousEnd = others
+        .filter((c) => c.start < clip.start)
+        .reduce((max, c) => Math.max(max, c.start + c.duration), 0);
+      return Math.max(previousEnd, Math.min(value, clip.start + clip.duration - EPS));
+    }
+    const nextStart = others
+      .filter((c) => c.start >= clip.start + clip.duration - EPS)
+      .reduce((min, c) => Math.min(min, c.start), Number.POSITIVE_INFINITY);
+    return Math.min(value, nextStart);
+  };
+
   const move = (e: React.PointerEvent<HTMLElement>) => {
     const d = drag.current;
     if (!d) return;
     e.stopPropagation();
-    const target =
-      d.start + (d.edge === "end" ? d.duration : 0) + (e.clientX - d.x) / zoom;
+
+    const delta = (e.clientX - d.x) / zoom;
+    const target = d.start + (d.edge === "end" ? d.duration : 0) + delta;
     let next =
       snapping && !e.altKey
         ? snap(target, candidates, 8 / zoom, p.project.settings.fps)
         : snap(target, [], 0, p.project.settings.fps);
-    if (!d.edge && snapping && !e.altKey) {
-      const snappedEnd =
-        snap(
-          target + d.duration,
-          candidates,
-          8 / zoom,
-          p.project.settings.fps,
-        ) - d.duration;
-      if (Math.abs(snappedEnd - target) < Math.abs(next - target))
-        next = Math.max(0, snappedEnd);
+
+    const track = p.project.tracks.find((t) => t.clips.some((c) => c.id === d.id));
+
+    if (!d.edge) {
+      if (snapping && !e.altKey) {
+        const snappedEnd =
+          snap(
+            target + d.duration,
+            candidates,
+            8 / zoom,
+            p.project.settings.fps,
+          ) - d.duration;
+        if (Math.abs(snappedEnd - target) < Math.abs(next - target))
+          next = Math.max(0, snappedEnd);
+      }
+      if (track) next = preventOverlap(track, d.id, next, d.duration, delta);
+    } else if (track) {
+      next = constrainTrim(track, d.id, d.edge, next);
     }
+
     p.onMove(d.id, next, d.edge);
   };
+
   const end = () => {
     if (drag.current) {
       drag.current = null;
       p.onEnd();
     }
   };
+
   return (
     <section className="timeline-shell timeline-premium" aria-label="Timeline">
       <div className="timeline-toolbar">
@@ -248,6 +334,7 @@ export default function Timeline(p: Props) {
             </label>
           )}
         </div>
+
         <div className="tool-group timeline-view-tools">
           <button
             className={snapping ? "active" : ""}
@@ -261,7 +348,7 @@ export default function Timeline(p: Props) {
           <button className="zoom-step" aria-label="Diminuir zoom" title="Diminuir zoom" onClick={() => changeZoom(-Math.max(1, zoom * 0.18))}>
             <Minus size={15} />
           </button>
-          <label className="zoom">
+          <label className="zoom" title="O zoom só muda por estes controles">
             <span>Zoom</span>
             <input
               aria-label="Zoom da timeline"
@@ -285,6 +372,7 @@ export default function Timeline(p: Props) {
           </button>
         </div>
       </div>
+
       <div className="timeline-scroll" ref={scroll}>
         <div className="timeline-content" style={{ width: width + label }}>
           <div className="ruler-row" style={{ gridTemplateColumns: `${label}px ${width}px` }}>
@@ -301,8 +389,13 @@ export default function Timeline(p: Props) {
               <div className="ruler-playhead" style={{ left: p.time * zoom }}><span /></div>
             </div>
           </div>
+
           {p.project.tracks.map((t, index) => (
-            <div className={`track-row ${t.locked ? "locked" : ""}`} key={t.id} style={{ gridTemplateColumns: `${label}px ${width}px` }}>
+            <div
+              className={`track-row ${t.locked ? "locked" : ""}`}
+              key={t.id}
+              style={{ gridTemplateColumns: `${label}px ${width}px` }}
+            >
               <div className="track-name">
                 <small className="layer-number">{t.type === "video" ? `V${index + 1}` : t.type === "audio" ? "A" : "T"}</small>
                 <strong title={t.name}>{t.name}</strong>
@@ -311,7 +404,9 @@ export default function Timeline(p: Props) {
                     aria-label={`${t.type === "text" ? (t.muted ? "Mostrar" : "Ocultar") : (t.muted ? "Ativar" : "Silenciar")} ${t.name}`}
                     onClick={() => p.onTrack(t.id, { muted: !t.muted })}
                   >
-                    {t.type === "text" ? (t.muted ? <EyeOff size={13}/> : <Eye size={13}/>) : t.muted ? <VolumeX size={13}/> : <Volume2 size={13}/>}
+                    {t.type === "text"
+                      ? t.muted ? <EyeOff size={13} /> : <Eye size={13} />
+                      : t.muted ? <VolumeX size={13} /> : <Volume2 size={13} />}
                   </button>
                   <button
                     aria-label={`${t.locked ? "Desbloquear" : "Bloquear"} ${t.name}`}
@@ -321,6 +416,7 @@ export default function Timeline(p: Props) {
                   </button>
                 </div>
               </div>
+
               <div className="track-lane" {...scrubProps}>
                 {t.clips.map((c) => {
                   const asset = p.project.assets.find((a) => a.id === c.assetId);
@@ -344,7 +440,9 @@ export default function Timeline(p: Props) {
                         }
                       }}
                     >
-                      {asset?.thumbnail && <div className="clip-film" style={{ backgroundImage: `url(${asset.thumbnail})` }} />}
+                      {asset?.thumbnail && (
+                        <div className="clip-film" style={{ backgroundImage: `url(${asset.thumbnail})` }} />
+                      )}
                       {asset?.peaks && (
                         <svg className="clip-wave" viewBox="0 0 160 40" preserveAspectRatio="none" aria-hidden="true">
                           {asset.peaks.map((peak, i) => (
@@ -354,8 +452,24 @@ export default function Timeline(p: Props) {
                       )}
                       <strong>{c.name}</strong>
                       <small>{formatDuration(c.duration)}</small>
-                      <button className="trim-handle start" aria-label={`Cortar início de ${c.name}`} disabled={t.locked} onPointerDown={(e) => start(e, c, !!t.locked, "start")} onPointerMove={move} onPointerUp={end} onPointerCancel={end} />
-                      <button className="trim-handle end" aria-label={`Cortar final de ${c.name}`} disabled={t.locked} onPointerDown={(e) => start(e, c, !!t.locked, "end")} onPointerMove={move} onPointerUp={end} onPointerCancel={end} />
+                      <button
+                        className="trim-handle start"
+                        aria-label={`Cortar início de ${c.name}`}
+                        disabled={t.locked}
+                        onPointerDown={(e) => start(e, c, !!t.locked, "start")}
+                        onPointerMove={move}
+                        onPointerUp={end}
+                        onPointerCancel={end}
+                      />
+                      <button
+                        className="trim-handle end"
+                        aria-label={`Cortar final de ${c.name}`}
+                        disabled={t.locked}
+                        onPointerDown={(e) => start(e, c, !!t.locked, "end")}
+                        onPointerMove={move}
+                        onPointerUp={end}
+                        onPointerCancel={end}
+                      />
                     </div>
                   );
                 })}
@@ -365,16 +479,19 @@ export default function Timeline(p: Props) {
           ))}
         </div>
       </div>
+
       <div className="timeline-footer">
         <span>{p.selected.length ? `${p.selected.length} selecionado(s)` : "Selecione um clipe"}</span>
-        <span>Arraste para mover · bordas para aparar · Shift: múltipla · Alt: ignora encaixe · Espaço: reproduzir</span>
+        <span>Arraste para mover · não sobrepõe clipes · bordas para aparar · Alt: ignora encaixe · Espaço: reproduzir</span>
       </div>
     </section>
   );
 }
+
 function format(n: number) {
   return `${Math.floor(n / 60)}:${String(Math.floor(n % 60)).padStart(2, "0")}`;
 }
+
 function formatDuration(n: number) {
   if (n < 60) return `${n.toFixed(1)} s`;
   return format(n);
