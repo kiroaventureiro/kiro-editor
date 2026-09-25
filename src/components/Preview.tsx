@@ -12,7 +12,7 @@ import {
 import { useEffect, useRef, useState } from "react";
 import type { Clip, KiroProject } from "../editor/types";
 import { Composition } from "../editor/engine";
-import { clamp, projectDuration } from "../editor/operations";
+import { activeAt, clamp, projectDuration } from "../editor/operations";
 
 interface Props {
   project: KiroProject;
@@ -28,12 +28,31 @@ interface Props {
   onEnd: () => void;
 }
 
+const CANVAS_SELECT_EVENT = "kiro-select-clip";
+
 function formatTime(value: number) {
   const safe = Math.max(0, Number.isFinite(value) ? value : 0);
   const minutes = Math.floor(safe / 60);
   const seconds = Math.floor(safe % 60);
   const tenths = Math.floor((safe % 1) * 10);
   return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}.${tenths}`;
+}
+
+function clipBox(clip: Clip) {
+  const scale = clamp(clip.scale ?? 1, 0.08, 4);
+  if (clip.type === "text") {
+    const lines = (clip.text ?? clip.name).split("\n");
+    const longest = Math.max(1, ...lines.map((line) => line.length));
+    const fontSize = clip.fontSize ?? 6;
+    return {
+      width: clamp(longest * fontSize * 0.62 * scale, 12, 160),
+      height: clamp(lines.length * fontSize * 1.55 * scale, 7, 120),
+    };
+  }
+  return {
+    width: 100 * scale,
+    height: 100 * scale,
+  };
 }
 
 export default function Preview({
@@ -50,6 +69,7 @@ export default function Preview({
   onEnd,
 }: Props) {
   const canvas = useRef<HTMLCanvasElement>(null),
+    shell = useRef<HTMLDivElement>(null),
     engine = useRef<Composition | undefined>(undefined),
     seekVersion = useRef(0),
     previousVolume = useRef(1);
@@ -64,6 +84,9 @@ export default function Preview({
   const drag = useRef<
     { x: number; y: number; cx: number; cy: number } | undefined
   >(undefined);
+  const resize = useRef<
+    { distance: number; scale: number; cx: number; cy: number } | undefined
+  >(undefined);
 
   const duration = projectDuration(project);
   const previewQuality = focus ? 1080 : 720;
@@ -76,6 +99,22 @@ export default function Preview({
         project.assets.find((a) => a.id === c.assetId)?.path,
       ]),
   );
+
+  const activeVisualClips = project.tracks.flatMap((track) =>
+    track.clips
+      .filter(
+        (clip) =>
+          clip.type !== "audio" &&
+          activeAt(clip, time) &&
+          !(track.type === "text" && track.muted),
+      )
+      .map((clip) => ({ clip, track })),
+  );
+
+  const movable = !!selectedClip && selectedClip.type !== "audio";
+  const selectedVisible =
+    movable && !!selectedClip && activeAt(selectedClip, time);
+  const selectedBox = selectedVisible && selectedClip ? clipBox(selectedClip) : null;
 
   useEffect(() => {
     let cancelled = false;
@@ -175,6 +214,9 @@ export default function Preview({
     });
   }, [playing, ready, volume, onPlaying]);
 
+  const factor =
+    previewQuality / Math.min(project.settings.width, project.settings.height);
+
   const toggle = () => {
     if (playing) onPlaying(false);
     else {
@@ -182,10 +224,6 @@ export default function Preview({
       onPlaying(true);
     }
   };
-
-  const movable = !!selectedClip && selectedClip.type !== "audio";
-  const factor =
-    previewQuality / Math.min(project.settings.width, project.settings.height);
 
   const toggleMute = () => {
     if (volume > 0) {
@@ -203,6 +241,111 @@ export default function Preview({
     onEnd();
   };
 
+  const pickClip = (clientX: number, clientY: number) => {
+    const rect = canvas.current?.getBoundingClientRect();
+    if (!rect?.width || !rect.height) return undefined;
+    const px = ((clientX - rect.left) / rect.width) * 100;
+    const py = ((clientY - rect.top) / rect.height) * 100;
+
+    return [...activeVisualClips]
+      .reverse()
+      .find(({ clip }) => {
+        const box = clipBox(clip);
+        const centerX = 50 + (clip.x ?? 0);
+        const centerY = 50 + (clip.y ?? 0);
+        const angle = -((clip.rotation ?? 0) * Math.PI) / 180;
+        const dx = px - centerX;
+        const dy = py - centerY;
+        const rx = dx * Math.cos(angle) - dy * Math.sin(angle);
+        const ry = dx * Math.sin(angle) + dy * Math.cos(angle);
+        return Math.abs(rx) <= box.width / 2 && Math.abs(ry) <= box.height / 2;
+      })?.clip;
+  };
+
+  const selectFromCanvas = (clientX: number, clientY: number) => {
+    const hit = pickClip(clientX, clientY);
+    if (!hit) return;
+    if (hit.id !== selectedClip?.id) {
+      window.dispatchEvent(
+        new CustomEvent<string>(CANVAS_SELECT_EVENT, { detail: hit.id }),
+      );
+    }
+  };
+
+  const beginMove = (e: React.PointerEvent<HTMLElement>) => {
+    if (!selectedClip || !selectedVisible) return;
+    if (playing) onPlaying(false);
+    e.preventDefault();
+    e.stopPropagation();
+    e.currentTarget.setPointerCapture(e.pointerId);
+    onBegin();
+    drag.current = {
+      x: e.clientX,
+      y: e.clientY,
+      cx: selectedClip.x ?? 0,
+      cy: selectedClip.y ?? 0,
+    };
+  };
+
+  const moveSelected = (e: React.PointerEvent<HTMLElement>) => {
+    if (!drag.current) return;
+    const rect = canvas.current?.getBoundingClientRect();
+    if (!rect?.width || !rect.height) return;
+    onTransform({
+      x: clamp(
+        drag.current.cx + ((e.clientX - drag.current.x) / rect.width) * 100,
+        -100,
+        100,
+      ),
+      y: clamp(
+        drag.current.cy + ((e.clientY - drag.current.y) / rect.height) * 100,
+        -100,
+        100,
+      ),
+    });
+  };
+
+  const endMove = () => {
+    if (!drag.current) return;
+    drag.current = undefined;
+    onEnd();
+  };
+
+  const beginResize = (e: React.PointerEvent<HTMLButtonElement>) => {
+    if (!selectedClip || !selectedVisible) return;
+    const rect = canvas.current?.getBoundingClientRect();
+    if (!rect?.width || !rect.height) return;
+    e.preventDefault();
+    e.stopPropagation();
+    e.currentTarget.setPointerCapture(e.pointerId);
+    if (playing) onPlaying(false);
+    const centerX = rect.left + rect.width * (0.5 + (selectedClip.x ?? 0) / 100);
+    const centerY = rect.top + rect.height * (0.5 + (selectedClip.y ?? 0) / 100);
+    onBegin();
+    resize.current = {
+      distance: Math.max(8, Math.hypot(e.clientX - centerX, e.clientY - centerY)),
+      scale: selectedClip.scale ?? 1,
+      cx: centerX,
+      cy: centerY,
+    };
+  };
+
+  const resizeSelected = (e: React.PointerEvent<HTMLButtonElement>) => {
+    if (!resize.current) return;
+    const distance = Math.hypot(
+      e.clientX - resize.current.cx,
+      e.clientY - resize.current.cy,
+    );
+    const ratio = distance / resize.current.distance;
+    onTransform({ scale: clamp(resize.current.scale * ratio, 0.08, 4) });
+  };
+
+  const endResize = () => {
+    if (!resize.current) return;
+    resize.current = undefined;
+    onEnd();
+  };
+
   return (
     <section
       className={`preview-wrap canvas-module ${fitView ? "canvas-fit-view" : "canvas-fill-view"}`}
@@ -214,9 +357,14 @@ export default function Preview({
           <span>{project.settings.width} × {project.settings.height}</span>
           <i />
           <span>{project.settings.fps} fps</span>
+          {activeVisualClips.length > 1 && (
+            <b className="canvas-layer-count">
+              {activeVisualClips.length} camadas visíveis
+            </b>
+          )}
           {movable && (
             <b className="canvas-hint">
-              Arraste no canvas para posicionar {selectedClip?.type === "text" ? "o texto" : "o vídeo"}
+              Clique para selecionar · arraste para mover · use os cantos para redimensionar
             </b>
           )}
         </div>
@@ -241,60 +389,58 @@ export default function Preview({
       </div>
 
       <div className={`preview-stage canvas-monitor ${!duration ? "canvas-monitor-empty" : ""}`}>
-        <div className="canvas-shell" data-aspect={project.settings.aspectRatio}>
+        <div
+          ref={shell}
+          className="canvas-shell"
+          data-aspect={project.settings.aspectRatio}
+        >
           <canvas
             ref={canvas}
             width={Math.round(project.settings.width * factor)}
             height={Math.round(project.settings.height * factor)}
             aria-label="Prévia da montagem"
-            className={movable ? "canvas-movable" : ""}
+            className={activeVisualClips.length ? "canvas-selectable" : ""}
             style={{
               aspectRatio: project.settings.aspectRatio.replace(":", " / "),
             }}
             onPointerDown={(e) => {
-              if (!movable || !selectedClip) return;
               if (playing) onPlaying(false);
-              e.preventDefault();
-              e.currentTarget.setPointerCapture(e.pointerId);
-              onBegin();
-              drag.current = {
-                x: e.clientX,
-                y: e.clientY,
-                cx: selectedClip.x ?? 0,
-                cy: selectedClip.y ?? 0,
-              };
-            }}
-            onPointerMove={(e) => {
-              if (!drag.current) return;
-              const rect = e.currentTarget.getBoundingClientRect();
-              onTransform({
-                x: clamp(
-                  drag.current.cx +
-                    ((e.clientX - drag.current.x) / rect.width) * 100,
-                  -100,
-                  100,
-                ),
-                y: clamp(
-                  drag.current.cy +
-                    ((e.clientY - drag.current.y) / rect.height) * 100,
-                  -100,
-                  100,
-                ),
-              });
-            }}
-            onPointerUp={() => {
-              if (drag.current) {
-                drag.current = undefined;
-                onEnd();
-              }
-            }}
-            onPointerCancel={() => {
-              if (drag.current) {
-                drag.current = undefined;
-                onEnd();
-              }
+              selectFromCanvas(e.clientX, e.clientY);
             }}
           />
+
+          {selectedBox && selectedClip && (
+            <div
+              className={`canvas-selection-box canvas-selection-${selectedClip.type}`}
+              style={{
+                left: `${50 + (selectedClip.x ?? 0)}%`,
+                top: `${50 + (selectedClip.y ?? 0)}%`,
+                width: `${selectedBox.width}%`,
+                height: `${selectedBox.height}%`,
+                transform: `translate(-50%, -50%) rotate(${selectedClip.rotation ?? 0}deg)`,
+              }}
+              aria-label={`Objeto selecionado: ${selectedClip.name}`}
+              onPointerDown={beginMove}
+              onPointerMove={moveSelected}
+              onPointerUp={endMove}
+              onPointerCancel={endMove}
+            >
+              <span className="canvas-selection-label">{selectedClip.name}</span>
+              {(["nw", "ne", "sw", "se"] as const).map((corner) => (
+                <button
+                  key={corner}
+                  type="button"
+                  className={`canvas-resize-handle ${corner}`}
+                  aria-label="Redimensionar objeto"
+                  title="Arraste para aumentar ou diminuir"
+                  onPointerDown={beginResize}
+                  onPointerMove={resizeSelected}
+                  onPointerUp={endResize}
+                  onPointerCancel={endResize}
+                />
+              ))}
+            </div>
+          )}
         </div>
 
         {(!duration || status) && (
