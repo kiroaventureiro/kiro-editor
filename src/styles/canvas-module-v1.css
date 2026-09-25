@@ -77,7 +77,6 @@
     gap: 5px;
   }
 
-  .canvas-actions select,
   .canvas-actions button {
     height: 29px !important;
     min-height: 29px !important;
@@ -85,19 +84,22 @@
     border: 1px solid #2a3742 !important;
     background: #101820 !important;
     color: #dce5eb !important;
-  }
-
-  .canvas-actions select {
-    width: 116px;
-    padding: 0 7px !important;
-    font-size: 9px !important;
-  }
-
-  .canvas-actions button {
     width: 31px !important;
     padding: 0 !important;
     display: grid !important;
     place-items: center !important;
+  }
+
+  .canvas-actions .canvas-fit-toggle {
+    width: auto !important;
+    min-width: 88px !important;
+    padding: 0 10px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 6px !important;
+    font-size: 9px !important;
+    font-weight: 600 !important;
   }
 
   .canvas-actions button:hover,
