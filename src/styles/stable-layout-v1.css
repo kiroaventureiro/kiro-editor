@@ -8,7 +8,7 @@
     --kiro-library: clamp(218px, 19vw, 280px);
     --kiro-inspector: clamp(258px, 22vw, 320px);
     --kiro-topbar: 54px;
-    --kiro-timeline-cap: 188px;
+    --kiro-timeline-cap: 240px;
   }
 
   .app-shell {
@@ -234,11 +234,11 @@
   }
 }
 
-/* Alturas próximas ao notebook/print enviado: preserva canvas e mantém 3 trilhas visíveis. */
+/* Em telas mais baixas, a timeline ainda sobe até a base aprovada sem esmagar o canvas. */
 @media (min-width: 851px) and (max-height: 680px) {
   :root {
     --kiro-topbar: 50px;
-    --kiro-timeline-cap: 176px;
+    --kiro-timeline-cap: 218px;
   }
 
   .topbar { padding-block: 4px !important; }
@@ -269,6 +269,6 @@
   :root {
     --kiro-library: 300px;
     --kiro-inspector: 350px;
-    --kiro-timeline-cap: 210px;
+    --kiro-timeline-cap: 250px;
   }
 }
