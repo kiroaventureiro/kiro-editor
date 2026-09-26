@@ -12,6 +12,7 @@ import "./styles/timeline-reference-v2.css";
 import "./styles/canvas-interaction-v1.css";
 import "./styles/audio-workflow-v1.css";
 import "./styles/caption-tools-v1.css";
+import "./styles/beat-markers-v1.css";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
