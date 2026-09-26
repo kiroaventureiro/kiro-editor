@@ -28,6 +28,15 @@
   border-style: dashed;
 }
 
+.canvas-selection-text.is-editing {
+  cursor: text;
+  border-style: solid;
+  border-color: #a7f5dc;
+  box-shadow:
+    0 0 0 1px rgba(5, 15, 13, 0.88),
+    0 0 18px rgba(120, 232, 196, 0.3);
+}
+
 .canvas-selection-label {
   position: absolute;
   left: 6px;
@@ -42,6 +51,39 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  pointer-events: none;
+}
+
+.canvas-inline-text-editor {
+  position: absolute;
+  inset: 0;
+  z-index: 22;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  padding: 10px;
+  border: 0;
+  outline: 0;
+  resize: none;
+  overflow: auto;
+  box-sizing: border-box;
+  background: rgba(5, 12, 15, 0.84);
+  color: #fff;
+  font: 600 clamp(12px, 1.7vw, 28px)/1.18 system-ui, sans-serif;
+  text-align: center;
+  caret-color: #8bf2d0;
+  user-select: text;
+  touch-action: auto;
+  cursor: text;
+}
+
+.canvas-inline-text-editor::selection {
+  background: rgba(120, 232, 196, 0.32);
+}
+
+.canvas-selection-box.is-editing .canvas-resize-handle {
+  opacity: 0.36;
   pointer-events: none;
 }
 
