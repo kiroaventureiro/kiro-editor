@@ -372,6 +372,12 @@ export default function App() {
     setSelected([id]);
     setTime(start);
   };
+  const addLibraryAsset = (asset: MediaAsset) => {
+    if (!current.current.assets.some((item) => item.id === asset.id))
+      edit((p) => ({ ...p, assets: [...p.assets, asset] }));
+    add(asset);
+    setNotice(`${asset.name} adicionado da KIRO Library.`);
+  };
   const importFiles = async (files: FileList | null) => {
     if (!files?.length || busy) return;
     setBusy(true);
@@ -959,6 +965,7 @@ export default function App() {
           assets={project.assets}
           onImport={importFiles}
           onAddToTimeline={add}
+          onAddLibraryAsset={addLibraryAsset}
           onRelink={relink}
           busy={busy}
         />
