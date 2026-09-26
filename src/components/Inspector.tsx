@@ -116,6 +116,29 @@ export default function Inspector({
       <section className="inspector-section">
         <span className="section-kicker">{clip.type === "audio" ? "SOM" : "REPRODUÇÃO"}</span>
         {range("Volume", "volume", 0, 1, 0.01, 1)}
+        {clip.type === "audio" && (
+          <>
+            {range(
+              "Fade de entrada",
+              "fadeIn",
+              0,
+              Math.min(5, clip.duration / 2),
+              0.05,
+              0,
+            )}
+            {range(
+              "Fade de saída",
+              "fadeOut",
+              0,
+              Math.min(5, clip.duration / 2),
+              0.05,
+              0,
+            )}
+            <small className="audio-inspector-hint">
+              Use a forma de onda na timeline para localizar fala, música e pausas com mais precisão.
+            </small>
+          </>
+        )}
         {clip.assetId && (
           <label>
             Velocidade
