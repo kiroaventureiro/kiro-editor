@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 import MediaLibrary from "./components/MediaLibrary";
+import LibraryAdmin from "./components/LibraryAdmin";
 import Preview from "./components/Preview";
 import Inspector from "./components/Inspector";
 import Timeline, { type TimelineMode } from "./components/Timeline";
@@ -82,6 +83,10 @@ export default function App() {
     [libraryWidth, setLibraryWidth] = useState(260);
   const [targetTrack, setTargetTrack] = useState("video-1");
   const [timelineMode, setTimelineMode] = useState<TimelineMode>(undefined);
+  const [libraryAdminOpen, setLibraryAdminOpen] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return new URLSearchParams(window.location.search).get("admin") === "library";
+  });
   const abort = useRef<AbortController | null>(null),
     dirty = useRef(false),
     ready = useRef(false),
@@ -787,6 +792,17 @@ export default function App() {
     window.addEventListener("pointerup", stop, { once: true });
     window.addEventListener("pointercancel", stop, { once: true });
   };
+  if (libraryAdminOpen)
+    return (
+      <LibraryAdmin
+        onClose={() => {
+          setLibraryAdminOpen(false);
+          const url = new URL(window.location.href);
+          url.searchParams.delete("admin");
+          window.history.replaceState({}, "", url);
+        }}
+      />
+    );
   if (!loaded) return <div className="loading">Abrindo seu estúdio…</div>;
   return (
     <div
