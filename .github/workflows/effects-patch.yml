@@ -1,0 +1,84 @@
+name: Apply visual effects patch
+
+on:
+  push:
+    branches:
+      - feat/editor-studio-foundation
+    paths:
+      - .github/workflows/effects-patch.yml
+
+permissions:
+  contents: write
+
+jobs:
+  patch-editor:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feat/editor-studio-foundation
+      - name: Patch basic effects
+        shell: python
+        run: |
+          from pathlib import Path
+
+          path = Path('src/editor/types.ts')
+          text = path.read_text(encoding='utf-8')
+          if 'brightness?: number;' not in text:
+              text = text.replace(
+                  '  transitionDuration?: number;\n  notes?: string;',
+                  '  transitionDuration?: number;\n  brightness?: number;\n  contrast?: number;\n  saturation?: number;\n  blur?: number;\n  notes?: string;'
+              )
+          path.write_text(text, encoding='utf-8')
+
+          path = Path('src/editor/storage.ts')
+          text = path.read_text(encoding='utf-8')
+          if '"brightness",' not in text:
+              text = text.replace(
+                  '        "transitionDuration",\n      ] as const) {',
+                  '        "transitionDuration",\n        "brightness",\n        "contrast",\n        "saturation",\n        "blur",\n      ] as const) {'
+              )
+          path.write_text(text, encoding='utf-8')
+
+          path = Path('src/editor/engine.ts')
+          text = path.read_text(encoding='utf-8')
+          anchor = '''        if (c.type === "text") {\n          drawTextClip(ctx, c, w, h);\n        } else {'''
+          replacement = '''        if (c.type === "text") {\n          drawTextClip(ctx, c, w, h);\n        } else {\n          const brightness = clamp(c.brightness ?? 1, 0, 3);\n          const contrast = clamp(c.contrast ?? 1, 0, 3);\n          const saturation = clamp(c.saturation ?? 1, 0, 3);\n          const blurPx =\n            clamp(c.blur ?? 0, 0, 10) * (Math.min(w, h) / 100);\n          ctx.filter = `brightness(${brightness}) contrast(${contrast}) saturate(${saturation}) blur(${blurPx}px)`;'''
+          if 'const brightness = clamp(c.brightness' not in text:
+              if anchor not in text:
+                  raise RuntimeError('Engine effects anchor not found')
+              text = text.replace(anchor, replacement)
+          path.write_text(text, encoding='utf-8')
+
+          path = Path('src/components/Inspector.tsx')
+          text = path.read_text(encoding='utf-8')
+          future = '''      <div className="future-effects">\n        <strong>Próximos efeitos</strong>'''
+          block = '''      {clip.type !== "audio" && clip.type !== "text" && (\n        <section className="inspector-section visual-effects-section">\n          <span className="section-kicker">AJUSTES VISUAIS</span>\n          {range("Brilho", "brightness", 0.2, 2, 0.05, 1)}\n          {range("Contraste", "contrast", 0.2, 2, 0.05, 1)}\n          {range("Saturação", "saturation", 0, 2, 0.05, 1)}\n          {range("Desfoque", "blur", 0, 3, 0.05, 0)}\n          <div className="effect-preset-row">\n            <button\n              type="button"\n              onClick={() =>\n                onChange({ brightness: 1.08, contrast: 1.12, saturation: 1.14, blur: 0 })\n              }\n            >\n              Vivo\n            </button>\n            <button\n              type="button"\n              onClick={() =>\n                onChange({ brightness: 0.9, contrast: 1.22, saturation: 0.72, blur: 0 })\n              }\n            >\n              Cinema\n            </button>\n            <button\n              type="button"\n              onClick={() =>\n                onChange({ brightness: 1, contrast: 1, saturation: 0, blur: 0 })\n              }\n            >\n              P&B\n            </button>\n            <button\n              type="button"\n              onClick={() =>\n                onChange({ brightness: 1, contrast: 1, saturation: 1, blur: 0 })\n              }\n            >\n              Limpar\n            </button>\n          </div>\n          <small>Esses ajustes são renderizados no Canvas e no arquivo exportado.</small>\n        </section>\n      )}\n'''
+          if 'AJUSTES VISUAIS' not in text:
+              text = text.replace(future, block + future)
+          text = text.replace(
+              '          Filtros, desfoque, sombra e animações avançadas entrarão nesta aba.',
+              '          Sombras, máscaras, glow, glitch e animações avançadas entrarão nesta aba.'
+          )
+          path.write_text(text, encoding='utf-8')
+
+          css = Path('src/styles/effects-tools-v1.css')
+          css.write_text('''.effect-preset-row {\n  display: grid;\n  grid-template-columns: repeat(2, minmax(0, 1fr));\n  gap: 6px;\n  margin-top: 6px;\n}\n\n.effect-preset-row button {\n  min-height: 30px;\n}\n''', encoding='utf-8')
+
+          path = Path('src/main.tsx')
+          text = path.read_text(encoding='utf-8')
+          line = 'import "./styles/effects-tools-v1.css";\n'
+          if line not in text:
+              text = text.replace(
+                  'import "./styles/transition-tools-v1.css";\n',
+                  'import "./styles/transition-tools-v1.css";\n' + line
+              )
+          path.write_text(text, encoding='utf-8')
+
+      - name: Commit patch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/editor/types.ts src/editor/storage.ts src/editor/engine.ts src/components/Inspector.tsx src/styles/effects-tools-v1.css src/main.tsx
+          git diff --cached --quiet || git commit -m "feat: add visual effects controls"
+          git push origin HEAD:feat/editor-studio-foundation
