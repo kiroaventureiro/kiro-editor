@@ -218,11 +218,16 @@ export default function Preview({
     previewQuality / Math.min(project.settings.width, project.settings.height);
 
   const toggle = () => {
-    if (playing) onPlaying(false);
-    else {
-      if (time >= duration) onTime(0);
-      onPlaying(true);
+    if (playing) {
+      onPlaying(false);
+      return;
     }
+    const startAt = time >= duration ? 0 : time;
+    if (startAt !== time) onTime(startAt);
+    void engine.current?.startPlayback(startAt).catch((e: Error) => {
+      setStatus(e.message);
+    });
+    onPlaying(true);
   };
 
   const toggleMute = () => {
