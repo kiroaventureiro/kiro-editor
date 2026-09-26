@@ -1,0 +1,137 @@
+.library-sections {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+  margin: 8px 0 10px;
+}
+
+.library-sections button {
+  min-height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  font-size: 11px;
+}
+
+.library-sections button.active {
+  border-color: rgba(137, 255, 211, 0.42);
+  background: rgba(137, 255, 211, 0.1);
+  color: #d9fff1;
+}
+
+.library-source-note {
+  margin: 0 0 10px;
+  padding: 9px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.025);
+  color: #81909b;
+  font-size: 10px;
+  line-height: 1.45;
+}
+
+.kiro-library-hero {
+  display: grid;
+  gap: 6px;
+  margin: 2px 0 10px;
+  padding: 11px;
+  border: 1px solid rgba(151, 108, 255, 0.24);
+  border-radius: 10px;
+  background: linear-gradient(135deg, rgba(89, 47, 161, 0.18), rgba(31, 46, 58, 0.08));
+}
+
+.kiro-library-hero strong {
+  color: #eee7ff;
+  font-size: 12px;
+}
+
+.kiro-library-hero span {
+  color: #8e99a4;
+  font-size: 10px;
+  line-height: 1.4;
+}
+
+.library-category-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-bottom: 9px;
+}
+
+.library-category-row button {
+  min-height: 27px;
+  padding: 0 9px;
+  border-radius: 999px;
+  font-size: 9px;
+}
+
+.library-category-row button.active {
+  border-color: rgba(137, 255, 211, 0.38);
+  color: #d9fff1;
+  background: rgba(137, 255, 211, 0.08);
+}
+
+.asset-source-badge,
+.asset-tier-badge {
+  position: absolute;
+  top: 5px;
+  z-index: 4;
+  border-radius: 999px;
+  padding: 2px 6px;
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  backdrop-filter: blur(8px);
+}
+
+.asset-source-badge {
+  left: 5px;
+  color: #ece3ff;
+  background: rgba(78, 43, 133, 0.86);
+}
+
+.asset-tier-badge {
+  right: 5px;
+  color: #dbfff1;
+  background: rgba(15, 77, 57, 0.86);
+}
+
+.asset-favorite {
+  position: absolute;
+  right: 5px;
+  bottom: 5px;
+  z-index: 5;
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border-radius: 50%;
+  background: rgba(4, 9, 12, 0.78);
+}
+
+.asset-favorite.active {
+  color: #ffe38a;
+  border-color: rgba(255, 227, 138, 0.45);
+}
+
+.library-status-card {
+  display: grid;
+  gap: 6px;
+  padding: 14px 12px;
+  border: 1px dashed rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+  color: #83909b;
+  text-align: center;
+}
+
+.library-status-card strong {
+  color: #d8e2e8;
+  font-size: 12px;
+}
+
+.library-status-card span {
+  font-size: 10px;
+  line-height: 1.45;
+}
