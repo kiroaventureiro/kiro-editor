@@ -1,0 +1,115 @@
+/* KIRO Editor — áudio v1
+   Prioriza leitura da forma de onda e precisão de corte sem alterar a estrutura das trilhas. */
+
+.timeline-premium .track-row[data-track-type="audio"] {
+  height: 76px !important;
+}
+
+.timeline-premium .track-row[data-track-type="audio"] .track-name {
+  min-height: 76px !important;
+  background: linear-gradient(90deg, #0f1b1a 0%, #0e151c 72%) !important;
+}
+
+.timeline-premium .track-row[data-track-type="audio"] .track-lane {
+  background:
+    linear-gradient(180deg, rgba(85, 216, 189, .025), transparent 50%),
+    #0c1218;
+}
+
+.timeline-premium .track-row[data-track-type="audio"] .clip-audio {
+  top: 5px !important;
+  height: 66px !important;
+  overflow: hidden;
+  border-color: #2e8f7d !important;
+  background: linear-gradient(180deg, #16362f 0%, #102923 100%) !important;
+}
+
+.timeline-premium .clip-audio .clip-wave {
+  inset: 22px 5px 6px !important;
+  width: calc(100% - 10px) !important;
+  height: 36px !important;
+  stroke: #83f0d1 !important;
+  stroke-width: 1.1;
+  opacity: .9;
+  pointer-events: none;
+}
+
+.timeline-premium .clip-audio strong {
+  position: relative;
+  z-index: 2;
+  display: block;
+  max-width: calc(100% - 48px);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #e8fff7 !important;
+}
+
+.timeline-premium .clip-audio small {
+  position: absolute;
+  z-index: 3;
+  right: 6px;
+  top: 5px;
+  margin: 0 !important;
+  padding: 2px 4px;
+  border-radius: 4px;
+  background: rgba(6, 20, 17, .72);
+  color: #b9e9da !important;
+}
+
+.timeline-premium .clip-audio.selected {
+  box-shadow:
+    inset 0 0 0 1px #91f1d4,
+    0 0 0 1px rgba(145, 241, 212, .24) !important;
+}
+
+.audio-inspector-hint {
+  display: block;
+  margin: -2px 0 13px;
+  padding: 8px 9px;
+  border: 1px solid #27483f;
+  border-radius: 7px;
+  background: #10211c;
+  color: #9fd8c6;
+  font-size: 10px;
+  line-height: 1.45;
+}
+
+.library-audio-entry {
+  display: grid;
+  gap: 5px;
+  margin: 9px 0 10px;
+}
+
+.library-audio-entry .audio-import-button {
+  width: 100%;
+  min-height: 34px;
+  justify-content: center;
+  border-color: #315b50;
+  background: #11231e;
+  color: #a9ead5;
+}
+
+.library-audio-entry small {
+  color: #788f87;
+  font-size: 9px;
+  line-height: 1.35;
+}
+
+@media (min-width: 851px) and (max-height: 680px) {
+  .timeline-premium .track-row[data-track-type="audio"] {
+    height: 68px !important;
+  }
+
+  .timeline-premium .track-row[data-track-type="audio"] .track-name {
+    min-height: 68px !important;
+  }
+
+  .timeline-premium .track-row[data-track-type="audio"] .clip-audio {
+    height: 58px !important;
+  }
+
+  .timeline-premium .clip-audio .clip-wave {
+    height: 29px !important;
+  }
+}
