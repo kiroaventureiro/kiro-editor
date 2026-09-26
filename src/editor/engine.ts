@@ -20,6 +20,52 @@ export function visualTrackStack(tracks: Track[]) {
     .map(({ track }) => track);
 }
 
+function drawTextClip(
+  ctx: CanvasRenderingContext2D,
+  c: Clip,
+  w: number,
+  h: number,
+) {
+  const size = ((c.fontSize ?? 6) * Math.min(w, h)) / 100;
+  const weight = c.fontWeight ?? 600;
+  const lines = (c.text ?? c.name).split("\n");
+  const lineHeight = size * 1.25;
+  const backgroundOpacity = clamp(c.backgroundOpacity ?? 0, 0, 1);
+  const padding = size * (c.backgroundPadding ?? 0.28);
+
+  ctx.font = `${weight} ${size}px system-ui, sans-serif`;
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.lineJoin = "round";
+
+  lines.forEach((line, i) => {
+    const y = (i - (lines.length - 1) / 2) * lineHeight;
+
+    if (backgroundOpacity > 0 && c.backgroundColor) {
+      const width = Math.min(w * 0.92, ctx.measureText(line || " ").width);
+      const oldAlpha = ctx.globalAlpha;
+      ctx.globalAlpha = oldAlpha * backgroundOpacity;
+      ctx.fillStyle = c.backgroundColor;
+      ctx.fillRect(
+        -width / 2 - padding,
+        y - size * 0.58 - padding * 0.45,
+        width + padding * 2,
+        size * 1.16 + padding * 0.9,
+      );
+      ctx.globalAlpha = oldAlpha;
+    }
+
+    const strokeWidth = Math.max(0, c.strokeWidth ?? 0.12);
+    if (strokeWidth > 0) {
+      ctx.strokeStyle = c.strokeColor ?? "#000000";
+      ctx.lineWidth = size * strokeWidth;
+      ctx.strokeText(line, 0, y, w * 0.9);
+    }
+    ctx.fillStyle = c.color ?? "#ffffff";
+    ctx.fillText(line, 0, y, w * 0.9);
+  });
+}
+
 export class Composition {
   private resources = new Map<string, Resource>();
   private gains = new Map<string, GainNode>();
@@ -123,8 +169,6 @@ export class Composition {
       this.monitorGain = this.context.createGain();
       this.monitorGain.connect(this.context.destination);
 
-      // Toda mídia com áudio entra no mesmo mixer. Isso permite ouvir também
-      // o som das camadas extras de vídeo, respeitando volume e mute da trilha.
       for (const [id, resource] of this.resources) {
         if (!(resource instanceof HTMLMediaElement)) continue;
 
@@ -185,8 +229,6 @@ export class Composition {
         const target = this.mediaTime(c, media, time);
         media.playbackRate = c.speed ?? 1;
 
-        // O seek inicial só acontece uma vez, antes da reprodução. Durante o
-        // play não ficamos reposicionando o vídeo quadro a quadro.
         if (!media.seeking && Math.abs(media.currentTime - target) > 0.3)
           media.currentTime = target;
 
@@ -281,8 +323,6 @@ export class Composition {
           continue;
         }
 
-        // Com o vídeo já tocando, nunca fazemos seek contínuo. Em vez disso,
-        // corrigimos pequenos desvios com uma variação suave de velocidade.
         if (media instanceof HTMLVideoElement) {
           const drift = target - media.currentTime;
           const correction = clamp(1 + drift * 0.12, 0.94, 1.06);
@@ -377,20 +417,7 @@ export class Composition {
         ctx.scale(scale, scale);
 
         if (c.type === "text") {
-          const size = ((c.fontSize ?? 6) * Math.min(w, h)) / 100;
-          ctx.font = `600 ${size}px system-ui, sans-serif`;
-          ctx.textAlign = "center";
-          ctx.textBaseline = "middle";
-          ctx.fillStyle = c.color ?? "#ffffff";
-          ctx.strokeStyle = "#000";
-          ctx.lineWidth = size * 0.12;
-          ctx.lineJoin = "round";
-          const lines = (c.text ?? c.name).split("\n");
-          lines.forEach((line, i) => {
-            const y = (i - (lines.length - 1) / 2) * size * 1.25;
-            ctx.strokeText(line, 0, y, w * 0.9);
-            ctx.fillText(line, 0, y, w * 0.9);
-          });
+          drawTextClip(ctx, c, w, h);
         } else {
           const source = this.resources.get(c.id);
           if (
