@@ -55,6 +55,14 @@ export interface Track {
   clips: Clip[];
 }
 
+export interface ProjectMarker {
+  id: string;
+  time: number;
+  label: string;
+  kind: "beat" | "manual";
+  sourceAssetId?: string;
+}
+
 export interface ProjectSettings {
   width: number;
   height: number;
@@ -71,4 +79,5 @@ export interface KiroProject {
   settings: ProjectSettings;
   assets: MediaAsset[];
   tracks: Track[];
+  markers?: ProjectMarker[];
 }
