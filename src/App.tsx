@@ -7,6 +7,7 @@ import {
   Captions,
   Film,
   Music2,
+  AudioWaveform,
   Video,
   SlidersHorizontal,
   WandSparkles,
@@ -23,10 +24,12 @@ import { historyReducer } from "./editor/history";
 import {
   changeSpeed,
   clamp,
+  detectSilenceRanges,
   frameTime,
   parseSrt,
   projectDuration,
   removeClips,
+  removeTimelineRanges,
   split,
   trim,
 } from "./editor/operations";
@@ -43,6 +46,7 @@ import {
   validateProject,
 } from "./editor/storage";
 import { recordingFormat, renderVideo } from "./editor/engine";
+import { analyzeAudioPeaks } from "./editor/audioAnalysis";
 
 const AUTO_CAPTION_PROXY_LIMIT = 4_300_000;
 
@@ -506,6 +510,73 @@ export default function App() {
       setNotice(error(e));
     }
   };
+  const removeAutomaticSilence = async () => {
+    if (busy || captioning) return;
+    if (!selectedClip?.assetId || selectedClip.type === "text") {
+      setNotice("Selecione um vídeo ou áudio para remover as pausas.");
+      return;
+    }
+    if (project.tracks.some((track) => track.locked)) {
+      setNotice(
+        "Desbloqueie as trilhas antes de remover silêncio para manter vídeo, áudio, textos e legendas sincronizados.",
+      );
+      return;
+    }
+    const asset = project.assets.find((item) => item.id === selectedClip.assetId);
+    if (!asset?.path || !asset.duration) {
+      setNotice("Reconecte a mídia antes de analisar os silêncios.");
+      return;
+    }
+
+    setPlaying(false);
+    setBusy(true);
+    setNotice("Analisando pausas e preservando a sincronização do projeto…");
+    try {
+      let peaks = asset.peaks;
+      if (!peaks?.length) {
+        const response = await fetch(asset.path);
+        if (!response.ok)
+          throw new Error("Não foi possível abrir a mídia selecionada.");
+        const analysis = await analyzeAudioPeaks(await response.blob());
+        peaks = analysis.peaks;
+        edit((p) => ({
+          ...p,
+          assets: p.assets.map((item) =>
+            item.id === asset.id ? { ...item, peaks } : item,
+          ),
+        }));
+      }
+
+      const ranges = detectSilenceRanges(
+        selectedClip,
+        peaks,
+        asset.duration,
+      );
+      if (!ranges.length) {
+        setNotice(
+          "Não encontrei pausas longas o bastante nesse trecho. O áudio foi mantido como está.",
+        );
+        return;
+      }
+
+      const removed = ranges.reduce(
+        (seconds, range) => seconds + range.end - range.start,
+        0,
+      );
+      const returnTime = selectedClip.start;
+      edit((p) => removeTimelineRanges(p, ranges));
+      setSelected([]);
+      setTimelineMode(undefined);
+      setTime(returnTime);
+      setNotice(
+        `${ranges.length} pausa(s) removida(s) · ${removed.toFixed(1)} s encurtados mantendo as camadas sincronizadas.`,
+      );
+    } catch (e) {
+      setNotice(error(e));
+    } finally {
+      setBusy(false);
+    }
+  };
   const generateAutomaticCaptions = async () => {
     if (captioning) return;
     if (!selectedClip?.assetId) {
@@ -754,6 +825,16 @@ export default function App() {
             <Music2 size={16} />
             Áudio
           </button>
+          {selectedClip && selectedClip.type !== "text" && (
+            <button
+              onClick={() => void removeAutomaticSilence()}
+              disabled={busy || exporting || captioning}
+              title="Detectar pausas e removê-las de todas as camadas sincronizadas"
+            >
+              <AudioWaveform size={16} />
+              Remover silêncio
+            </button>
+          )}
           <button
             onClick={() => void generateAutomaticCaptions()}
             disabled={busy || exporting || captioning}
