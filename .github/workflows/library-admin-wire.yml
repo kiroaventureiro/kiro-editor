@@ -1,5 +1,6 @@
 name: Wire KIRO Library admin panel
 
+# Retry after the cloud client typing fix.
 on:
   push:
     branches:
