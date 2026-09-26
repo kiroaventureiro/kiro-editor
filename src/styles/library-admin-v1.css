@@ -224,3 +224,10 @@
     grid-template-columns: 1fr;
   }
 }
+
+.library-admin-visibility-note {
+  display: block;
+  color: rgba(244, 246, 251, 0.5);
+  font-size: 11px;
+  line-height: 1.45;
+}

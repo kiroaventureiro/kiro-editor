@@ -191,11 +191,6 @@ function patchRow(body) {
       throw Object.assign(new Error("Plano inválido."), { status: 400 });
     patch.tier = body.tier;
   }
-  if (body?.visibility !== undefined) {
-    if (!allowedVisibility.has(body.visibility))
-      throw Object.assign(new Error("Visibilidade inválida."), { status: 400 });
-    patch.visibility = body.visibility;
-  }
   if (body?.status !== undefined) {
     if (!allowedStatus.has(body.status))
       throw Object.assign(new Error("Estado inválido."), { status: 400 });

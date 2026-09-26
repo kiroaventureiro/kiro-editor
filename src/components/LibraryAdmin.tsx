@@ -193,7 +193,6 @@ export default function LibraryAdmin({ onClose }: Props) {
     asset: LibraryAdminAsset,
     patch: Partial<{
       status: LibraryStatus;
-      visibility: LibraryVisibility;
     }>,
   ) => {
     if (!session) return;
@@ -434,6 +433,10 @@ export default function LibraryAdmin({ onClose }: Props) {
                 />
               </label>
 
+              <small className="library-admin-visibility-note">
+                A visibilidade fica vinculada ao bucket escolhido no upload. Para mudar entre público e interno, arquive e envie novamente.
+              </small>
+
               <button className="primary" disabled={loading || !file}>
                 <CloudUpload size={16} />
                 {loading ? "Salvando…" : "Enviar e salvar asset"}
@@ -483,17 +486,6 @@ export default function LibraryAdmin({ onClose }: Props) {
                         Voltar a rascunho
                       </button>
                     )}
-                    <button
-                      disabled={loading}
-                      onClick={() =>
-                        void changeStatus(asset, {
-                          visibility:
-                            asset.visibility === "public" ? "internal" : "public",
-                        })
-                      }
-                    >
-                      {asset.visibility === "public" ? "Tornar interno" : "Tornar público"}
-                    </button>
                     <button
                       disabled={loading || asset.status === "archived"}
                       onClick={() => void archive(asset)}

@@ -177,7 +177,6 @@ export async function updateLibraryAdminAsset(
     name: string;
     category: LibraryAdminAsset["category"];
     tier: LibraryAdminAsset["tier"];
-    visibility: LibraryVisibility;
     status: LibraryStatus;
     tags: string[];
     collection: string;
