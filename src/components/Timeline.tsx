@@ -20,10 +20,14 @@ import { useEffect, useRef, useState } from "react";
 import type { Clip, KiroProject, Track } from "../editor/types";
 import { projectDuration, snap } from "../editor/operations";
 
+export type TimelineMode = "video" | "text" | "audio";
+
 interface Props {
   project: KiroProject;
   selected: string[];
   time: number;
+  mode: TimelineMode;
+  onMode: (mode: TimelineMode) => void;
   onSeek: (n: number) => void;
   onSelect: (c: Clip, multiple: boolean) => void;
   onMove: (id: string, n: number, edge?: "start" | "end") => void;
@@ -38,6 +42,7 @@ interface Props {
   canRedo: boolean;
   onTrack: (id: string, patch: Partial<Track>) => void;
   onAddTrack: (type: "video" | "audio") => void;
+  onAddText: () => void;
 }
 
 type DragState = {
@@ -58,8 +63,6 @@ type DragVisual = {
   mode: "move" | "trim-start" | "trim-end";
 };
 
-type EditMode = "video" | "text" | "audio";
-
 const EPS = 1 / 1000;
 const MIN_ZOOM = 0.05;
 const MAX_ZOOM = 240;
@@ -72,7 +75,6 @@ export default function Timeline(p: Props) {
   const [ripple, setRipple] = useState(false);
   const [viewport, setViewport] = useState(900);
   const [dragVisual, setDragVisual] = useState<DragVisual | null>(null);
-  const [editMode, setEditMode] = useState<EditMode>("video");
 
   const scroll = useRef<HTMLDivElement>(null);
   const scrub = useRef<number | null>(null);
@@ -114,10 +116,10 @@ export default function Timeline(p: Props) {
   });
   const primaryVideo = orderedTracks.find((track) => track.type === "video");
   const visibleTracks = orderedTracks.filter((track) => {
-    if (editMode === "video")
+    if (p.mode === "video")
       return track.type === "video" || track.type === "overlay";
     if (track.id === primaryVideo?.id) return true;
-    return track.type === editMode;
+    return track.type === p.mode;
   });
 
   const setVisual = (visual: DragVisual | null) => {
@@ -139,16 +141,16 @@ export default function Timeline(p: Props) {
     if (projectId.current !== p.project.id) {
       projectId.current = p.project.id;
       autoFitDone.current = false;
-      setEditMode("video");
+      p.onMode("video");
     }
-  }, [p.project.id]);
+  }, [p.project.id, p.onMode]);
 
   useEffect(() => {
     if (!selectedClip) return;
-    if (selectedClip.type === "text") setEditMode("text");
-    else if (selectedClip.type === "audio") setEditMode("audio");
-    else setEditMode("video");
-  }, [selectedClip?.id, selectedClip?.type]);
+    if (selectedClip.type === "text") p.onMode("text");
+    else if (selectedClip.type === "audio") p.onMode("audio");
+    else p.onMode("video");
+  }, [selectedClip?.id, selectedClip?.type, p.onMode]);
 
   useEffect(() => {
     const handleCanvasSelection = (event: Event) => {
@@ -617,9 +619,6 @@ export default function Timeline(p: Props) {
         </div>
 
         <div className="tool-group timeline-view-tools">
-          <span className="timeline-context" title="A timeline mostra apenas as trilhas úteis para a edição atual">
-            {editMode === "video" ? "Vídeo" : editMode === "text" ? "Texto" : "Áudio"}
-          </span>
           <button
             className={snapping ? "active" : ""}
             aria-label="Encaixe automático"
@@ -664,26 +663,30 @@ export default function Timeline(p: Props) {
           >
             Ver tudo
           </button>
-          <button
-            onClick={() => {
-              setEditMode("video");
-              p.onAddTrack("video");
-            }}
-            title="Nova camada de vídeo"
-          >
-            <Plus size={16} />
-            <span>Camada</span>
-          </button>
-          <button
-            onClick={() => {
-              setEditMode("audio");
-              p.onAddTrack("audio");
-            }}
-            title="Nova camada de áudio"
-          >
-            <Plus size={16} />
-            <span>Áudio</span>
-          </button>
+          {p.mode === "video" && (
+            <button
+              onClick={() => p.onAddTrack("video")}
+              title="Nova camada de vídeo"
+            >
+              <Plus size={16} />
+              <span>Camada</span>
+            </button>
+          )}
+          {p.mode === "text" && (
+            <button onClick={p.onAddText} title="Adicionar texto">
+              <Plus size={16} />
+              <span>Texto</span>
+            </button>
+          )}
+          {p.mode === "audio" && (
+            <button
+              onClick={() => p.onAddTrack("audio")}
+              title="Nova camada de áudio"
+            >
+              <Plus size={16} />
+              <span>Áudio</span>
+            </button>
+          )}
         </div>
       </div>
 
@@ -884,12 +887,12 @@ export default function Timeline(p: Props) {
                 : "Movendo clipe — solte na posição desejada"
             : p.selected.length
               ? `${p.selected.length} selecionado(s)`
-              : `Editando ${editMode === "video" ? "vídeo" : editMode === "text" ? "texto" : "áudio"}`}
+              : `Editando ${p.mode === "video" ? "vídeo" : p.mode === "text" ? "texto" : "áudio"}`}
         </span>
         <span>
-          {editMode === "video"
+          {p.mode === "video"
             ? "Vídeo principal + camadas de vídeo"
-            : editMode === "text"
+            : p.mode === "text"
               ? "Vídeo principal + textos"
               : "Vídeo principal + áudios"}
           {" · "}Alt ignora encaixe
