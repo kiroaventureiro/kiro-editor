@@ -20,7 +20,7 @@ import { useEffect, useRef, useState } from "react";
 import type { Clip, KiroProject, Track } from "../editor/types";
 import { projectDuration, snap } from "../editor/operations";
 
-export type TimelineMode = "video" | "text" | "audio";
+export type TimelineMode = "video" | "text" | "audio" | undefined;
 
 interface Props {
   project: KiroProject;
@@ -84,7 +84,7 @@ export default function Timeline(p: Props) {
   const projectId = useRef(p.project.id);
 
   const total = projectDuration(p.project);
-  const label = 172;
+  const label = 210;
   const available = Math.max(260, viewport - label - 18);
   const width = Math.max(available, Math.max(1, total) * zoom);
   const fitZoom = Math.max(
@@ -114,8 +114,10 @@ export default function Timeline(p: Props) {
     if (diff) return diff;
     return p.project.tracks.indexOf(a) - p.project.tracks.indexOf(b);
   });
+
   const primaryVideo = orderedTracks.find((track) => track.type === "video");
   const visibleTracks = orderedTracks.filter((track) => {
+    if (!p.mode) return true;
     if (p.mode === "video")
       return track.type === "video" || track.type === "overlay";
     if (track.id === primaryVideo?.id) return true;
@@ -125,6 +127,14 @@ export default function Timeline(p: Props) {
   const setVisual = (visual: DragVisual | null) => {
     dragVisualRef.current = visual;
     setDragVisual(visual);
+  };
+
+  const clearSelection = () => {
+    const clips = p.project.tracks
+      .flatMap((track) => track.clips)
+      .filter((clip) => p.selected.includes(clip.id));
+    clips.forEach((clip) => p.onSelect(clip, true));
+    p.onMode(undefined);
   };
 
   useEffect(() => {
@@ -141,7 +151,7 @@ export default function Timeline(p: Props) {
     if (projectId.current !== p.project.id) {
       projectId.current = p.project.id;
       autoFitDone.current = false;
-      p.onMode("video");
+      p.onMode(undefined);
     }
   }, [p.project.id, p.onMode]);
 
@@ -158,7 +168,10 @@ export default function Timeline(p: Props) {
       const clip = p.project.tracks
         .flatMap((track) => track.clips)
         .find((candidate) => candidate.id === clipId);
-      if (!clip) return;
+      if (!clip) {
+        if (!clipId) clearSelection();
+        return;
+      }
       const keepTime = p.time;
       p.onSelect(clip, false);
       p.onSeek(keepTime);
@@ -169,7 +182,7 @@ export default function Timeline(p: Props) {
         CANVAS_SELECT_EVENT,
         handleCanvasSelection as EventListener,
       );
-  }, [p.project, p.time, p.onSelect, p.onSeek]);
+  }, [p.project, p.time, p.selected, p.onSelect, p.onSeek, p.onMode]);
 
   useEffect(() => {
     if (!total || autoFitDone.current) return;
@@ -226,6 +239,7 @@ export default function Timeline(p: Props) {
   const scrubProps = {
     onPointerDown: (e: React.PointerEvent<HTMLDivElement>) => {
       e.preventDefault();
+      clearSelection();
       e.currentTarget.setPointerCapture(e.pointerId);
       scrub.current = e.pointerId;
       seek(e);
@@ -533,53 +547,26 @@ export default function Timeline(p: Props) {
     <section className="timeline-shell timeline-premium" aria-label="Timeline">
       <div className="timeline-toolbar">
         <div className="tool-group timeline-edit-tools">
-          <button
-            aria-label="Desfazer"
-            title="Desfazer (Ctrl+Z)"
-            onClick={p.onUndo}
-            disabled={!p.canUndo}
-          >
+          <button aria-label="Desfazer" title="Desfazer (Ctrl+Z)" onClick={p.onUndo} disabled={!p.canUndo}>
             <Undo2 size={17} />
           </button>
-          <button
-            aria-label="Refazer"
-            title="Refazer (Ctrl+Y)"
-            onClick={p.onRedo}
-            disabled={!p.canRedo}
-          >
+          <button aria-label="Refazer" title="Refazer (Ctrl+Y)" onClick={p.onRedo} disabled={!p.canRedo}>
             <Redo2 size={17} />
           </button>
           <span className="separator" />
-          <button
-            onClick={p.onSplit}
-            disabled={!p.selected.length}
-            title="Dividir clipe no cursor"
-          >
+          <button onClick={p.onSplit} disabled={!p.selected.length} title="Dividir clipe no cursor">
             <Scissors size={16} />
             <span>Dividir</span>
           </button>
-          <button
-            onClick={p.onDuplicate}
-            disabled={!p.selected.length}
-            title="Duplicar seleção"
-          >
+          <button onClick={p.onDuplicate} disabled={!p.selected.length} title="Duplicar seleção">
             <Copy size={16} />
             <span>Duplicar</span>
           </button>
-          <button
-            aria-label="Excluir seleção"
-            title="Excluir seleção"
-            onClick={() => p.onDelete(ripple)}
-            disabled={!p.selected.length}
-          >
+          <button aria-label="Excluir seleção" title="Excluir seleção" onClick={() => p.onDelete(ripple)} disabled={!p.selected.length}>
             <Trash2 size={17} />
           </button>
           <span className="separator" />
-          <button
-            className="active"
-            aria-label="Ferramenta de seleção"
-            title="Selecionar e mover clipes"
-          >
+          <button className="active" aria-label="Ferramenta de seleção" title="Selecionar e mover clipes">
             <MousePointer2 size={16} />
           </button>
           <button
@@ -603,15 +590,9 @@ export default function Timeline(p: Props) {
           {selectedClip && sourceTrack && compatibleTracks.length > 1 && (
             <label className="layer-picker">
               Camada
-              <select
-                aria-label="Mover para camada"
-                value={sourceTrack.id}
-                onChange={(e) => moveToLayer(e.target.value)}
-              >
+              <select aria-label="Mover para camada" value={sourceTrack.id} onChange={(e) => moveToLayer(e.target.value)}>
                 {compatibleTracks.map((t) => (
-                  <option value={t.id} key={t.id}>
-                    {t.name}
-                  </option>
+                  <option value={t.id} key={t.id}>{t.name}</option>
                 ))}
               </select>
             </label>
@@ -628,63 +609,30 @@ export default function Timeline(p: Props) {
           >
             <Magnet size={17} />
           </button>
-          <button
-            className="zoom-step"
-            aria-label="Diminuir zoom"
-            title="Diminuir zoom"
-            onClick={() => changeZoom(-Math.max(0.1, Math.max(zoom, 0.5) * 0.18))}
-          >
+          <button className="zoom-step" aria-label="Diminuir zoom" title="Diminuir zoom" onClick={() => changeZoom(-Math.max(0.1, Math.max(zoom, 0.5) * 0.18))}>
             <Minus size={15} />
           </button>
           <label className="zoom" title="Zoom da linha do tempo">
             <span>Zoom</span>
-            <input
-              aria-label="Zoom da timeline"
-              type="range"
-              min={MIN_ZOOM}
-              max={MAX_ZOOM}
-              step={0.05}
-              value={zoom}
-              onChange={(e) => setZoom(Number(e.target.value))}
-            />
+            <input aria-label="Zoom da timeline" type="range" min={MIN_ZOOM} max={MAX_ZOOM} step={0.05} value={zoom} onChange={(e) => setZoom(Number(e.target.value))} />
           </label>
-          <button
-            className="zoom-step"
-            aria-label="Aumentar zoom"
-            title="Aumentar zoom"
-            onClick={() => changeZoom(Math.max(0.1, Math.max(zoom, 0.5) * 0.18))}
-          >
+          <button className="zoom-step" aria-label="Aumentar zoom" title="Aumentar zoom" onClick={() => changeZoom(Math.max(0.1, Math.max(zoom, 0.5) * 0.18))}>
             <Plus size={15} />
           </button>
-          <button
-            className="fit-timeline"
-            onClick={fitAll}
-            title="Mostrar o projeto inteiro na timeline"
-          >
-            Ver tudo
-          </button>
-          {p.mode === "video" && (
-            <button
-              onClick={() => p.onAddTrack("video")}
-              title="Nova camada de vídeo"
-            >
-              <Plus size={16} />
-              <span>Camada</span>
+          <button className="fit-timeline" onClick={fitAll} title="Mostrar o projeto inteiro na timeline">Ver tudo</button>
+          {(p.mode === "video" || !p.mode) && (
+            <button onClick={() => p.onAddTrack("video")} title="Nova camada de vídeo">
+              <Plus size={16} /><span>Camada</span>
             </button>
           )}
-          {p.mode === "text" && (
+          {(p.mode === "text" || !p.mode) && (
             <button onClick={p.onAddText} title="Adicionar texto">
-              <Plus size={16} />
-              <span>Texto</span>
+              <Plus size={16} /><span>Texto</span>
             </button>
           )}
-          {p.mode === "audio" && (
-            <button
-              onClick={() => p.onAddTrack("audio")}
-              title="Nova camada de áudio"
-            >
-              <Plus size={16} />
-              <span>Áudio</span>
+          {(p.mode === "audio" || !p.mode) && (
+            <button onClick={() => p.onAddTrack("audio")} title="Nova camada de áudio">
+              <Plus size={16} /><span>Áudio</span>
             </button>
           )}
         </div>
@@ -692,32 +640,21 @@ export default function Timeline(p: Props) {
 
       <div className="timeline-scroll" ref={scroll}>
         <div className="timeline-content" style={{ width: width + label }}>
-          <div
-            className="ruler-row"
-            style={{ gridTemplateColumns: `${label}px ${width}px` }}
-          >
+          <div className="ruler-row" style={{ gridTemplateColumns: `${label}px ${width}px` }}>
             <div className="ruler-label">{p.project.settings.fps} FPS</div>
             <div className="ruler" {...scrubProps}>
               {Array.from(
-                {
-                  length: Math.min(2000, Math.ceil(width / zoom / tick) + 1),
-                },
+                { length: Math.min(2000, Math.ceil(width / zoom / tick) + 1) },
                 (_, i) => {
                   const at = i * tick;
                   return (
-                    <span
-                      className={`ruler-tick ${i === 0 ? "first" : ""}`}
-                      key={i}
-                      style={{ left: at * zoom }}
-                    >
+                    <span className={`ruler-tick ${i === 0 ? "first" : ""}`} key={i} style={{ left: at * zoom }}>
                       {formatRulerTime(at)}
                     </span>
                   );
                 },
               )}
-              <div className="ruler-playhead" style={{ left: p.time * zoom }}>
-                <span />
-              </div>
+              <div className="ruler-playhead" style={{ left: p.time * zoom }}><span /></div>
             </div>
           </div>
 
@@ -734,49 +671,25 @@ export default function Timeline(p: Props) {
                 style={{ gridTemplateColumns: `${label}px ${width}px` }}
               >
                 <div className="track-name" data-track-type={t.type}>
-                  <span className="track-kind" aria-hidden="true">
-                    {kind}
-                  </span>
+                  <span className="track-kind" aria-hidden="true">{kind}</span>
                   <div className="track-title-block">
                     <strong title={t.name}>{t.name}</strong>
                     <small>{code}</small>
                   </div>
                   <div className="track-actions">
                     <button
-                      aria-label={`${
-                        t.type === "text"
-                          ? t.muted
-                            ? "Mostrar"
-                            : "Ocultar"
-                          : t.muted
-                            ? "Ativar"
-                            : "Silenciar"
-                      } ${t.name}`}
-                      title={
-                        t.type === "text"
-                          ? t.muted
-                            ? "Mostrar trilha"
-                            : "Ocultar trilha"
-                          : t.muted
-                            ? "Ativar áudio"
-                            : "Silenciar áudio"
-                      }
+                      aria-label={`${t.type === "text" ? (t.muted ? "Mostrar" : "Ocultar") : t.muted ? "Ativar" : "Silenciar"} ${t.name}`}
+                      title={t.type === "text" ? (t.muted ? "Mostrar trilha" : "Ocultar trilha") : t.muted ? "Ativar áudio" : "Silenciar áudio"}
                       onClick={() => p.onTrack(t.id, { muted: !t.muted })}
                     >
-                      {t.type === "text" ? (
-                        t.muted ? <EyeOff size={13} /> : <Eye size={13} />
-                      ) : t.muted ? (
-                        <VolumeX size={13} />
-                      ) : (
-                        <Volume2 size={13} />
-                      )}
+                      {t.type === "text" ? (t.muted ? <EyeOff size={14} /> : <Eye size={14} />) : t.muted ? <VolumeX size={14} /> : <Volume2 size={14} />}
                     </button>
                     <button
                       aria-label={`${t.locked ? "Desbloquear" : "Bloquear"} ${t.name}`}
                       title={t.locked ? "Desbloquear trilha" : "Bloquear trilha"}
                       onClick={() => p.onTrack(t.id, { locked: !t.locked })}
                     >
-                      {t.locked ? <Lock size={13} /> : <Unlock size={13} />}
+                      {t.locked ? <Lock size={14} /> : <Unlock size={14} />}
                     </button>
                   </div>
                 </div>
@@ -785,10 +698,7 @@ export default function Timeline(p: Props) {
                   {dragVisual?.trackId === t.id && dragVisual.mode === "move" && (
                     <div
                       className={`clip-drop-slot ${dragVisual.snapped ? "snapped" : ""}`}
-                      style={{
-                        left: dragVisual.start * zoom,
-                        width: Math.max(4, dragVisual.duration * zoom),
-                      }}
+                      style={{ left: dragVisual.start * zoom, width: Math.max(4, dragVisual.duration * zoom) }}
                       aria-hidden="true"
                     >
                       <i />
@@ -807,10 +717,7 @@ export default function Timeline(p: Props) {
                         key={c.id}
                         data-clip-id={c.id}
                         className={`clip clip-${t.type} ${p.selected.includes(c.id) ? "selected" : ""} ${dragging ? "dragging" : ""}`}
-                        style={{
-                          left: c.start * zoom,
-                          width: Math.max(4, c.duration * zoom),
-                        }}
+                        style={{ left: c.start * zoom, width: Math.max(4, c.duration * zoom) }}
                         onPointerDown={(e) => start(e, c, !!t.locked)}
                         onPointerMove={move}
                         onPointerUp={end}
@@ -822,50 +729,18 @@ export default function Timeline(p: Props) {
                           }
                         }}
                       >
-                        {asset?.thumbnail && (
-                          <div
-                            className="clip-film"
-                            style={{ backgroundImage: `url(${asset.thumbnail})` }}
-                          />
-                        )}
+                        {asset?.thumbnail && <div className="clip-film" style={{ backgroundImage: `url(${asset.thumbnail})` }} />}
                         {asset?.peaks && (
-                          <svg
-                            className="clip-wave"
-                            viewBox="0 0 160 40"
-                            preserveAspectRatio="none"
-                            aria-hidden="true"
-                          >
+                          <svg className="clip-wave" viewBox="0 0 160 40" preserveAspectRatio="none" aria-hidden="true">
                             {asset.peaks.map((peak, i) => (
-                              <line
-                                key={i}
-                                x1={i}
-                                x2={i}
-                                y1={20 - peak * 20}
-                                y2={20 + peak * 20}
-                              />
+                              <line key={i} x1={i} x2={i} y1={20 - peak * 20} y2={20 + peak * 20} />
                             ))}
                           </svg>
                         )}
                         <strong>{c.name}</strong>
                         <small>{formatDuration(c.duration)}</small>
-                        <button
-                          className="trim-handle start"
-                          aria-label={`Cortar início de ${c.name}`}
-                          disabled={t.locked}
-                          onPointerDown={(e) => start(e, c, !!t.locked, "start")}
-                          onPointerMove={move}
-                          onPointerUp={end}
-                          onPointerCancel={end}
-                        />
-                        <button
-                          className="trim-handle end"
-                          aria-label={`Cortar final de ${c.name}`}
-                          disabled={t.locked}
-                          onPointerDown={(e) => start(e, c, !!t.locked, "end")}
-                          onPointerMove={move}
-                          onPointerUp={end}
-                          onPointerCancel={end}
-                        />
+                        <button className="trim-handle start" aria-label={`Cortar início de ${c.name}`} disabled={t.locked} onPointerDown={(e) => start(e, c, !!t.locked, "start")} onPointerMove={move} onPointerUp={end} onPointerCancel={end} />
+                        <button className="trim-handle end" aria-label={`Cortar final de ${c.name}`} disabled={t.locked} onPointerDown={(e) => start(e, c, !!t.locked, "end")} onPointerMove={move} onPointerUp={end} onPointerCancel={end} />
                       </div>
                     );
                   })}
@@ -887,14 +762,16 @@ export default function Timeline(p: Props) {
                 : "Movendo clipe — solte na posição desejada"
             : p.selected.length
               ? `${p.selected.length} selecionado(s)`
-              : `Editando ${p.mode === "video" ? "vídeo" : p.mode === "text" ? "texto" : "áudio"}`}
+              : "Nenhum item selecionado"}
         </span>
         <span>
-          {p.mode === "video"
-            ? "Vídeo principal + camadas de vídeo"
-            : p.mode === "text"
-              ? "Vídeo principal + textos"
-              : "Vídeo principal + áudios"}
+          {!p.mode
+            ? "Todas as trilhas"
+            : p.mode === "video"
+              ? "Vídeo principal + camadas de vídeo"
+              : p.mode === "text"
+                ? "Vídeo principal + textos"
+                : "Vídeo principal + áudios"}
           {" · "}Alt ignora encaixe
         </span>
       </div>
@@ -904,10 +781,7 @@ export default function Timeline(p: Props) {
 
 function chooseRulerStep(pxPerSecond: number) {
   const steps = [1, 2, 5, 10, 15, 30, 60, 120, 300, 600, 900, 1800, 3600, 7200];
-  return (
-    steps.find((seconds) => seconds * pxPerSecond >= RULER_MIN_LABEL_GAP) ??
-    steps[steps.length - 1]
-  );
+  return steps.find((seconds) => seconds * pxPerSecond >= RULER_MIN_LABEL_GAP) ?? steps[steps.length - 1];
 }
 
 function formatRulerTime(n: number) {
@@ -915,8 +789,7 @@ function formatRulerTime(n: number) {
   const h = Math.floor(seconds / 3600);
   const m = Math.floor((seconds % 3600) / 60);
   const s = seconds % 60;
-  if (h > 0)
-    return `${h}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+  if (h > 0) return `${h}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
   return `${m}:${String(s).padStart(2, "0")}`;
 }
 
