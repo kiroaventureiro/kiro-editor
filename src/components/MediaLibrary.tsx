@@ -1,4 +1,4 @@
-import { Grid2X2, Link2, List, Plus, Search, Upload } from "lucide-react";
+import { Grid2X2, Link2, List, Music2, Plus, Search, Upload } from "lucide-react";
 import { useMemo, useState } from "react";
 import type { MediaAsset, Track } from "../editor/types";
 
@@ -99,6 +99,27 @@ export default function MediaLibrary({
           }}
         />
       </label>
+
+      <div className="library-audio-entry">
+        <label className={`button audio-import-button ${busy ? "disabled" : ""}`}>
+          <Music2 size={16} />
+          <span>Importar áudio</span>
+          <input
+            aria-label="Importar áudio"
+            hidden
+            type="file"
+            accept="audio/*"
+            multiple
+            disabled={busy}
+            onChange={(e) => {
+              setFilter("audio");
+              onImport(e.target.files);
+              e.target.value = "";
+            }}
+          />
+        </label>
+        <small>Músicas, narrações e efeitos. Depois use + para inserir na timeline.</small>
+      </div>
 
       <label className="search">
         <Search size={16} />
