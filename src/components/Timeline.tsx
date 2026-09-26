@@ -81,7 +81,7 @@ export default function Timeline(p: Props) {
   const drag = useRef<DragState | null>(null);
   const dragVisualRef = useRef<DragVisual | null>(null);
   const autoFitDone = useRef(false);
-  const projectId = useRef(p.project.id);
+  const projectId = useRef("");
 
   const total = projectDuration(p.project);
   const label = 210;
