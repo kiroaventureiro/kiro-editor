@@ -6,6 +6,8 @@ import {
   Type,
   Captions,
   Film,
+  Music2,
+  Video,
   SlidersHorizontal,
   X,
 } from "lucide-react";
@@ -13,7 +15,7 @@ import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 import MediaLibrary from "./components/MediaLibrary";
 import Preview from "./components/Preview";
 import Inspector from "./components/Inspector";
-import Timeline from "./components/Timeline";
+import Timeline, { type TimelineMode } from "./components/Timeline";
 import { createEmptyProject, projectPresets } from "./editor/project";
 import type { Clip, KiroProject, MediaAsset, Track } from "./editor/types";
 import { historyReducer } from "./editor/history";
@@ -70,6 +72,7 @@ export default function App() {
     ),
     [libraryWidth, setLibraryWidth] = useState(260);
   const [targetTrack, setTargetTrack] = useState("video-1");
+  const [timelineMode, setTimelineMode] = useState<TimelineMode>("video");
   const abort = useRef<AbortController | null>(null),
     dirty = useRef(false),
     ready = useRef(false),
@@ -163,7 +166,10 @@ export default function App() {
           : [...ids, c.id]
         : [c.id],
     );
-    if (!multiple) setTime(c.start);
+    if (!multiple) {
+      setTime(c.start);
+      setTimelineMode(c.type === "audio" ? "audio" : c.type === "text" ? "text" : "video");
+    }
   };
   const updateClip = (patch: Partial<Clip>) => {
     if (!selectedClip || locked) return;
@@ -352,6 +358,7 @@ export default function App() {
         ),
       };
     });
+    setTimelineMode(type);
     setSelected([id]);
     setTime(start);
   };
@@ -422,6 +429,7 @@ export default function App() {
     setPlaying(false);
     setTime(0);
     setSelected([]);
+    setTimelineMode("video");
     current.current = p;
     dispatch({ type: "load", project: p });
     setProjects(null);
@@ -478,6 +486,7 @@ export default function App() {
         ),
       };
     });
+    setTimelineMode("text");
     setSelected([newClips[0].id]);
     setDrawer("inspector");
   };
@@ -629,9 +638,38 @@ export default function App() {
             <Film size={16} />
             Mídia
           </button>
-          <button onClick={() => addText()} disabled={busy || exporting}>
+          <button
+            className={timelineMode === "video" ? "active" : ""}
+            onClick={() => {
+              setTimelineMode("video");
+              const track = project.tracks.find((t) => t.type === "video");
+              if (track) setTargetTrack(track.id);
+            }}
+            title="Editar camadas de vídeo"
+          >
+            <Video size={16} />
+            Vídeo
+          </button>
+          <button
+            className={timelineMode === "text" ? "active" : ""}
+            onClick={() => setTimelineMode("text")}
+            title="Editar textos"
+          >
             <Type size={16} />
             Texto
+          </button>
+          <button
+            className={timelineMode === "audio" ? "active" : ""}
+            onClick={() => {
+              setTimelineMode("audio");
+              const track = project.tracks.find((t) => t.type === "audio");
+              if (track) setTargetTrack(track.id);
+              setDrawer("media");
+            }}
+            title="Editar áudio"
+          >
+            <Music2 size={16} />
+            Áudio
           </button>
           <label className="button">
             <Captions size={16} />
@@ -718,6 +756,8 @@ export default function App() {
           project={project}
           selected={selected}
           time={time}
+          mode={timelineMode}
+          onMode={setTimelineMode}
           onSeek={setTime}
           onSelect={select}
           onMove={(id, n, edge) =>
@@ -770,8 +810,10 @@ export default function App() {
                 },
               ],
             }));
+            setTimelineMode(type);
             setTargetTrack(id);
           }}
+          onAddText={() => addText()}
         />
       </div>
       {notice && (
