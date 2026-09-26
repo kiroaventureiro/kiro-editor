@@ -59,7 +59,10 @@ export class Composition {
             await element.decode();
           } else {
             element.preload = "auto";
-            if (element instanceof HTMLVideoElement) element.playsInline = true;
+            if (element instanceof HTMLVideoElement) {
+              element.playsInline = true;
+              element.disablePictureInPicture = true;
+            }
             await new Promise<void>((resolve, reject) => {
               const timer = setTimeout(() => {
                 cleanup();
@@ -119,17 +122,36 @@ export class Composition {
       this.monitorGain = this.context.createGain();
       this.monitorGain.connect(this.context.destination);
 
-      for (const [id, resource] of this.resources)
-        if (resource instanceof HTMLMediaElement) {
-          resource.volume = 1;
-          const source = this.context.createMediaElementSource(resource);
-          const gain = this.context.createGain();
-          gain.gain.value = 0;
-          source.connect(gain);
-          gain.connect(this.destination);
-          gain.connect(this.monitorGain);
-          this.gains.set(id, gain);
+      const primaryVideo = this.project.tracks.find(
+        (track) => track.type === "video",
+      )?.id;
+      const trackByClip = new Map<string, Track>();
+      for (const track of this.project.tracks)
+        for (const clip of track.clips) trackByClip.set(clip.id, track);
+
+      for (const [id, resource] of this.resources) {
+        if (!(resource instanceof HTMLMediaElement)) continue;
+
+        const track = trackByClip.get(id);
+        const carriesAudio =
+          track?.type === "audio" || track?.id === primaryVideo;
+
+        // Camadas visuais extras não entram no grafo de áudio. Isso reduz
+        // trabalho desnecessário do navegador quando há vários vídeos ativos.
+        if (!carriesAudio) {
+          resource.muted = true;
+          continue;
         }
+
+        resource.volume = 1;
+        const source = this.context.createMediaElementSource(resource);
+        const gain = this.context.createGain();
+        gain.gain.value = 0;
+        source.connect(gain);
+        gain.connect(this.destination);
+        gain.connect(this.monitorGain);
+        this.gains.set(id, gain);
+      }
     }
 
     if (this.monitorGain)
@@ -180,7 +202,9 @@ export class Composition {
         const target = this.mediaTime(c, media, time);
         media.playbackRate = c.speed ?? 1;
 
-        if (!media.seeking && Math.abs(media.currentTime - target) > 0.12)
+        // O seek inicial só acontece uma vez, antes da reprodução. Durante o
+        // play não ficamos reposicionando o vídeo quadro a quadro.
+        if (!media.seeking && Math.abs(media.currentTime - target) > 0.3)
           media.currentTime = target;
 
         if (media instanceof HTMLVideoElement) {
@@ -231,7 +255,7 @@ export class Composition {
           gain.gain.value = audible
             ? clamp(c.volume ?? 1, 0, 1) * envelope(c, time)
             : 0;
-        else
+        else if (!(media instanceof HTMLVideoElement && media.muted))
           media.volume = audible
             ? clamp(c.volume ?? 1, 0, 1) * envelope(c, time)
             : 0;
@@ -244,42 +268,58 @@ export class Composition {
           media.playsInline = true;
         }
 
-        if (!active || !playing) media.pause();
-        if (!active) continue;
+        if (!active) {
+          media.pause();
+          media.playbackRate = c.speed ?? 1;
+          continue;
+        }
 
         const target = this.mediaTime(c, media, time);
-        media.playbackRate = c.speed ?? 1;
+        const baseRate = c.speed ?? 1;
 
-        // Durante a reprodução os elementos de vídeo devem correr naturalmente.
-        // Corrigir o currentTime a cada poucos frames faz o navegador entrar em
-        // seek contínuo e pode congelar uma das camadas. Só corrigimos desvios
-        // realmente perceptíveis e nunca enquanto o elemento já está buscando.
-        const tolerance = playing
-          ? media instanceof HTMLVideoElement
-            ? 0.35
-            : 0.18
-          : 0.001;
-        if (
-          !media.seeking &&
-          Math.abs(media.currentTime - target) > tolerance
-        )
-          media.currentTime = target;
+        if (!playing) {
+          media.pause();
+          media.playbackRate = baseRate;
+          if (!media.seeking && Math.abs(media.currentTime - target) > 0.001)
+            media.currentTime = target;
+          continue;
+        }
 
-        if (playing && media.paused && !this.pending.has(c.id)) {
-          this.pending.add(c.id);
-          void media
-            .play()
-            .catch((e: Error) => {
-              if (
-                e.name !== "AbortError" &&
-                e.name !== "NotAllowedError" &&
-                !this.disposed
-              )
-                this.failure = new Error(
-                  `Reprodução interrompida: ${e.message}`,
-                );
-            })
-            .finally(() => this.pending.delete(c.id));
+        if (media.paused) {
+          // Quando uma camada entra no meio da reprodução, posicionamos uma
+          // única vez e então deixamos o elemento tocar naturalmente.
+          if (!media.seeking && Math.abs(media.currentTime - target) > 0.2)
+            media.currentTime = target;
+
+          if (!this.pending.has(c.id)) {
+            this.pending.add(c.id);
+            void media
+              .play()
+              .catch((e: Error) => {
+                if (
+                  e.name !== "AbortError" &&
+                  e.name !== "NotAllowedError" &&
+                  !this.disposed
+                )
+                  this.failure = new Error(
+                    `Reprodução interrompida: ${e.message}`,
+                  );
+              })
+              .finally(() => this.pending.delete(c.id));
+          }
+          continue;
+        }
+
+        // Com o vídeo já tocando, nunca fazemos seek contínuo. Em vez disso,
+        // corrigimos pequenos desvios com uma variação suave de velocidade.
+        // Isso evita o efeito de uma camada andar devagar/travando enquanto a
+        // outra segue normalmente.
+        if (media instanceof HTMLVideoElement) {
+          const drift = target - media.currentTime;
+          const correction = clamp(1 + drift * 0.12, 0.94, 1.06);
+          media.playbackRate = clamp(baseRate * correction, 0.25, 4);
+        } else {
+          media.playbackRate = baseRate;
         }
       }
     }
@@ -416,7 +456,10 @@ export class Composition {
 
   pause() {
     for (const r of this.resources.values())
-      if (r instanceof HTMLMediaElement) r.pause();
+      if (r instanceof HTMLMediaElement) {
+        r.pause();
+        r.playbackRate = 1;
+      }
   }
 
   dispose() {
