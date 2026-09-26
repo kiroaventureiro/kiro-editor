@@ -256,6 +256,16 @@ export function removeTimelineRanges(
       ...track,
       clips: track.clips.flatMap(cutClip).sort((a, b) => a.start - b.start),
     })),
+    markers: project.markers?.flatMap((marker) => {
+      if (normalized.some((range) => marker.time >= range.start && marker.time < range.end))
+        return [];
+      return [
+        {
+          ...marker,
+          time: Math.max(0, marker.time - removedBefore(marker.time)),
+        },
+      ];
+    }),
   };
 }
 

@@ -8,6 +8,7 @@ import {
   Film,
   Music2,
   AudioWaveform,
+  CircleDot,
   Video,
   SlidersHorizontal,
   WandSparkles,
@@ -46,7 +47,7 @@ import {
   validateProject,
 } from "./editor/storage";
 import { recordingFormat, renderVideo } from "./editor/engine";
-import { analyzeAudioPeaks } from "./editor/audioAnalysis";
+import { analyzeAudioPeaks, detectBeatTimes } from "./editor/audioAnalysis";
 
 const AUTO_CAPTION_PROXY_LIMIT = 4_300_000;
 
@@ -510,6 +511,77 @@ export default function App() {
       setNotice(error(e));
     }
   };
+  const markAutomaticBeats = async () => {
+    if (busy || captioning) return;
+    if (!selectedClip?.assetId || selectedClip.type === "text") {
+      setNotice("Selecione um vídeo ou áudio para detectar as batidas.");
+      return;
+    }
+    const asset = project.assets.find((item) => item.id === selectedClip.assetId);
+    if (!asset?.path || !asset.duration) {
+      setNotice("Reconecte a mídia antes de detectar as batidas.");
+      return;
+    }
+
+    setPlaying(false);
+    setBusy(true);
+    setNotice("Analisando ritmo e procurando batidas…");
+    try {
+      let peaks = asset.peaks;
+      if (!peaks?.length) {
+        const response = await fetch(asset.path);
+        if (!response.ok)
+          throw new Error("Não foi possível abrir a mídia selecionada.");
+        const analysis = await analyzeAudioPeaks(await response.blob());
+        peaks = analysis.peaks;
+        edit((p) => ({
+          ...p,
+          assets: p.assets.map((item) =>
+            item.id === asset.id ? { ...item, peaks } : item,
+          ),
+        }));
+      }
+
+      const times = detectBeatTimes(selectedClip, peaks, asset.duration);
+      if (!times.length) {
+        setNotice(
+          "Não encontrei batidas fortes o bastante nesse trecho. A mídia não foi alterada.",
+        );
+        return;
+      }
+
+      const clipStart = selectedClip.start;
+      const clipEnd = selectedClip.start + selectedClip.duration;
+      edit((p) => ({
+        ...p,
+        markers: [
+          ...(p.markers ?? []).filter(
+            (marker) =>
+              !(
+                marker.kind === "beat" &&
+                marker.sourceAssetId === asset.id &&
+                marker.time >= clipStart - 0.001 &&
+                marker.time <= clipEnd + 0.001
+              ),
+          ),
+          ...times.map((beat, index) => ({
+            id: crypto.randomUUID(),
+            time: frameTime(beat, p.settings.fps),
+            label: `Batida ${index + 1}`,
+            kind: "beat" as const,
+            sourceAssetId: asset.id,
+          })),
+        ].sort((a, b) => a.time - b.time),
+      }));
+      setNotice(
+        `${times.length} batida(s) marcada(s). Elas agora aparecem na régua e servem de encaixe para cortes e clipes.`,
+      );
+    } catch (e) {
+      setNotice(error(e));
+    } finally {
+      setBusy(false);
+    }
+  };
   const removeAutomaticSilence = async () => {
     if (busy || captioning) return;
     if (!selectedClip?.assetId || selectedClip.type === "text") {
@@ -833,6 +905,16 @@ export default function App() {
             >
               <AudioWaveform size={16} />
               Remover silêncio
+            </button>
+          )}
+          {selectedClip && selectedClip.type !== "text" && (
+            <button
+              onClick={() => void markAutomaticBeats()}
+              disabled={busy || exporting || captioning}
+              title="Detectar batidas e criar marcadores magnéticos na timeline"
+            >
+              <CircleDot size={16} />
+              Marcar batidas
             </button>
           )}
           <button

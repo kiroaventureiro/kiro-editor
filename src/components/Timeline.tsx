@@ -298,6 +298,7 @@ export default function Timeline(p: Props) {
   const candidates = [
     0,
     p.time,
+    ...(p.project.markers ?? []).map((marker) => marker.time),
     ...p.project.tracks.flatMap((t) =>
       t.clips
         .filter((c) => !p.selected.includes(c.id))
@@ -838,6 +839,24 @@ export default function Timeline(p: Props) {
                   );
                 },
               )}
+              {(p.project.markers ?? []).map((marker) => (
+                <button
+                  key={marker.id}
+                  className={`timeline-marker marker-${marker.kind}`}
+                  style={{ left: marker.time * zoom }}
+                  title={`${marker.label} · ${formatRulerTime(marker.time)}`}
+                  aria-label={`${marker.label} em ${formatRulerTime(marker.time)}`}
+                  onPointerDown={(event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                  }}
+                  onClick={(event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    p.onSeek(marker.time);
+                  }}
+                />
+              ))}
               <div className="ruler-playhead" style={{ left: p.time * zoom }}>
                 <span />
               </div>
@@ -918,6 +937,14 @@ export default function Timeline(p: Props) {
                 </div>
 
                 <div className="track-lane" {...scrubProps}>
+                  {(p.project.markers ?? []).map((marker) => (
+                    <i
+                      key={`${t.id}-${marker.id}`}
+                      className={`beat-guide marker-${marker.kind}`}
+                      style={{ left: marker.time * zoom }}
+                      aria-hidden="true"
+                    />
+                  ))}
                   {dragVisual?.trackId === t.id &&
                     dragVisual.mode === "move" && (
                       <div
