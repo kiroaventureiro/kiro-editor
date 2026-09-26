@@ -176,8 +176,9 @@ export default function App() {
         : [c.id],
     );
     if (!multiple) {
-      setTime(c.start);
-      setTimelineMode(c.type === "audio" ? "audio" : c.type === "text" ? "text" : "video");
+      setTimelineMode(
+        c.type === "audio" ? "audio" : c.type === "text" ? "text" : "video",
+      );
     }
   };
   const updateClip = (patch: Partial<Clip>) => {

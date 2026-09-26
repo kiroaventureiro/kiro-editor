@@ -406,14 +406,51 @@ export class Composition {
         const lerp = (a: number, b: number | undefined) =>
           a + ((b ?? a) - a) * smooth;
 
+        const transitionDuration = Math.max(
+          0.01,
+          Math.min(c.transitionDuration ?? 0.6, c.duration / 2),
+        );
+        const transitionProgress = c.transitionIn
+          ? clamp((time - c.start) / transitionDuration, 0, 1)
+          : 1;
+        const transitionSmooth =
+          transitionProgress *
+          transitionProgress *
+          (3 - 2 * transitionProgress);
+        let transitionAlpha = 1;
+        let transitionOffsetX = 0;
+        let transitionScale = 1;
+
+        if (c.transitionIn && transitionProgress < 1) {
+          if (c.transitionIn === "dissolve")
+            transitionAlpha = Math.sqrt(transitionSmooth);
+          else if (c.transitionIn === "fade")
+            transitionAlpha = transitionSmooth;
+          else if (c.transitionIn === "zoom") {
+            transitionAlpha = 0.35 + transitionSmooth * 0.65;
+            transitionScale = 0.72 + transitionSmooth * 0.28;
+          } else if (c.transitionIn === "slide-left") {
+            transitionAlpha = 0.5 + transitionSmooth * 0.5;
+            transitionOffsetX = (1 - transitionSmooth) * w * 0.42;
+          } else if (c.transitionIn === "slide-right") {
+            transitionAlpha = 0.5 + transitionSmooth * 0.5;
+            transitionOffsetX = -(1 - transitionSmooth) * w * 0.42;
+          }
+        }
+
         ctx.save();
-        ctx.globalAlpha = clamp(c.opacity ?? 1, 0, 1) * envelope(c, time);
+        ctx.globalAlpha =
+          clamp(c.opacity ?? 1, 0, 1) *
+          envelope(c, time) *
+          transitionAlpha;
         ctx.translate(
-          w / 2 + (lerp(c.x ?? 0, c.endX) * w) / 100,
+          w / 2 +
+            (lerp(c.x ?? 0, c.endX) * w) / 100 +
+            transitionOffsetX,
           h / 2 + (lerp(c.y ?? 0, c.endY) * h) / 100,
         );
         ctx.rotate(((c.rotation ?? 0) * Math.PI) / 180);
-        const scale = lerp(c.scale ?? 1, c.endScale);
+        const scale = lerp(c.scale ?? 1, c.endScale) * transitionScale;
         ctx.scale(scale, scale);
 
         if (c.type === "text") {

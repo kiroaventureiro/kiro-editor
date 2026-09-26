@@ -161,6 +161,7 @@ export function validateProject(value: unknown): KiroProject {
         "fadeIn",
         "fadeOut",
         "fontSize",
+        "transitionDuration",
       ] as const) {
         if (c[key] !== undefined && !finite(c[key]))
           throw new Error("Ajuste de clipe inválido.");
@@ -172,6 +173,13 @@ export function validateProject(value: unknown): KiroProject {
         (c.volume ?? 1) > 1
       )
         throw new Error("Ajuste fora dos limites.");
+      if (
+        c.transitionIn !== undefined &&
+        !["dissolve", "fade", "zoom", "slide-left", "slide-right"].includes(
+          c.transitionIn,
+        )
+      )
+        throw new Error("Transição inválida.");
       for (const key of ["text", "notes", "color"] as const)
         if (c[key] !== undefined && typeof c[key] !== "string")
           throw new Error("Texto inválido.");

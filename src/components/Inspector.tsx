@@ -383,6 +383,45 @@ export default function Inspector({
           0,
         )}
       </section>
+      {clip.type !== "audio" && clip.type !== "text" && (
+        <section className="inspector-section transition-section">
+          <span className="section-kicker">TRANSIÇÃO DE ENTRADA</span>
+          <label>
+            Tipo
+            <select
+              aria-label="Transição de entrada"
+              value={clip.transitionIn ?? "none"}
+              onChange={(e) =>
+                onChange({
+                  transitionIn:
+                    e.target.value === "none"
+                      ? undefined
+                      : (e.target.value as Clip["transitionIn"]),
+                })
+              }
+            >
+              <option value="none">Sem transição</option>
+              <option value="dissolve">Dissolver</option>
+              <option value="fade">Fade</option>
+              <option value="zoom">Zoom</option>
+              <option value="slide-left">Deslizar da direita</option>
+              <option value="slide-right">Deslizar da esquerda</option>
+            </select>
+          </label>
+          {clip.transitionIn &&
+            range(
+              "Duração da transição",
+              "transitionDuration",
+              0.1,
+              Math.max(0.1, Math.min(3, clip.duration / 2)),
+              0.05,
+              Math.min(0.6, clip.duration / 2),
+            )}
+          <small>
+            A transição acontece no início do clipe e também é aplicada na exportação.
+          </small>
+        </section>
+      )}
       {clip.type !== "audio" && (
         <section className="inspector-section">
           <span className="section-kicker">MOVIMENTO</span>
@@ -408,7 +447,7 @@ export default function Inspector({
       <div className="future-effects">
         <strong>Próximos efeitos</strong>
         <span>
-          Transições, filtros, desfoque, sombra e animações entrarão nesta aba.
+          Filtros, desfoque, sombra e animações avançadas entrarão nesta aba.
         </span>
       </div>
     </fieldset>

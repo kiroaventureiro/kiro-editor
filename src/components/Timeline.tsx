@@ -1016,6 +1016,14 @@ export default function Timeline(p: Props) {
                             ))}
                           </svg>
                         )}
+                        {c.transitionIn && (
+                          <span
+                            className="clip-transition-badge"
+                            title={`Transição: ${transitionLabel(c.transitionIn)} · ${(c.transitionDuration ?? 0.6).toFixed(2)} s`}
+                          >
+                            ◇
+                          </span>
+                        )}
                         <strong>{c.name}</strong>
                         <small>{formatDuration(c.duration)}</small>
                         <button
@@ -1104,6 +1112,14 @@ function trackCode(tracks: Track[], index: number, type: Track["type"]) {
     .filter((t) => t.type === type).length;
   const prefix = type === "video" ? "V" : type === "audio" ? "A" : "T";
   return `${prefix}${ordinal}`;
+}
+
+function transitionLabel(type: NonNullable<Clip["transitionIn"]>) {
+  if (type === "dissolve") return "Dissolver";
+  if (type === "fade") return "Fade";
+  if (type === "zoom") return "Zoom";
+  if (type === "slide-left") return "Deslizar da direita";
+  return "Deslizar da esquerda";
 }
 
 function formatDuration(n: number) {

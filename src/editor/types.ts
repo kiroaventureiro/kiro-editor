@@ -1,4 +1,10 @@
 export type TrackType = "video" | "audio" | "text" | "overlay";
+export type TransitionType =
+  | "dissolve"
+  | "fade"
+  | "zoom"
+  | "slide-left"
+  | "slide-right";
 
 export interface MediaAsset {
   id: string;
@@ -43,6 +49,8 @@ export interface Clip {
   backgroundColor?: string;
   backgroundOpacity?: number;
   backgroundPadding?: number;
+  transitionIn?: TransitionType;
+  transitionDuration?: number;
   notes?: string;
 }
 

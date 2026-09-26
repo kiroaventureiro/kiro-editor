@@ -1,0 +1,26 @@
+.transition-section select {
+  width: 100%;
+}
+
+.clip-transition-badge {
+  position: absolute;
+  left: 3px;
+  top: 3px;
+  z-index: 5;
+  display: grid;
+  place-items: center;
+  width: 17px;
+  height: 17px;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 4px;
+  background: rgba(7, 14, 18, 0.82);
+  color: #c9ffe9;
+  font-size: 12px;
+  line-height: 1;
+  pointer-events: none;
+}
+
+.clip.selected .clip-transition-badge {
+  border-color: rgba(201, 255, 233, 0.9);
+  box-shadow: 0 0 10px rgba(130, 255, 205, 0.25);
+}
