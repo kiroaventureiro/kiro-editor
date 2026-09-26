@@ -73,14 +73,16 @@ export default function Preview({
     engine = useRef<Composition | undefined>(undefined),
     seekVersion = useRef(0),
     previousVolume = useRef(1),
-    playbackIntent = useRef(playing);
+    playbackIntent = useRef(playing),
+    textEditor = useRef<HTMLTextAreaElement>(null);
   const latest = useRef({ project, time, playing, onTime, onPlaying });
   latest.current = { project, time, playing, onTime, onPlaying };
 
   const [status, setStatus] = useState(""),
     [ready, setReady] = useState(false),
     [volume, setVolume] = useState(1),
-    [fitView, setFitView] = useState(true);
+    [fitView, setFitView] = useState(true),
+    [editingText, setEditingText] = useState(false);
 
   const drag = useRef<
     { x: number; y: number; cx: number; cy: number } | undefined
@@ -120,6 +122,22 @@ export default function Preview({
   useEffect(() => {
     playbackIntent.current = playing;
   }, [playing]);
+
+  useEffect(() => {
+    setEditingText(false);
+  }, [selectedClip?.id]);
+
+  useEffect(() => {
+    if (!editingText) return;
+    const id = requestAnimationFrame(() => {
+      const editor = textEditor.current;
+      if (!editor) return;
+      editor.focus();
+      const end = editor.value.length;
+      editor.setSelectionRange(end, end);
+    });
+    return () => cancelAnimationFrame(id);
+  }, [editingText]);
 
   useEffect(() => {
     let cancelled = false;
@@ -227,10 +245,6 @@ export default function Preview({
       return;
     }
 
-    // Não chamamos startPlayback novamente aqui. O clique no botão Play já
-    // inicia todas as camadas dentro do gesto do usuário. Reiniciar os mesmos
-    // vídeos logo depois abortava/ressincronizava uma das camadas. Para play
-    // iniciado por teclado, o loop sync() acima assume os elementos pausados.
     if (playing) {
       void composition.enableAudio(true).catch((e: Error) => {
         setStatus(e.message);
@@ -327,8 +341,21 @@ export default function Preview({
     }
   };
 
+  const beginTextEditing = (e: React.MouseEvent<HTMLElement>) => {
+    if (selectedClip?.type !== "text") return;
+    e.preventDefault();
+    e.stopPropagation();
+    if (playing || playbackIntent.current) {
+      playbackIntent.current = false;
+      latest.current.playing = false;
+      engine.current?.pause();
+      onPlaying(false);
+    }
+    setEditingText(true);
+  };
+
   const beginMove = (e: React.PointerEvent<HTMLElement>) => {
-    if (!selectedClip || !selectedVisible) return;
+    if (!selectedClip || !selectedVisible || editingText) return;
     if (playing) onPlaying(false);
     e.preventDefault();
     e.stopPropagation();
@@ -367,7 +394,7 @@ export default function Preview({
   };
 
   const beginResize = (e: React.PointerEvent<HTMLButtonElement>) => {
-    if (!selectedClip || !selectedVisible) return;
+    if (!selectedClip || !selectedVisible || editingText) return;
     const rect = canvas.current?.getBoundingClientRect();
     if (!rect?.width || !rect.height) return;
     e.preventDefault();
@@ -419,7 +446,9 @@ export default function Preview({
           )}
           {movable && (
             <b className="canvas-hint">
-              Clique para selecionar · arraste para mover · use os cantos para redimensionar
+              {selectedClip?.type === "text"
+                ? "Arraste para mover · use os cantos · duplo clique para editar o texto"
+                : "Clique para selecionar · arraste para mover · use os cantos para redimensionar"}
             </b>
           )}
         </div>
@@ -466,7 +495,7 @@ export default function Preview({
 
           {selectedBox && selectedClip && (
             <div
-              className={`canvas-selection-box canvas-selection-${selectedClip.type}`}
+              className={`canvas-selection-box canvas-selection-${selectedClip.type} ${editingText ? "is-editing" : ""}`}
               style={{
                 left: `${50 + (selectedClip.x ?? 0)}%`,
                 top: `${50 + (selectedClip.y ?? 0)}%`,
@@ -475,12 +504,42 @@ export default function Preview({
                 transform: `translate(-50%, -50%) rotate(${selectedClip.rotation ?? 0}deg)`,
               }}
               aria-label={`Objeto selecionado: ${selectedClip.name}`}
+              onDoubleClick={beginTextEditing}
               onPointerDown={beginMove}
               onPointerMove={moveSelected}
               onPointerUp={endMove}
               onPointerCancel={endMove}
             >
-              <span className="canvas-selection-label">{selectedClip.name}</span>
+              {selectedClip.type === "text" && editingText ? (
+                <textarea
+                  ref={textEditor}
+                  className="canvas-inline-text-editor"
+                  aria-label="Editar texto diretamente no canvas"
+                  value={selectedClip.text ?? ""}
+                  style={{ color: selectedClip.color ?? "#ffffff" }}
+                  onFocus={onBegin}
+                  onBlur={() => {
+                    setEditingText(false);
+                    onEnd();
+                  }}
+                  onPointerDown={(e) => e.stopPropagation()}
+                  onPointerMove={(e) => e.stopPropagation()}
+                  onDoubleClick={(e) => e.stopPropagation()}
+                  onChange={(e) => onTransform({ text: e.target.value })}
+                  onKeyDown={(e) => {
+                    if (e.key === "Escape" || ((e.ctrlKey || e.metaKey) && e.key === "Enter")) {
+                      e.preventDefault();
+                      e.currentTarget.blur();
+                    }
+                  }}
+                />
+              ) : (
+                <span className="canvas-selection-label">
+                  {selectedClip.type === "text"
+                    ? "Texto · duplo clique para editar"
+                    : selectedClip.name}
+                </span>
+              )}
               {(["nw", "ne", "sw", "se"] as const).map((corner) => (
                 <button
                   key={corner}
@@ -488,6 +547,7 @@ export default function Preview({
                   className={`canvas-resize-handle ${corner}`}
                   aria-label="Redimensionar objeto"
                   title="Arraste para aumentar ou diminuir"
+                  disabled={editingText}
                   onPointerDown={beginResize}
                   onPointerMove={resizeSelected}
                   onPointerUp={endResize}
