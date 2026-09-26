@@ -207,8 +207,18 @@ export default function Preview({
 
   useEffect(() => {
     if (!ready) return;
-    engine.current?.setMonitorVolume(volume);
-    void engine.current?.enableAudio(playing).catch((e: Error) => {
+    const composition = engine.current;
+    if (!composition) return;
+    composition.setMonitorVolume(volume);
+    if (!playing) {
+      composition.pause();
+      return;
+    }
+    const at = latest.current.time;
+    void Promise.all([
+      composition.enableAudio(true),
+      composition.startPlayback(at),
+    ]).catch((e: Error) => {
       setStatus(e.message);
       onPlaying(false);
     });
@@ -218,11 +228,28 @@ export default function Preview({
     previewQuality / Math.min(project.settings.width, project.settings.height);
 
   const toggle = () => {
-    if (playing) onPlaying(false);
-    else {
-      if (time >= duration) onTime(0);
-      onPlaying(true);
+    if (playing) {
+      onPlaying(false);
+      return;
     }
+
+    const startAt = time >= duration ? 0 : time;
+    if (startAt !== time) onTime(startAt);
+
+    const composition = engine.current;
+    if (composition) {
+      composition.setMonitorVolume(volume);
+      // Dispara todos os elementos de vídeo dentro do próprio gesto do usuário.
+      // Isso evita que o navegador inicie apenas uma camada e bloqueie as demais.
+      void composition.startPlayback(startAt).catch((e: Error) => {
+        setStatus(e.message);
+      });
+      void composition.enableAudio(true).catch((e: Error) => {
+        setStatus(e.message);
+      });
+    }
+
+    onPlaying(true);
   };
 
   const toggleMute = () => {
