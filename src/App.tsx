@@ -9,6 +9,7 @@ import {
   Music2,
   Video,
   SlidersHorizontal,
+  WandSparkles,
   X,
 } from "lucide-react";
 import { useCallback, useEffect, useReducer, useRef, useState } from "react";
@@ -43,6 +44,8 @@ import {
 } from "./editor/storage";
 import { recordingFormat, renderVideo } from "./editor/engine";
 
+const AUTO_CAPTION_PROXY_LIMIT = 4_300_000;
+
 export default function App() {
   const [history, dispatch] = useReducer(historyReducer, undefined, () => ({
     present: createEmptyProject(),
@@ -54,6 +57,7 @@ export default function App() {
   current.current = project;
   const [loaded, setLoaded] = useState(false),
     [busy, setBusy] = useState(false),
+    [captioning, setCaptioning] = useState(false),
     [selected, setSelected] = useState<string[]>([]),
     [time, setTime] = useState(0),
     [playing, setPlaying] = useState(false);
@@ -72,7 +76,7 @@ export default function App() {
     ),
     [libraryWidth, setLibraryWidth] = useState(260);
   const [targetTrack, setTargetTrack] = useState("video-1");
-  const [timelineMode, setTimelineMode] = useState<TimelineMode>("video");
+  const [timelineMode, setTimelineMode] = useState<TimelineMode>(undefined);
   const abort = useRef<AbortController | null>(null),
     dirty = useRef(false),
     ready = useRef(false),
@@ -429,7 +433,7 @@ export default function App() {
     setPlaying(false);
     setTime(0);
     setSelected([]);
-    setTimelineMode("video");
+    setTimelineMode(undefined);
     current.current = p;
     dispatch({ type: "load", project: p });
     setProjects(null);
@@ -500,6 +504,85 @@ export default function App() {
       setNotice(`${clips.length} legendas adicionadas como texto editável.`);
     } catch (e) {
       setNotice(error(e));
+    }
+  };
+  const generateAutomaticCaptions = async () => {
+    if (captioning) return;
+    if (!selectedClip?.assetId) {
+      setNotice("Selecione primeiro o vídeo ou o áudio que deseja transcrever.");
+      return;
+    }
+    const asset = project.assets.find((item) => item.id === selectedClip.assetId);
+    if (!asset || asset.type === "image" || !asset.path) {
+      setNotice("Selecione um vídeo ou áudio conectado antes de gerar legendas.");
+      return;
+    }
+
+    setPlaying(false);
+    setCaptioning(true);
+    setNotice("Transcrevendo o áudio e criando as legendas…");
+    try {
+      const mediaResponse = await fetch(asset.path);
+      if (!mediaResponse.ok)
+        throw new Error("Não foi possível abrir a mídia selecionada.");
+      const media = await mediaResponse.blob();
+      if (media.size > AUTO_CAPTION_PROXY_LIMIT)
+        throw new Error(
+          "Nesta primeira etapa, Legendas IA aceita arquivos de até 4,3 MB. Vamos ampliar isso com upload direto na próxima etapa.",
+        );
+
+      const response = await fetch("/api/transcribe", {
+        method: "POST",
+        headers: {
+          "Content-Type": media.type || "application/octet-stream",
+          "X-File-Name": encodeURIComponent(asset.name),
+        },
+        body: media,
+      });
+      const body = await response.text();
+      if (!response.ok) {
+        let message = "Não foi possível gerar as legendas.";
+        try {
+          message = JSON.parse(body)?.error || message;
+        } catch {
+          if (body.trim()) message = body.trim().slice(0, 500);
+        }
+        throw new Error(message);
+      }
+
+      const raw = parseSrt(body);
+      const speed = selectedClip.speed ?? 1;
+      const sourceIn = selectedClip.sourceIn ?? 0;
+      const sourceOut =
+        selectedClip.sourceOut ?? sourceIn + selectedClip.duration * speed;
+      const clips = raw.flatMap((caption) => {
+        const start = Math.max(sourceIn, caption.start);
+        const end = Math.min(sourceOut, caption.start + caption.duration);
+        if (end <= start) return [];
+        return [
+          {
+            ...caption,
+            id: crypto.randomUUID(),
+            start: selectedClip.start + (start - sourceIn) / speed,
+            duration: (end - start) / speed,
+          },
+        ];
+      });
+
+      if (!clips.length)
+        throw new Error(
+          "A transcrição terminou, mas não encontrou falas dentro do trecho selecionado.",
+        );
+
+      addText(clips);
+      setTime(selectedClip.start);
+      setNotice(
+        `${clips.length} legendas automáticas criadas. Você pode editar cada uma no Canvas e em Propriedades.`,
+      );
+    } catch (e) {
+      setNotice(error(e));
+    } finally {
+      setCaptioning(false);
     }
   };
   const exportVideo = async () => {
@@ -671,6 +754,14 @@ export default function App() {
             <Music2 size={16} />
             Áudio
           </button>
+          <button
+            onClick={() => void generateAutomaticCaptions()}
+            disabled={busy || exporting || captioning}
+            title="Gerar legendas automaticamente a partir do vídeo ou áudio selecionado"
+          >
+            <WandSparkles size={16} />
+            {captioning ? "Gerando legendas…" : "Legendas IA"}
+          </button>
           <label className="button">
             <Captions size={16} />
             Legendas SRT
@@ -679,7 +770,7 @@ export default function App() {
               hidden
               type="file"
               accept=".srt"
-              disabled={busy || exporting}
+              disabled={busy || exporting || captioning}
               onChange={(e) => {
                 void importCaptions(e.target.files?.[0]);
                 e.target.value = "";
@@ -951,6 +1042,14 @@ export default function App() {
           <div className="modal" role="status">
             <h2>Preparando arquivos…</h2>
             <p>Não feche a página enquanto os arquivos são armazenados.</p>
+          </div>
+        </div>
+      )}
+      {captioning && (
+        <div className="modal-backdrop">
+          <div className="modal" role="status">
+            <h2>Gerando legendas…</h2>
+            <p>Transcrevendo a mídia e sincronizando as falas com a timeline.</p>
           </div>
         </div>
       )}
