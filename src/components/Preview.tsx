@@ -72,7 +72,8 @@ export default function Preview({
     shell = useRef<HTMLDivElement>(null),
     engine = useRef<Composition | undefined>(undefined),
     seekVersion = useRef(0),
-    previousVolume = useRef(1);
+    previousVolume = useRef(1),
+    playbackIntent = useRef(playing);
   const latest = useRef({ project, time, playing, onTime, onPlaying });
   latest.current = { project, time, playing, onTime, onPlaying };
 
@@ -117,6 +118,10 @@ export default function Preview({
   const selectedBox = selectedVisible && selectedClip ? clipBox(selectedClip) : null;
 
   useEffect(() => {
+    playbackIntent.current = playing;
+  }, [playing]);
+
+  useEffect(() => {
     let cancelled = false;
     setReady(false);
     setStatus("Preparando prévia…");
@@ -136,6 +141,7 @@ export default function Preview({
       .catch((e: Error) => {
         if (!cancelled) {
           setStatus(e.message);
+          playbackIntent.current = false;
           latest.current.onPlaying(false);
         }
       });
@@ -166,7 +172,8 @@ export default function Preview({
       lastPublished = 0;
     const draw = (now: number) => {
       const state = latest.current;
-      if (state.playing) {
+      const wantsPlayback = state.playing || playbackIntent.current;
+      if (wantsPlayback) {
         const next = Math.min(
           projectDuration(state.project),
           state.time + (now - previous) / 1000,
@@ -176,6 +183,7 @@ export default function Preview({
           engine.current?.sync(next, true);
         } catch (e) {
           setStatus(e instanceof Error ? e.message : "Falha na reprodução.");
+          playbackIntent.current = false;
           state.onPlaying(false);
         }
         if (
@@ -185,7 +193,10 @@ export default function Preview({
           state.onTime(next);
           lastPublished = now;
         }
-        if (next >= projectDuration(state.project)) state.onPlaying(false);
+        if (next >= projectDuration(state.project)) {
+          playbackIntent.current = false;
+          state.onPlaying(false);
+        }
         engine.current?.draw(
           Math.min(
             next,
@@ -210,25 +221,31 @@ export default function Preview({
     const composition = engine.current;
     if (!composition) return;
     composition.setMonitorVolume(volume);
-    if (!playing) {
+    if (!playing && !playbackIntent.current) {
       composition.pause();
       return;
     }
-    const at = latest.current.time;
-    void Promise.all([
-      composition.enableAudio(true),
-      composition.startPlayback(at),
-    ]).catch((e: Error) => {
-      setStatus(e.message);
-      onPlaying(false);
-    });
+    if (playing) {
+      const at = latest.current.time;
+      void Promise.all([
+        composition.enableAudio(true),
+        composition.startPlayback(at),
+      ]).catch((e: Error) => {
+        setStatus(e.message);
+        playbackIntent.current = false;
+        onPlaying(false);
+      });
+    }
   }, [playing, ready, volume, onPlaying]);
 
   const factor =
     previewQuality / Math.min(project.settings.width, project.settings.height);
 
   const toggle = () => {
-    if (playing) {
+    if (playing || playbackIntent.current) {
+      playbackIntent.current = false;
+      latest.current.playing = false;
+      engine.current?.pause();
       onPlaying(false);
       return;
     }
@@ -236,20 +253,23 @@ export default function Preview({
     const startAt = time >= duration ? 0 : time;
     if (startAt !== time) onTime(startAt);
 
+    playbackIntent.current = true;
+    latest.current.time = startAt;
+    latest.current.playing = true;
+    onPlaying(true);
+
     const composition = engine.current;
     if (composition) {
       composition.setMonitorVolume(volume);
-      // Dispara todos os elementos de vídeo dentro do próprio gesto do usuário.
-      // Isso evita que o navegador inicie apenas uma camada e bloqueie as demais.
-      void composition.startPlayback(startAt).catch((e: Error) => {
-        setStatus(e.message);
-      });
       void composition.enableAudio(true).catch((e: Error) => {
         setStatus(e.message);
       });
+      void composition.startPlayback(startAt).catch((e: Error) => {
+        setStatus(e.message);
+        playbackIntent.current = false;
+        onPlaying(false);
+      });
     }
-
-    onPlaying(true);
   };
 
   const toggleMute = () => {
