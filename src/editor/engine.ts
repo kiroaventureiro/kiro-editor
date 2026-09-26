@@ -141,8 +141,46 @@ export class Composition {
   update(project: KiroProject) {
     this.project = project;
   }
+  private mediaTime(c: Clip, media: HTMLMediaElement, time: number) {
+    return clamp(
+      (c.sourceIn ?? 0) + (time - c.start) * (c.speed ?? 1),
+      0,
+      Math.max(0, media.duration - 0.001),
+    );
+  }
+  async startPlayback(time: number) {
+    const primaryVideo = this.project.tracks.find((track) => track.type === "video")?.id;
+    const starts: Promise<void>[] = [];
+    for (const track of this.project.tracks) {
+      for (const c of track.clips) {
+        if (!activeAt(c, time)) continue;
+        const media = this.resources.get(c.id);
+        if (!(media instanceof HTMLMediaElement)) continue;
+        const target = this.mediaTime(c, media, time);
+        media.playbackRate = c.speed ?? 1;
+        if (Math.abs(media.currentTime - target) > 0.02) media.currentTime = target;
+        if (media instanceof HTMLVideoElement) {
+          const secondaryVisual =
+            (track.type === "video" || track.type === "overlay") &&
+            track.id !== primaryVideo;
+          media.muted = secondaryVisual;
+          media.playsInline = true;
+        }
+        if (media.paused) {
+          starts.push(
+            media.play().catch((e: Error) => {
+              if (e.name !== "AbortError" && e.name !== "NotAllowedError" && !this.disposed)
+                this.failure = new Error(`Reprodução interrompida: ${e.message}`);
+            }),
+          );
+        }
+      }
+    }
+    await Promise.allSettled(starts);
+  }
   sync(time: number, playing: boolean) {
     if (this.failure) throw this.failure;
+    const primaryVideo = this.project.tracks.find((track) => track.type === "video")?.id;
     for (const track of this.project.tracks)
       for (const c of track.clips) {
         const media = this.resources.get(c.id);
@@ -158,22 +196,34 @@ export class Composition {
           media.volume = audible
             ? clamp(c.volume ?? 1, 0, 1) * envelope(c, time)
             : 0;
+        if (media instanceof HTMLVideoElement) {
+          const secondaryVisual =
+            (track.type === "video" || track.type === "overlay") &&
+            track.id !== primaryVideo;
+          media.muted = secondaryVisual;
+          media.playsInline = true;
+        }
         if (!active || !playing) media.pause();
         if (!active) continue;
-        const target = clamp(
-          (c.sourceIn ?? 0) + (time - c.start) * (c.speed ?? 1),
-          0,
-          Math.max(0, media.duration - 0.001),
-        );
+        const target = this.mediaTime(c, media, time);
         media.playbackRate = c.speed ?? 1;
-        if (Math.abs(media.currentTime - target) > (playing ? 0.15 : 0.001))
+        const tolerance = playing
+          ? media instanceof HTMLVideoElement
+            ? 0.045
+            : 0.1
+          : 0.001;
+        if (Math.abs(media.currentTime - target) > tolerance)
           media.currentTime = target;
         if (playing && media.paused && !this.pending.has(c.id)) {
           this.pending.add(c.id);
           void media
             .play()
             .catch((e: Error) => {
-              if (e.name !== "AbortError" && !this.disposed)
+              if (
+                e.name !== "AbortError" &&
+                e.name !== "NotAllowedError" &&
+                !this.disposed
+              )
                 this.failure = new Error(
                   `Reprodução interrompida: ${e.message}`,
                 );
