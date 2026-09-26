@@ -49,8 +49,12 @@ export interface NewLibraryAsset {
 const SESSION_KEY = "kiro-editor-library-admin-session-v1";
 
 function cloudConfig() {
-  const url = String(import.meta.env.VITE_SUPABASE_URL ?? "").replace(/\/$/, "");
-  const key = String(import.meta.env.VITE_SUPABASE_ANON_KEY ?? "");
+  const env =
+    (import.meta as ImportMeta & {
+      env?: Record<string, string | undefined>;
+    }).env ?? {};
+  const url = String(env.VITE_SUPABASE_URL ?? "").replace(/\/$/, "");
+  const key = String(env.VITE_SUPABASE_ANON_KEY ?? "");
   return { url, key, ready: Boolean(url && key) };
 }
 
@@ -109,7 +113,6 @@ export async function signInLibraryAdmin(email: string, password: string) {
   };
   if (!session.user.id) throw new Error("A autenticação não retornou um usuário válido.");
 
-  // A API administrativa confirma a role antes de liberar qualquer dado.
   await listLibraryAdminAssets(session.accessToken);
   storeSession(session);
   return session;
