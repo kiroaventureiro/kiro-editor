@@ -1,4 +1,5 @@
 import {
+  AudioLines,
   Copy,
   Eye,
   EyeOff,
@@ -102,6 +103,19 @@ export default function Timeline(p: Props) {
   const compatibleTracks = selectedClip
     ? p.project.tracks.filter((t) => t.type === selectedClip.type && !t.locked)
     : [];
+  const selectedAsset = selectedClip?.assetId
+    ? p.project.assets.find((asset) => asset.id === selectedClip.assetId)
+    : undefined;
+  const audioTargetTrack = p.project.tracks.find(
+    (track) => track.type === "audio" && !track.locked,
+  );
+  const canExtractAudio =
+    !!selectedClip &&
+    !!sourceTrack &&
+    !sourceTrack.locked &&
+    (selectedClip.type === "video" || selectedClip.type === "overlay") &&
+    selectedAsset?.type === "video" &&
+    !!audioTargetTrack;
 
   const orderedTracks = [...p.project.tracks].sort((a, b) => {
     const rank = (track: Track) =>
@@ -219,6 +233,66 @@ export default function Timeline(p: Props) {
   const toggleSelectedTrackLock = () => {
     if (!sourceTrack) return;
     p.onTrack(sourceTrack.id, { locked: !sourceTrack.locked });
+  };
+
+  const extractSelectedAudio = () => {
+    if (!canExtractAudio || !selectedClip || !sourceTrack || !audioTargetTrack)
+      return;
+
+    const keepTime = p.time;
+    const existing = p.project.tracks
+      .filter((track) => track.type === "audio")
+      .flatMap((track) => track.clips)
+      .find(
+        (clip) =>
+          clip.assetId === selectedClip.assetId &&
+          Math.abs(clip.start - selectedClip.start) < EPS &&
+          Math.abs(clip.duration - selectedClip.duration) < EPS &&
+          Math.abs((clip.sourceIn ?? 0) - (selectedClip.sourceIn ?? 0)) < EPS &&
+          clip.name === `Áudio de ${selectedClip.name}`,
+      );
+
+    if (existing) {
+      p.onSelect(existing, false);
+      p.onSeek(keepTime);
+      p.onMode("audio");
+      return;
+    }
+
+    const audioClip: Clip = {
+      id: crypto.randomUUID(),
+      assetId: selectedClip.assetId,
+      name: `Áudio de ${selectedClip.name}`,
+      type: "audio",
+      start: selectedClip.start,
+      duration: selectedClip.duration,
+      sourceIn: selectedClip.sourceIn ?? 0,
+      sourceOut:
+        selectedClip.sourceOut ??
+        (selectedClip.sourceIn ?? 0) +
+          selectedClip.duration * (selectedClip.speed ?? 1),
+      volume: selectedClip.volume ?? 1,
+      speed: selectedClip.speed ?? 1,
+      fadeIn: selectedClip.fadeIn ?? 0,
+      fadeOut: selectedClip.fadeOut ?? 0,
+    };
+
+    p.onBegin();
+    p.onTrack(sourceTrack.id, {
+      clips: sourceTrack.clips.map((clip) =>
+        clip.id === selectedClip.id ? { ...clip, volume: 0 } : clip,
+      ),
+    });
+    p.onTrack(audioTargetTrack.id, {
+      clips: [...audioTargetTrack.clips, audioClip].sort(
+        (a, b) => a.start - b.start,
+      ),
+    });
+    p.onEnd();
+
+    p.onSelect(audioClip, false);
+    p.onSeek(keepTime);
+    p.onMode("audio");
   };
 
   const candidates = [
@@ -407,7 +481,9 @@ export default function Timeline(p: Props) {
   const trackUnderPointer = (x: number, y: number, clipType: Clip["type"]) => {
     const element = document
       .elementsFromPoint(x, y)
-      .find((node) => node instanceof HTMLElement && node.matches(".track-row[data-track-id]"));
+      .find((node) =>
+        node instanceof HTMLElement && node.matches(".track-row[data-track-id]"),
+      );
     if (!(element instanceof HTMLElement)) return undefined;
     const id = element.dataset.trackId;
     const track = p.project.tracks.find((candidate) => candidate.id === id);
@@ -549,26 +625,69 @@ export default function Timeline(p: Props) {
     <section className="timeline-shell timeline-premium" aria-label="Timeline">
       <div className="timeline-toolbar">
         <div className="tool-group timeline-edit-tools">
-          <button aria-label="Desfazer" title="Desfazer (Ctrl+Z)" onClick={p.onUndo} disabled={!p.canUndo}>
+          <button
+            aria-label="Desfazer"
+            title="Desfazer (Ctrl+Z)"
+            onClick={p.onUndo}
+            disabled={!p.canUndo}
+          >
             <Undo2 size={17} />
           </button>
-          <button aria-label="Refazer" title="Refazer (Ctrl+Y)" onClick={p.onRedo} disabled={!p.canRedo}>
+          <button
+            aria-label="Refazer"
+            title="Refazer (Ctrl+Y)"
+            onClick={p.onRedo}
+            disabled={!p.canRedo}
+          >
             <Redo2 size={17} />
           </button>
           <span className="separator" />
-          <button onClick={p.onSplit} disabled={!p.selected.length} title="Dividir clipe no cursor">
+          <button
+            onClick={p.onSplit}
+            disabled={!p.selected.length}
+            title="Dividir clipe no cursor"
+          >
             <Scissors size={16} />
             <span>Dividir</span>
           </button>
-          <button onClick={p.onDuplicate} disabled={!p.selected.length} title="Duplicar seleção">
+          <button
+            onClick={p.onDuplicate}
+            disabled={!p.selected.length}
+            title="Duplicar seleção"
+          >
             <Copy size={16} />
             <span>Duplicar</span>
           </button>
-          <button aria-label="Excluir seleção" title="Excluir seleção" onClick={() => p.onDelete(ripple)} disabled={!p.selected.length}>
+          <button
+            aria-label="Excluir seleção"
+            title="Excluir seleção"
+            onClick={() => p.onDelete(ripple)}
+            disabled={!p.selected.length}
+          >
             <Trash2 size={17} />
           </button>
+          {selectedAsset?.type === "video" &&
+            selectedClip &&
+            (selectedClip.type === "video" || selectedClip.type === "overlay") && (
+              <button
+                onClick={extractSelectedAudio}
+                disabled={!canExtractAudio}
+                title={
+                  audioTargetTrack
+                    ? "Separar o som deste vídeo em uma trilha de áudio editável"
+                    : "Crie ou desbloqueie uma trilha de áudio primeiro"
+                }
+              >
+                <AudioLines size={16} />
+                <span>Separar áudio</span>
+              </button>
+            )}
           <span className="separator" />
-          <button className="active" aria-label="Ferramenta de seleção" title="Selecionar e mover clipes">
+          <button
+            className="active"
+            aria-label="Ferramenta de seleção"
+            title="Selecionar e mover clipes"
+          >
             <MousePointer2 size={16} />
           </button>
           <button
@@ -583,7 +702,11 @@ export default function Timeline(p: Props) {
           <button
             className={sourceTrack?.locked ? "active" : ""}
             aria-label="Bloquear trilha selecionada"
-            title={sourceTrack?.locked ? "Desbloquear trilha" : "Bloquear trilha selecionada"}
+            title={
+              sourceTrack?.locked
+                ? "Desbloquear trilha"
+                : "Bloquear trilha selecionada"
+            }
             disabled={!sourceTrack}
             onClick={toggleSelectedTrackLock}
           >
@@ -592,9 +715,15 @@ export default function Timeline(p: Props) {
           {selectedClip && sourceTrack && compatibleTracks.length > 1 && (
             <label className="layer-picker">
               Camada
-              <select aria-label="Mover para camada" value={sourceTrack.id} onChange={(e) => moveToLayer(e.target.value)}>
+              <select
+                aria-label="Mover para camada"
+                value={sourceTrack.id}
+                onChange={(e) => moveToLayer(e.target.value)}
+              >
                 {compatibleTracks.map((t) => (
-                  <option value={t.id} key={t.id}>{t.name}</option>
+                  <option value={t.id} key={t.id}>
+                    {t.name}
+                  </option>
                 ))}
               </select>
             </label>
@@ -606,35 +735,76 @@ export default function Timeline(p: Props) {
             className={snapping ? "active" : ""}
             aria-label="Encaixe automático"
             aria-pressed={snapping}
-            title={snapping ? "Encaixe automático ligado" : "Encaixe automático desligado"}
+            title={
+              snapping
+                ? "Encaixe automático ligado"
+                : "Encaixe automático desligado"
+            }
             onClick={() => setSnapping(!snapping)}
           >
             <Magnet size={17} />
           </button>
-          <button className="zoom-step" aria-label="Diminuir zoom" title="Diminuir zoom" onClick={() => changeZoom(-Math.max(0.1, Math.max(zoom, 0.5) * 0.18))}>
+          <button
+            className="zoom-step"
+            aria-label="Diminuir zoom"
+            title="Diminuir zoom"
+            onClick={() =>
+              changeZoom(-Math.max(0.1, Math.max(zoom, 0.5) * 0.18))
+            }
+          >
             <Minus size={15} />
           </button>
           <label className="zoom" title="Zoom da linha do tempo">
             <span>Zoom</span>
-            <input aria-label="Zoom da timeline" type="range" min={MIN_ZOOM} max={MAX_ZOOM} step={0.05} value={zoom} onChange={(e) => setZoom(Number(e.target.value))} />
+            <input
+              aria-label="Zoom da timeline"
+              type="range"
+              min={MIN_ZOOM}
+              max={MAX_ZOOM}
+              step={0.05}
+              value={zoom}
+              onChange={(e) => setZoom(Number(e.target.value))}
+            />
           </label>
-          <button className="zoom-step" aria-label="Aumentar zoom" title="Aumentar zoom" onClick={() => changeZoom(Math.max(0.1, Math.max(zoom, 0.5) * 0.18))}>
+          <button
+            className="zoom-step"
+            aria-label="Aumentar zoom"
+            title="Aumentar zoom"
+            onClick={() =>
+              changeZoom(Math.max(0.1, Math.max(zoom, 0.5) * 0.18))
+            }
+          >
             <Plus size={15} />
           </button>
-          <button className="fit-timeline" onClick={fitAll} title="Mostrar o projeto inteiro na timeline">Ver tudo</button>
+          <button
+            className="fit-timeline"
+            onClick={fitAll}
+            title="Mostrar o projeto inteiro na timeline"
+          >
+            Ver tudo
+          </button>
           {(p.mode === "video" || !p.mode) && (
-            <button onClick={() => p.onAddTrack("video")} title="Nova camada de vídeo">
-              <Plus size={16} /><span>Camada</span>
+            <button
+              onClick={() => p.onAddTrack("video")}
+              title="Nova camada de vídeo"
+            >
+              <Plus size={16} />
+              <span>Camada</span>
             </button>
           )}
           {(p.mode === "text" || !p.mode) && (
             <button onClick={p.onAddText} title="Adicionar texto">
-              <Plus size={16} /><span>Texto</span>
+              <Plus size={16} />
+              <span>Texto</span>
             </button>
           )}
           {(p.mode === "audio" || !p.mode) && (
-            <button onClick={() => p.onAddTrack("audio")} title="Nova camada de áudio">
-              <Plus size={16} /><span>Áudio</span>
+            <button
+              onClick={() => p.onAddTrack("audio")}
+              title="Nova camada de áudio"
+            >
+              <Plus size={16} />
+              <span>Áudio</span>
             </button>
           )}
         </div>
@@ -642,28 +812,43 @@ export default function Timeline(p: Props) {
 
       <div className="timeline-scroll" ref={scroll}>
         <div className="timeline-content" style={{ width: width + label }}>
-          <div className="ruler-row" style={{ gridTemplateColumns: `${label}px ${width}px` }}>
+          <div
+            className="ruler-row"
+            style={{ gridTemplateColumns: `${label}px ${width}px` }}
+          >
             <div className="ruler-label">{p.project.settings.fps} FPS</div>
             <div className="ruler" {...scrubProps}>
               {Array.from(
-                { length: Math.min(2000, Math.ceil(width / zoom / tick) + 1) },
+                {
+                  length: Math.min(
+                    2000,
+                    Math.ceil(width / zoom / tick) + 1,
+                  ),
+                },
                 (_, i) => {
                   const at = i * tick;
                   return (
-                    <span className={`ruler-tick ${i === 0 ? "first" : ""}`} key={i} style={{ left: at * zoom }}>
+                    <span
+                      className={`ruler-tick ${i === 0 ? "first" : ""}`}
+                      key={i}
+                      style={{ left: at * zoom }}
+                    >
                       {formatRulerTime(at)}
                     </span>
                   );
                 },
               )}
-              <div className="ruler-playhead" style={{ left: p.time * zoom }}><span /></div>
+              <div className="ruler-playhead" style={{ left: p.time * zoom }}>
+                <span />
+              </div>
             </div>
           </div>
 
           {visibleTracks.map((t) => {
             const index = orderedTracks.findIndex((track) => track.id === t.id);
             const code = trackCode(orderedTracks, index, t.type);
-            const kind = t.type === "video" ? "▶" : t.type === "audio" ? "♪" : "T";
+            const kind =
+              t.type === "video" ? "▶" : t.type === "audio" ? "♪" : "T";
             return (
               <div
                 className={`track-row ${t.locked ? "locked" : ""} ${dragVisual?.trackId === t.id ? "drop-active" : ""}`}
@@ -673,42 +858,84 @@ export default function Timeline(p: Props) {
                 style={{ gridTemplateColumns: `${label}px ${width}px` }}
               >
                 <div className="track-name" data-track-type={t.type}>
-                  <span className="track-kind" aria-hidden="true">{kind}</span>
+                  <span className="track-kind" aria-hidden="true">
+                    {kind}
+                  </span>
                   <div className="track-title-block">
                     <strong title={t.name}>{t.name}</strong>
                     <small>{code}</small>
                   </div>
                   <div className="track-actions">
                     <button
-                      aria-label={`${t.type === "text" ? (t.muted ? "Mostrar" : "Ocultar") : t.muted ? "Ativar" : "Silenciar"} ${t.name}`}
-                      title={t.type === "text" ? (t.muted ? "Mostrar trilha" : "Ocultar trilha") : t.muted ? "Ativar áudio" : "Silenciar áudio"}
+                      aria-label={`${
+                        t.type === "text"
+                          ? t.muted
+                            ? "Mostrar"
+                            : "Ocultar"
+                          : t.muted
+                            ? "Ativar"
+                            : "Silenciar"
+                      } ${t.name}`}
+                      title={
+                        t.type === "text"
+                          ? t.muted
+                            ? "Mostrar trilha"
+                            : "Ocultar trilha"
+                          : t.muted
+                            ? "Ativar áudio"
+                            : "Silenciar áudio"
+                      }
                       onClick={() => p.onTrack(t.id, { muted: !t.muted })}
                     >
-                      {t.type === "text" ? (t.muted ? <EyeOff size={14} /> : <Eye size={14} />) : t.muted ? <VolumeX size={14} /> : <Volume2 size={14} />}
+                      {t.type === "text" ? (
+                        t.muted ? (
+                          <EyeOff size={14} />
+                        ) : (
+                          <Eye size={14} />
+                        )
+                      ) : t.muted ? (
+                        <VolumeX size={14} />
+                      ) : (
+                        <Volume2 size={14} />
+                      )}
                     </button>
                     <button
                       aria-label={`${t.locked ? "Desbloquear" : "Bloquear"} ${t.name}`}
-                      title={t.locked ? "Desbloquear trilha" : "Bloquear trilha"}
-                      onClick={() => p.onTrack(t.id, { locked: !t.locked })}
+                      title={
+                        t.locked ? "Desbloquear trilha" : "Bloquear trilha"
+                      }
+                      onClick={() =>
+                        p.onTrack(t.id, { locked: !t.locked })
+                      }
                     >
-                      {t.locked ? <Lock size={14} /> : <Unlock size={14} />}
+                      {t.locked ? (
+                        <Lock size={14} />
+                      ) : (
+                        <Unlock size={14} />
+                      )}
                     </button>
                   </div>
                 </div>
 
                 <div className="track-lane" {...scrubProps}>
-                  {dragVisual?.trackId === t.id && dragVisual.mode === "move" && (
-                    <div
-                      className={`clip-drop-slot ${dragVisual.snapped ? "snapped" : ""}`}
-                      style={{ left: dragVisual.start * zoom, width: Math.max(4, dragVisual.duration * zoom) }}
-                      aria-hidden="true"
-                    >
-                      <i />
-                    </div>
-                  )}
+                  {dragVisual?.trackId === t.id &&
+                    dragVisual.mode === "move" && (
+                      <div
+                        className={`clip-drop-slot ${dragVisual.snapped ? "snapped" : ""}`}
+                        style={{
+                          left: dragVisual.start * zoom,
+                          width: Math.max(4, dragVisual.duration * zoom),
+                        }}
+                        aria-hidden="true"
+                      >
+                        <i />
+                      </div>
+                    )}
 
                   {t.clips.map((c) => {
-                    const asset = p.project.assets.find((a) => a.id === c.assetId);
+                    const asset = p.project.assets.find(
+                      (a) => a.id === c.assetId,
+                    );
                     const dragging = dragVisual?.id === c.id;
                     return (
                       <div
@@ -719,7 +946,10 @@ export default function Timeline(p: Props) {
                         key={c.id}
                         data-clip-id={c.id}
                         className={`clip clip-${t.type} ${p.selected.includes(c.id) ? "selected" : ""} ${dragging ? "dragging" : ""}`}
-                        style={{ left: c.start * zoom, width: Math.max(4, c.duration * zoom) }}
+                        style={{
+                          left: c.start * zoom,
+                          width: Math.max(4, c.duration * zoom),
+                        }}
                         onPointerDown={(e) => start(e, c, !!t.locked)}
                         onPointerMove={move}
                         onPointerUp={end}
@@ -733,18 +963,56 @@ export default function Timeline(p: Props) {
                           }
                         }}
                       >
-                        {asset?.thumbnail && <div className="clip-film" style={{ backgroundImage: `url(${asset.thumbnail})` }} />}
+                        {asset?.thumbnail && (
+                          <div
+                            className="clip-film"
+                            style={{
+                              backgroundImage: `url(${asset.thumbnail})`,
+                            }}
+                          />
+                        )}
                         {asset?.peaks && (
-                          <svg className="clip-wave" viewBox="0 0 160 40" preserveAspectRatio="none" aria-hidden="true">
+                          <svg
+                            className="clip-wave"
+                            viewBox="0 0 160 40"
+                            preserveAspectRatio="none"
+                            aria-hidden="true"
+                          >
                             {asset.peaks.map((peak, i) => (
-                              <line key={i} x1={i} x2={i} y1={20 - peak * 20} y2={20 + peak * 20} />
+                              <line
+                                key={i}
+                                x1={i}
+                                x2={i}
+                                y1={20 - peak * 20}
+                                y2={20 + peak * 20}
+                              />
                             ))}
                           </svg>
                         )}
                         <strong>{c.name}</strong>
                         <small>{formatDuration(c.duration)}</small>
-                        <button className="trim-handle start" aria-label={`Cortar início de ${c.name}`} disabled={t.locked} onPointerDown={(e) => start(e, c, !!t.locked, "start")} onPointerMove={move} onPointerUp={end} onPointerCancel={end} />
-                        <button className="trim-handle end" aria-label={`Cortar final de ${c.name}`} disabled={t.locked} onPointerDown={(e) => start(e, c, !!t.locked, "end")} onPointerMove={move} onPointerUp={end} onPointerCancel={end} />
+                        <button
+                          className="trim-handle start"
+                          aria-label={`Cortar início de ${c.name}`}
+                          disabled={t.locked}
+                          onPointerDown={(e) =>
+                            start(e, c, !!t.locked, "start")
+                          }
+                          onPointerMove={move}
+                          onPointerUp={end}
+                          onPointerCancel={end}
+                        />
+                        <button
+                          className="trim-handle end"
+                          aria-label={`Cortar final de ${c.name}`}
+                          disabled={t.locked}
+                          onPointerDown={(e) =>
+                            start(e, c, !!t.locked, "end")
+                          }
+                          onPointerMove={move}
+                          onPointerUp={end}
+                          onPointerCancel={end}
+                        />
                       </div>
                     );
                   })}
@@ -784,8 +1052,13 @@ export default function Timeline(p: Props) {
 }
 
 function chooseRulerStep(pxPerSecond: number) {
-  const steps = [1, 2, 5, 10, 15, 30, 60, 120, 300, 600, 900, 1800, 3600, 7200];
-  return steps.find((seconds) => seconds * pxPerSecond >= RULER_MIN_LABEL_GAP) ?? steps[steps.length - 1];
+  const steps = [
+    1, 2, 5, 10, 15, 30, 60, 120, 300, 600, 900, 1800, 3600, 7200,
+  ];
+  return (
+    steps.find((seconds) => seconds * pxPerSecond >= RULER_MIN_LABEL_GAP) ??
+    steps[steps.length - 1]
+  );
 }
 
 function formatRulerTime(n: number) {
@@ -793,12 +1066,15 @@ function formatRulerTime(n: number) {
   const h = Math.floor(seconds / 3600);
   const m = Math.floor((seconds % 3600) / 60);
   const s = seconds % 60;
-  if (h > 0) return `${h}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+  if (h > 0)
+    return `${h}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
   return `${m}:${String(s).padStart(2, "0")}`;
 }
 
 function trackCode(tracks: Track[], index: number, type: Track["type"]) {
-  const ordinal = tracks.slice(0, index + 1).filter((t) => t.type === type).length;
+  const ordinal = tracks
+    .slice(0, index + 1)
+    .filter((t) => t.type === type).length;
   const prefix = type === "video" ? "V" : type === "audio" ? "A" : "T";
   return `${prefix}${ordinal}`;
 }
