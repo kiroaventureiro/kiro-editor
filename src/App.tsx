@@ -17,6 +17,7 @@ import {
 import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 import MediaLibrary from "./components/MediaLibrary";
 import LibraryAdmin from "./components/LibraryAdmin";
+import CreatorHub from "./components/CreatorHub";
 import Preview from "./components/Preview";
 import Inspector from "./components/Inspector";
 import Timeline, { type TimelineMode } from "./components/Timeline";
@@ -86,6 +87,10 @@ export default function App() {
   const [libraryAdminOpen, setLibraryAdminOpen] = useState(() => {
     if (typeof window === "undefined") return false;
     return new URLSearchParams(window.location.search).get("admin") === "library";
+  });
+  const [creatorHubOpen, setCreatorHubOpen] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return new URLSearchParams(window.location.search).get("hub") === "creator";
   });
   const abort = useRef<AbortController | null>(null),
     dirty = useRef(false),
@@ -792,6 +797,24 @@ export default function App() {
     window.addEventListener("pointerup", stop, { once: true });
     window.addEventListener("pointercancel", stop, { once: true });
   };
+  if (creatorHubOpen)
+    return (
+      <CreatorHub
+        project={project}
+        currentTime={time}
+        selectedClipId={selectedClip?.id}
+        onApplyProject={(next, message) => {
+          edit(() => next);
+          setNotice(message);
+        }}
+        onClose={() => {
+          setCreatorHubOpen(false);
+          const url = new URL(window.location.href);
+          url.searchParams.delete("hub");
+          window.history.replaceState({}, "", url);
+        }}
+      />
+    );
   if (libraryAdminOpen)
     return (
       <LibraryAdmin
@@ -880,6 +903,19 @@ export default function App() {
       </header>
       <nav className="workspace-tools" inert={busy || !!projects || exportOpen}>
         <div>
+          <button
+            onClick={() => {
+              setPlaying(false);
+              setCreatorHubOpen(true);
+              const url = new URL(window.location.href);
+              url.searchParams.set("hub", "creator");
+              window.history.replaceState({}, "", url);
+            }}
+            title="Abrir o Creator Hub de IA, geração e conexões"
+          >
+            <WandSparkles size={16} />
+            Creator Hub
+          </button>
           <button
             className={drawer === "media" ? "active" : ""}
             onClick={() => setDrawer(drawer === "media" ? "none" : "media")}
