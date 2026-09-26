@@ -62,6 +62,7 @@ export class Composition {
             if (element instanceof HTMLVideoElement) {
               element.playsInline = true;
               element.disablePictureInPicture = true;
+              element.muted = false;
             }
             await new Promise<void>((resolve, reject) => {
               const timer = setTimeout(() => {
@@ -122,27 +123,12 @@ export class Composition {
       this.monitorGain = this.context.createGain();
       this.monitorGain.connect(this.context.destination);
 
-      const primaryVideo = this.project.tracks.find(
-        (track) => track.type === "video",
-      )?.id;
-      const trackByClip = new Map<string, Track>();
-      for (const track of this.project.tracks)
-        for (const clip of track.clips) trackByClip.set(clip.id, track);
-
+      // Toda mídia com áudio entra no mesmo mixer. Isso permite ouvir também
+      // o som das camadas extras de vídeo, respeitando volume e mute da trilha.
       for (const [id, resource] of this.resources) {
         if (!(resource instanceof HTMLMediaElement)) continue;
 
-        const track = trackByClip.get(id);
-        const carriesAudio =
-          track?.type === "audio" || track?.id === primaryVideo;
-
-        // Camadas visuais extras não entram no grafo de áudio. Isso reduz
-        // trabalho desnecessário do navegador quando há vários vídeos ativos.
-        if (!carriesAudio) {
-          resource.muted = true;
-          continue;
-        }
-
+        resource.muted = false;
         resource.volume = 1;
         const source = this.context.createMediaElementSource(resource);
         const gain = this.context.createGain();
@@ -188,9 +174,6 @@ export class Composition {
   }
 
   async startPlayback(time: number) {
-    const primaryVideo = this.project.tracks.find(
-      (track) => track.type === "video",
-    )?.id;
     const starts: Promise<void>[] = [];
 
     for (const track of this.project.tracks) {
@@ -208,10 +191,7 @@ export class Composition {
           media.currentTime = target;
 
         if (media instanceof HTMLVideoElement) {
-          const secondaryVisual =
-            (track.type === "video" || track.type === "overlay") &&
-            track.id !== primaryVideo;
-          media.muted = secondaryVisual;
+          media.muted = false;
           media.playsInline = true;
         }
 
@@ -238,10 +218,6 @@ export class Composition {
   sync(time: number, playing: boolean) {
     if (this.failure) throw this.failure;
 
-    const primaryVideo = this.project.tracks.find(
-      (track) => track.type === "video",
-    )?.id;
-
     for (const track of this.project.tracks) {
       for (const c of track.clips) {
         const media = this.resources.get(c.id);
@@ -255,16 +231,13 @@ export class Composition {
           gain.gain.value = audible
             ? clamp(c.volume ?? 1, 0, 1) * envelope(c, time)
             : 0;
-        else if (!(media instanceof HTMLVideoElement && media.muted))
+        else
           media.volume = audible
             ? clamp(c.volume ?? 1, 0, 1) * envelope(c, time)
             : 0;
 
         if (media instanceof HTMLVideoElement) {
-          const secondaryVisual =
-            (track.type === "video" || track.type === "overlay") &&
-            track.id !== primaryVideo;
-          media.muted = secondaryVisual;
+          media.muted = false;
           media.playsInline = true;
         }
 
@@ -286,8 +259,6 @@ export class Composition {
         }
 
         if (media.paused) {
-          // Quando uma camada entra no meio da reprodução, posicionamos uma
-          // única vez e então deixamos o elemento tocar naturalmente.
           if (!media.seeking && Math.abs(media.currentTime - target) > 0.2)
             media.currentTime = target;
 
@@ -312,8 +283,6 @@ export class Composition {
 
         // Com o vídeo já tocando, nunca fazemos seek contínuo. Em vez disso,
         // corrigimos pequenos desvios com uma variação suave de velocidade.
-        // Isso evita o efeito de uma camada andar devagar/travando enquanto a
-        // outra segue normalmente.
         if (media instanceof HTMLVideoElement) {
           const drift = target - media.currentTime;
           const correction = clamp(1 + drift * 0.12, 0.94, 1.06);
