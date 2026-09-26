@@ -1,0 +1,79 @@
+name: Wire Creator Hub workspace
+
+on:
+  push:
+    branches:
+      - feat/kiro-ai-editor-actions
+    paths:
+      - .github/workflows/wire-creator-hub.yml
+
+permissions:
+  contents: write
+
+jobs:
+  wire:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feat/kiro-ai-editor-actions
+
+      - name: Wire Creator Hub into the editor
+        shell: python
+        run: |
+          from pathlib import Path
+
+          app = Path('src/App.tsx')
+          text = app.read_text(encoding='utf-8')
+
+          if 'import CreatorHub from "./components/CreatorHub";' not in text:
+              text = text.replace(
+                  'import LibraryAdmin from "./components/LibraryAdmin";\n',
+                  'import LibraryAdmin from "./components/LibraryAdmin";\nimport CreatorHub from "./components/CreatorHub";\n'
+              )
+
+          state_anchor = '''  const [libraryAdminOpen, setLibraryAdminOpen] = useState(() => {\n    if (typeof window === "undefined") return false;\n    return new URLSearchParams(window.location.search).get("admin") === "library";\n  });\n'''
+          state_block = state_anchor + '''  const [creatorHubOpen, setCreatorHubOpen] = useState(() => {\n    if (typeof window === "undefined") return false;\n    return new URLSearchParams(window.location.search).get("hub") === "creator";\n  });\n'''
+          if 'const [creatorHubOpen, setCreatorHubOpen]' not in text:
+              if state_anchor not in text:
+                  raise RuntimeError('Creator Hub state anchor not found')
+              text = text.replace(state_anchor, state_block)
+
+          return_anchor = '''  if (libraryAdminOpen)\n    return (\n      <LibraryAdmin\n        onClose={() => {\n          setLibraryAdminOpen(false);\n          const url = new URL(window.location.href);\n          url.searchParams.delete("admin");\n          window.history.replaceState({}, "", url);\n        }}\n      />\n    );\n'''
+          creator_return = '''  if (creatorHubOpen)\n    return (\n      <CreatorHub\n        project={project}\n        currentTime={time}\n        selectedClipId={selectedClip?.id}\n        onApplyProject={(next, message) => {\n          edit(() => next);\n          setNotice(message);\n        }}\n        onClose={() => {\n          setCreatorHubOpen(false);\n          const url = new URL(window.location.href);\n          url.searchParams.delete("hub");\n          window.history.replaceState({}, "", url);\n        }}\n      />\n    );\n'''
+          if 'if (creatorHubOpen)' not in text:
+              if return_anchor not in text:
+                  raise RuntimeError('Creator Hub return anchor not found')
+              text = text.replace(return_anchor, creator_return + return_anchor)
+
+          tools_anchor = '''        <div>\n          <button\n            className={drawer === "media" ? "active" : ""}\n'''
+          tools_button = '''        <div>\n          <button\n            onClick={() => {\n              setPlaying(false);\n              setCreatorHubOpen(true);\n              const url = new URL(window.location.href);\n              url.searchParams.set("hub", "creator");\n              window.history.replaceState({}, "", url);\n            }}\n            title="Abrir o Creator Hub de IA, geração e conexões"\n          >\n            <WandSparkles size={16} />\n            Creator Hub\n          </button>\n          <button\n            className={drawer === "media" ? "active" : ""}\n'''
+          if '>Creator Hub<' not in text and 'Creator Hub\n          </button>' not in text:
+              if tools_anchor not in text:
+                  raise RuntimeError('Workspace tools anchor not found')
+              text = text.replace(tools_anchor, tools_button)
+
+          app.write_text(text, encoding='utf-8')
+
+          main = Path('src/main.tsx')
+          main_text = main.read_text(encoding='utf-8')
+          import_lines = 'import "./styles/kiro-ai-v1.css";\nimport "./styles/creator-hub-v1.css";\n'
+          if 'creator-hub-v1.css' not in main_text:
+              anchor = 'import "./styles/kiro-library-v1.css";\n'
+              if anchor not in main_text:
+                  raise RuntimeError('CSS import anchor not found')
+              main_text = main_text.replace(anchor, anchor + import_lines)
+          main.write_text(main_text, encoding='utf-8')
+
+      - name: Verify build
+        run: |
+          npm ci
+          npm run build
+
+      - name: Commit integration
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/App.tsx src/main.tsx
+          git diff --cached --quiet || git commit -m "feat: expose Creator Hub in KIRO Editor"
+          git push origin HEAD:feat/kiro-ai-editor-actions
