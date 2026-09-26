@@ -272,7 +272,9 @@ export default function Timeline(p: Props) {
     );
     if (!track) return;
 
+    const keepTime = p.time;
     p.onSelect(c, e.shiftKey || e.metaKey || e.ctrlKey);
+    p.onSeek(keepTime);
     p.onBegin();
     e.currentTarget.setPointerCapture(e.pointerId);
     drag.current = {
@@ -725,7 +727,9 @@ export default function Timeline(p: Props) {
                         onKeyDown={(e) => {
                           if (e.key === "Enter" || e.key === " ") {
                             e.preventDefault();
+                            const keepTime = p.time;
                             p.onSelect(c, e.shiftKey);
+                            p.onSeek(keepTime);
                           }
                         }}
                       >
