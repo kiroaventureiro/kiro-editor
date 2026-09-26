@@ -12,6 +12,7 @@ interface Props {
 }
 
 type InspectorTab = "project" | "media" | "text" | "effects";
+type CaptionPreset = Exclude<Clip["captionStyle"], undefined>;
 
 export default function Inspector({
   settings,
@@ -59,12 +60,67 @@ export default function Inspector({
     </label>
   );
 
+  const applyCaptionPreset = (preset: CaptionPreset) => {
+    if (preset === "yellow-bar") {
+      onChange({
+        caption: true,
+        captionStyle: preset,
+        y: 34,
+        fontSize: 5.5,
+        fontWeight: 800,
+        color: "#111111",
+        strokeWidth: 0,
+        backgroundColor: "#ffd84d",
+        backgroundOpacity: 0.96,
+        backgroundPadding: 0.34,
+      });
+      return;
+    }
+    if (preset === "impact") {
+      onChange({
+        caption: true,
+        captionStyle: preset,
+        y: 28,
+        fontSize: 6.2,
+        fontWeight: 850,
+        color: "#ffffff",
+        strokeColor: "#000000",
+        strokeWidth: 0.1,
+        backgroundColor: "#000000",
+        backgroundOpacity: 0.72,
+        backgroundPadding: 0.3,
+      });
+      return;
+    }
+    onChange({
+      caption: true,
+      captionStyle: "clean",
+      y: 34,
+      fontSize: 5.2,
+      fontWeight: 750,
+      color: "#ffffff",
+      strokeColor: "#000000",
+      strokeWidth: 0.12,
+      backgroundColor: "#000000",
+      backgroundOpacity: 0,
+      backgroundPadding: 0.28,
+    });
+  };
+
   const identity = (
     <section className="inspector-section clip-identity">
       <span className="section-kicker">
-        {clip?.type === "text" ? "TEXTO" : clip?.type === "audio" ? "ÁUDIO" : "VÍDEO / IMAGEM"}
+        {clip?.type === "text"
+          ? clip.caption
+            ? "LEGENDA"
+            : "TEXTO"
+          : clip?.type === "audio"
+            ? "ÁUDIO"
+            : "VÍDEO / IMAGEM"}
       </span>
-      <strong className="selected-clip-name">{locked ? "Trilha bloqueada" : clip?.name}</strong>
+      <strong className="selected-clip-name">
+        {locked ? "Trilha bloqueada" : clip?.name}
+      </strong>
       <label>
         Nome
         <input
@@ -98,7 +154,9 @@ export default function Inspector({
         <select
           aria-label="Formato do projeto"
           value={settings.aspectRatio}
-          onChange={(e) => onAspect(e.target.value as ProjectSettings["aspectRatio"])}
+          onChange={(e) =>
+            onAspect(e.target.value as ProjectSettings["aspectRatio"])
+          }
         >
           <option value="16:9">YouTube · 16:9</option>
           <option value="9:16">Reels / Shorts · 9:16</option>
@@ -106,15 +164,22 @@ export default function Inspector({
           <option value="4:5">Feed · 4:5</option>
         </select>
       </label>
-      <p className="specs">{settings.width} × {settings.height} · {settings.fps} fps</p>
+      <p className="specs">
+        {settings.width} × {settings.height} · {settings.fps} fps
+      </p>
     </section>
   );
 
   const mediaTab = clip && clip.type !== "text" ? (
-    <fieldset disabled={locked} className={`clip-inspector clip-inspector-${clip.type}`}>
+    <fieldset
+      disabled={locked}
+      className={`clip-inspector clip-inspector-${clip.type}`}
+    >
       {identity}
       <section className="inspector-section">
-        <span className="section-kicker">{clip.type === "audio" ? "SOM" : "REPRODUÇÃO"}</span>
+        <span className="section-kicker">
+          {clip.type === "audio" ? "SOM" : "REPRODUÇÃO"}
+        </span>
         {range("Volume", "volume", 0, 1, 0.01, 1)}
         {clip.type === "audio" && (
           <>
@@ -135,7 +200,8 @@ export default function Inspector({
               0,
             )}
             <small className="audio-inspector-hint">
-              Use a forma de onda na timeline para localizar fala, música e pausas com mais precisão.
+              Use a forma de onda na timeline para localizar fala, música e
+              pausas com mais precisão.
             </small>
           </>
         )}
@@ -148,7 +214,9 @@ export default function Inspector({
               onChange={(e) => onChange({ speed: Number(e.target.value) })}
             >
               {[0.25, 0.5, 0.75, 1, 1.25, 1.5, 2, 4].map((n) => (
-                <option key={n} value={n}>{n}×</option>
+                <option key={n} value={n}>
+                  {n}×
+                </option>
               ))}
             </select>
           </label>
@@ -195,6 +263,90 @@ export default function Inspector({
           />
         </label>
       </section>
+
+      <section className="inspector-section caption-style-section">
+        <div className="caption-style-heading">
+          <span className="section-kicker">LEGENDAS</span>
+          {!clip.caption && (
+            <button
+              type="button"
+              className="caption-convert"
+              onClick={() => applyCaptionPreset("clean")}
+            >
+              Transformar em legenda
+            </button>
+          )}
+        </div>
+        <div className="caption-presets" aria-label="Estilos de legenda">
+          <button
+            type="button"
+            className={clip.captionStyle === "clean" ? "active" : ""}
+            onClick={() => applyCaptionPreset("clean")}
+          >
+            <span className="caption-preview clean">Aa</span>
+            Limpa
+          </button>
+          <button
+            type="button"
+            className={clip.captionStyle === "yellow-bar" ? "active" : ""}
+            onClick={() => applyCaptionPreset("yellow-bar")}
+          >
+            <span className="caption-preview yellow">Aa</span>
+            Tarja amarela
+          </button>
+          <button
+            type="button"
+            className={clip.captionStyle === "impact" ? "active" : ""}
+            onClick={() => applyCaptionPreset("impact")}
+          >
+            <span className="caption-preview impact">Aa</span>
+            Impacto
+          </button>
+        </div>
+        {clip.caption && (
+          <>
+            <div className="caption-color-row">
+              <label className="color-control">
+                Fundo
+                <input
+                  aria-label="Cor do fundo da legenda"
+                  type="color"
+                  value={clip.backgroundColor ?? "#000000"}
+                  onChange={(e) =>
+                    onChange({ backgroundColor: e.target.value })
+                  }
+                />
+              </label>
+              <label className="color-control">
+                Contorno
+                <input
+                  aria-label="Cor do contorno da legenda"
+                  type="color"
+                  value={clip.strokeColor ?? "#000000"}
+                  onChange={(e) => onChange({ strokeColor: e.target.value })}
+                />
+              </label>
+            </div>
+            {range(
+              "Opacidade do fundo",
+              "backgroundOpacity",
+              0,
+              1,
+              0.05,
+              clip.captionStyle === "yellow-bar" ? 0.96 : 0,
+            )}
+            {range(
+              "Espaço da tarja",
+              "backgroundPadding",
+              0.05,
+              0.8,
+              0.05,
+              0.28,
+            )}
+          </>
+        )}
+      </section>
+
       {transformControls}
       <details className="inspector-section">
         <summary>Roteiro da cena</summary>
@@ -214,27 +366,57 @@ export default function Inspector({
       <section className="inspector-section project-section">
         <span className="section-kicker">EFEITOS</span>
         <strong className="selected-clip-name">{clip.name}</strong>
-        {range("Entrada suave", "fadeIn", 0, Math.min(5, clip.duration / 2), 0.1, 0)}
-        {range("Saída suave", "fadeOut", 0, Math.min(5, clip.duration / 2), 0.1, 0)}
+        {range(
+          "Entrada suave",
+          "fadeIn",
+          0,
+          Math.min(5, clip.duration / 2),
+          0.1,
+          0,
+        )}
+        {range(
+          "Saída suave",
+          "fadeOut",
+          0,
+          Math.min(5, clip.duration / 2),
+          0.1,
+          0,
+        )}
       </section>
       {clip.type !== "audio" && (
         <section className="inspector-section">
           <span className="section-kicker">MOVIMENTO</span>
-          {range("Escala final", "endScale", 0.1, 4, 0.05, clip.scale ?? 1)}
+          {range(
+            "Escala final",
+            "endScale",
+            0.1,
+            4,
+            0.05,
+            clip.scale ?? 1,
+          )}
           {range("Horizontal final", "endX", -100, 100, 1, clip.x ?? 0)}
           {range("Vertical final", "endY", -100, 100, 1, clip.y ?? 0)}
-          <button onClick={() => onChange({ endScale: undefined, endX: undefined, endY: undefined })}>
+          <button
+            onClick={() =>
+              onChange({ endScale: undefined, endX: undefined, endY: undefined })
+            }
+          >
             Remover movimento
           </button>
         </section>
       )}
       <div className="future-effects">
         <strong>Próximos efeitos</strong>
-        <span>Transições, filtros, desfoque, sombra e animações entrarão nesta aba.</span>
+        <span>
+          Transições, filtros, desfoque, sombra e animações entrarão nesta aba.
+        </span>
       </div>
     </fieldset>
   ) : (
-    <div className="empty-inspector"><strong>Selecione um item</strong><p>Os efeitos aparecerão aqui.</p></div>
+    <div className="empty-inspector">
+      <strong>Selecione um item</strong>
+      <p>Os efeitos aparecerão aqui.</p>
+    </div>
   );
 
   return (
@@ -245,16 +427,49 @@ export default function Inspector({
       </div>
 
       <nav className="inspector-tabs" aria-label="Categorias de propriedades">
-        <button className={tab === "project" ? "active" : ""} onClick={() => setTab("project")}>Projeto</button>
-        <button className={tab === "media" ? "active" : ""} onClick={() => setTab("media")} disabled={!clip || clip.type === "text"}>Mídia</button>
-        <button className={tab === "text" ? "active" : ""} onClick={() => setTab("text")} disabled={clip?.type !== "text"}>Texto</button>
-        <button className={tab === "effects" ? "active" : ""} onClick={() => setTab("effects")} disabled={!clip}>Efeitos</button>
+        <button
+          className={tab === "project" ? "active" : ""}
+          onClick={() => setTab("project")}
+        >
+          Projeto
+        </button>
+        <button
+          className={tab === "media" ? "active" : ""}
+          onClick={() => setTab("media")}
+          disabled={!clip || clip.type === "text"}
+        >
+          Mídia
+        </button>
+        <button
+          className={tab === "text" ? "active" : ""}
+          onClick={() => setTab("text")}
+          disabled={clip?.type !== "text"}
+        >
+          Texto
+        </button>
+        <button
+          className={tab === "effects" ? "active" : ""}
+          onClick={() => setTab("effects")}
+          disabled={!clip}
+        >
+          Efeitos
+        </button>
       </nav>
 
       <div className="inspector-tab-content">
         {tab === "project" && projectTab}
-        {tab === "media" && (mediaTab ?? <div className="empty-inspector"><strong>Selecione vídeo, imagem ou áudio</strong></div>)}
-        {tab === "text" && (textTab ?? <div className="empty-inspector"><strong>Selecione um texto</strong></div>)}
+        {tab === "media" &&
+          (mediaTab ?? (
+            <div className="empty-inspector">
+              <strong>Selecione vídeo, imagem ou áudio</strong>
+            </div>
+          ))}
+        {tab === "text" &&
+          (textTab ?? (
+            <div className="empty-inspector">
+              <strong>Selecione um texto</strong>
+            </div>
+          ))}
         {tab === "effects" && effectsTab}
       </div>
     </aside>
