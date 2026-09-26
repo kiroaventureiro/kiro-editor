@@ -1,0 +1,56 @@
+name: Wire KIRO Library into editor
+
+on:
+  push:
+    branches:
+      - feat/editor-studio-foundation
+    paths:
+      - .github/workflows/kiro-library-wire.yml
+
+permissions:
+  contents: write
+
+jobs:
+  wire-library:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feat/editor-studio-foundation
+
+      - name: Wire public catalog assets into projects
+        shell: python
+        run: |
+          from pathlib import Path
+
+          path = Path('src/App.tsx')
+          text = path.read_text(encoding='utf-8')
+
+          anchor = '''  const importFiles = async (files: FileList | null) => {'''
+          block = '''  const addLibraryAsset = (asset: MediaAsset) => {\n    if (!current.current.assets.some((item) => item.id === asset.id))\n      edit((p) => ({ ...p, assets: [...p.assets, asset] }));\n    add(asset);\n    setNotice(`${asset.name} adicionado da KIRO Library.`);\n  };\n'''
+          if 'const addLibraryAsset = (asset: MediaAsset)' not in text:
+              if anchor not in text:
+                  raise RuntimeError('Import anchor not found in App.tsx')
+              text = text.replace(anchor, block + anchor)
+
+          old = '''          onAddToTimeline={add}\n          onRelink={relink}'''
+          new = '''          onAddToTimeline={add}\n          onAddLibraryAsset={addLibraryAsset}\n          onRelink={relink}'''
+          if 'onAddLibraryAsset={addLibraryAsset}' not in text:
+              if old not in text:
+                  raise RuntimeError('MediaLibrary props anchor not found in App.tsx')
+              text = text.replace(old, new)
+
+          path.write_text(text, encoding='utf-8')
+
+      - name: Verify editor build
+        run: |
+          npm ci
+          npm run build
+
+      - name: Commit integration
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/App.tsx
+          git diff --cached --quiet || git commit -m "feat: wire KIRO Library assets into projects"
+          git push origin HEAD:feat/editor-studio-foundation
