@@ -129,6 +129,156 @@ export function removeClips(
     }),
   };
 }
+
+export interface TimeRange {
+  start: number;
+  end: number;
+}
+
+export function detectSilenceRanges(
+  clip: Clip,
+  peaks: number[],
+  assetDuration: number,
+  threshold = 0.028,
+  minimumSilence = 0.45,
+  edgePadding = 0.08,
+): TimeRange[] {
+  if (!peaks.length || !Number.isFinite(assetDuration) || assetDuration <= 0)
+    return [];
+
+  const speed = clip.speed ?? 1;
+  const sourceIn = clamp(clip.sourceIn ?? 0, 0, assetDuration);
+  const sourceOut = clamp(
+    clip.sourceOut ?? sourceIn + clip.duration * speed,
+    sourceIn,
+    assetDuration,
+  );
+  const bucket = assetDuration / peaks.length;
+  const first = Math.max(0, Math.floor(sourceIn / bucket));
+  const last = Math.min(peaks.length, Math.ceil(sourceOut / bucket));
+  const ranges: TimeRange[] = [];
+  let silentStart: number | null = null;
+
+  const closeRun = (sourceEnd: number) => {
+    if (silentStart === null) return;
+    const rawStart = Math.max(sourceIn, silentStart);
+    const rawEnd = Math.min(sourceOut, sourceEnd);
+    const timelineDuration = (rawEnd - rawStart) / speed;
+    if (timelineDuration >= minimumSilence) {
+      const paddingSource = edgePadding * speed;
+      const removeStart = Math.min(rawEnd, rawStart + paddingSource);
+      const removeEnd = Math.max(removeStart, rawEnd - paddingSource);
+      if (removeEnd > removeStart) {
+        ranges.push({
+          start: clip.start + (removeStart - sourceIn) / speed,
+          end: clip.start + (removeEnd - sourceIn) / speed,
+        });
+      }
+    }
+    silentStart = null;
+  };
+
+  for (let i = first; i < last; i += 1) {
+    const sourceStart = i * bucket;
+    const sourceEnd = Math.min(assetDuration, (i + 1) * bucket);
+    const silent = (peaks[i] ?? 0) <= threshold;
+    if (silent && silentStart === null) silentStart = sourceStart;
+    if (!silent && silentStart !== null) closeRun(sourceStart);
+    if (i === last - 1 && silentStart !== null) closeRun(sourceEnd);
+  }
+
+  return mergeTimeRanges(ranges);
+}
+
+export function removeTimelineRanges(
+  project: KiroProject,
+  ranges: TimeRange[],
+): KiroProject {
+  const normalized = mergeTimeRanges(ranges).filter(
+    (range) => range.end - range.start > 1 / project.settings.fps,
+  );
+  if (!normalized.length) return project;
+
+  const removedBefore = (time: number) =>
+    normalized.reduce((removed, range) => {
+      if (time <= range.start) return removed;
+      return removed + Math.max(0, Math.min(time, range.end) - range.start);
+    }, 0);
+
+  const cutClip = (clip: Clip): Clip[] => {
+    const clipStart = clip.start;
+    const clipEnd = clip.start + clip.duration;
+    const overlaps = normalized.filter(
+      (range) => range.end > clipStart && range.start < clipEnd,
+    );
+
+    if (!overlaps.length) {
+      const shifted = Math.max(0, clip.start - removedBefore(clip.start));
+      return shifted === clip.start ? [clip] : [{ ...clip, start: shifted }];
+    }
+
+    const keep: TimeRange[] = [];
+    let cursor = clipStart;
+    for (const range of overlaps) {
+      const start = Math.max(clipStart, range.start);
+      const end = Math.min(clipEnd, range.end);
+      if (start > cursor) keep.push({ start: cursor, end: start });
+      cursor = Math.max(cursor, end);
+    }
+    if (cursor < clipEnd) keep.push({ start: cursor, end: clipEnd });
+
+    const sourceBase = clip.sourceIn ?? 0;
+    const speed = clip.speed ?? 1;
+    return keep
+      .filter((part) => part.end - part.start > 1 / project.settings.fps)
+      .map((part, index) => {
+        const start = Math.max(0, part.start - removedBefore(part.start));
+        const duration = part.end - part.start;
+        const next: Clip = {
+          ...clip,
+          id: keep.length === 1 && index === 0 ? clip.id : crypto.randomUUID(),
+          start,
+          duration,
+        };
+        if (clip.assetId) {
+          next.sourceIn = sourceBase + (part.start - clipStart) * speed;
+          next.sourceOut = sourceBase + (part.end - clipStart) * speed;
+        }
+        if (part.start > clipStart) next.fadeIn = 0;
+        if (part.end < clipEnd) next.fadeOut = 0;
+        return next;
+      });
+  };
+
+  return {
+    ...project,
+    tracks: project.tracks.map((track) => ({
+      ...track,
+      clips: track.clips.flatMap(cutClip).sort((a, b) => a.start - b.start),
+    })),
+  };
+}
+
+function mergeTimeRanges(ranges: TimeRange[]) {
+  const ordered = ranges
+    .filter(
+      (range) =>
+        Number.isFinite(range.start) &&
+        Number.isFinite(range.end) &&
+        range.end > range.start,
+    )
+    .map((range) => ({ start: Math.max(0, range.start), end: range.end }))
+    .sort((a, b) => a.start - b.start);
+  const merged: TimeRange[] = [];
+  for (const range of ordered) {
+    const last = merged[merged.length - 1];
+    if (last && range.start <= last.end + 0.001)
+      last.end = Math.max(last.end, range.end);
+    else merged.push({ ...range });
+  }
+  return merged;
+}
+
 export function snap(
   time: number,
   candidates: number[],
