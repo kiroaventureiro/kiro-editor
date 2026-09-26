@@ -101,7 +101,6 @@ export function removeClips(
     tracks: p.tracks.map((t) => {
       if (t.locked) return t;
       const removed = t.clips.filter((c) => wanted.has(c.id));
-      // Merge deleted intervals so overlapping selections never close the same gap twice.
       const intervals: [number, number][] = [];
       for (const c of [...removed].sort((a, b) => a.start - b.start)) {
         const last = intervals[intervals.length - 1];
@@ -176,8 +175,16 @@ export function parseSrt(text: string): Clip[] {
         start,
         duration: end - start,
         text: content,
+        caption: true,
+        captionStyle: "yellow-bar",
         y: 34,
-        fontSize: 5,
+        fontSize: 5.5,
+        fontWeight: 800,
+        color: "#111111",
+        strokeWidth: 0,
+        backgroundColor: "#ffd84d",
+        backgroundOpacity: 0.96,
+        backgroundPadding: 0.34,
       });
   }
   return clips;
