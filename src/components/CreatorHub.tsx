@@ -10,7 +10,7 @@ import {
   WandSparkles,
   X,
 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { KiroProject } from "../editor/types";
 import {
   connectorRegistry,
@@ -21,6 +21,14 @@ import KiroAiPanel from "./KiroAiPanel";
 
 type HubTab = "chat" | "generate" | "agents" | "connections" | "library";
 
+type ServerConnectorState = {
+  configured?: boolean;
+  generationEnabled?: boolean;
+  requiresKiroAuth?: boolean;
+};
+
+type ConnectorSnapshot = Record<string, ServerConnectorState>;
+
 interface Props {
   project: KiroProject;
   currentTime: number;
@@ -29,9 +37,18 @@ interface Props {
   onClose: () => void;
 }
 
-function statusLabel(connector: ConnectorDefinition) {
+function statusLabel(
+  connector: ConnectorDefinition,
+  server?: ServerConnectorState,
+) {
+  if (server?.configured) {
+    if (server.generationEnabled === false)
+      return "Servidor conectado · geração protegida";
+    return "Servidor conectado";
+  }
   if (connector.status === "ready") return "Disponível";
-  if (connector.status === "provider-dependent") return "Aguardando conexão do provedor";
+  if (connector.status === "provider-dependent")
+    return "Aguardando conexão do provedor";
   return "Em preparação";
 }
 
@@ -43,6 +60,8 @@ export default function CreatorHub({
   onClose,
 }: Props) {
   const [tab, setTab] = useState<HubTab>("chat");
+  const [serverConnectors, setServerConnectors] = useState<ConnectorSnapshot>({});
+  const [connectorStatus, setConnectorStatus] = useState("Verificando conexões…");
   const selectedClip = useMemo(
     () =>
       project.tracks
@@ -50,6 +69,27 @@ export default function CreatorHub({
         .find((clip) => clip.id === selectedClipId),
     [project, selectedClipId],
   );
+
+  useEffect(() => {
+    let alive = true;
+    void fetch("/api/creator-connectors")
+      .then(async (response) => {
+        const body = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(body?.error || "Falha ao consultar conectores.");
+        if (!alive) return;
+        setServerConnectors(body?.connectors || {});
+        setConnectorStatus("Conexões verificadas");
+      })
+      .catch(() => {
+        if (!alive) return;
+        setConnectorStatus("Não foi possível verificar os conectores agora");
+      });
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  const xai = serverConnectors.xai;
 
   return (
     <div className="creator-hub-shell">
@@ -113,6 +153,7 @@ export default function CreatorHub({
               <div>
                 <span className="creator-hub-kicker">GERAÇÃO</span>
                 <h2>Crie mídia com o provedor que você conectar</h2>
+                <p>{connectorStatus}</p>
               </div>
               <Sparkles size={23} />
             </div>
@@ -121,13 +162,21 @@ export default function CreatorHub({
                 <ImageIcon size={23} />
                 <strong>Imagem</strong>
                 <p>Prompt, referência, edição e envio direto para a KIRO Library.</p>
-                <small>Disponível quando um conector com image.generate estiver autenticado.</small>
+                <small>
+                  {xai?.configured
+                    ? "Grok/xAI está configurado no servidor. A geração fica bloqueada até a autenticação KIRO e os limites estarem ativos."
+                    : "Disponível quando um conector com image.generate estiver autenticado."}
+                </small>
               </article>
               <article className="creator-hub-feature-card">
                 <Video size={23} />
                 <strong>Vídeo</strong>
                 <p>Texto para vídeo, imagem para vídeo e edição por IA quando o provedor suportar.</p>
-                <small>Projetado para Grok/xAI e outros conectores compatíveis.</small>
+                <small>
+                  {xai?.configured
+                    ? "Gateway Grok/xAI instalado. Vídeos usam fila assíncrona e polling para não prender a interface."
+                    : "Projetado para Grok/xAI e outros conectores compatíveis."}
+                </small>
               </article>
               <article className="creator-hub-feature-card">
                 <Link2 size={23} />
@@ -156,7 +205,7 @@ export default function CreatorHub({
                     <Bot size={22} />
                     <strong>{connector.name}</strong>
                     <p>{connector.description}</p>
-                    <small>{statusLabel(connector)}</small>
+                    <small>{statusLabel(connector, serverConnectors[connector.id])}</small>
                   </article>
                 ))}
             </div>
@@ -174,25 +223,28 @@ export default function CreatorHub({
               <PlugZap size={23} />
             </div>
             <div className="creator-hub-connectors">
-              {connectorRegistry.map((connector) => (
-                <article className="creator-hub-connector" key={connector.id}>
-                  <div>
-                    <strong>{connector.name}</strong>
-                    <span>{connector.description}</span>
-                  </div>
-                  <div className="creator-hub-badges">
-                    {connector.authModes.map((mode) => (
-                      <span key={mode}>{mode.toUpperCase()}</span>
-                    ))}
-                  </div>
-                  <div className="creator-hub-connector-footer">
-                    <small>{statusLabel(connector)}</small>
-                    <button disabled={connector.status !== "ready" || !connector.userConnectable}>
-                      {connector.userConnectable ? "Conectar" : "Gerenciado pela KIRO"}
-                    </button>
-                  </div>
-                </article>
-              ))}
+              {connectorRegistry.map((connector) => {
+                const server = serverConnectors[connector.id];
+                return (
+                  <article className="creator-hub-connector" key={connector.id}>
+                    <div>
+                      <strong>{connector.name}</strong>
+                      <span>{connector.description}</span>
+                    </div>
+                    <div className="creator-hub-badges">
+                      {connector.authModes.map((mode) => (
+                        <span key={mode}>{mode.toUpperCase()}</span>
+                      ))}
+                    </div>
+                    <div className="creator-hub-connector-footer">
+                      <small>{statusLabel(connector, server)}</small>
+                      <button disabled={connector.status !== "ready" || !connector.userConnectable}>
+                        {connector.userConnectable ? "Conectar" : "Gerenciado pela KIRO"}
+                      </button>
+                    </div>
+                  </article>
+                );
+              })}
             </div>
             <div className="creator-hub-permissions">
               <span className="creator-hub-kicker">PERMISSÕES DO EDITOR</span>
