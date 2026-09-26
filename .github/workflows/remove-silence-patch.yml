@@ -1,0 +1,52 @@
+name: Apply silence removal UI patch
+
+on:
+  push:
+    branches:
+      - feat/editor-studio-foundation
+    paths:
+      - .github/workflows/remove-silence-patch.yml
+
+permissions:
+  contents: write
+
+jobs:
+  patch-app:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feat/editor-studio-foundation
+      - name: Patch App.tsx
+        shell: python
+        run: |
+          from pathlib import Path
+          path = Path('src/App.tsx')
+          text = path.read_text(encoding='utf-8')
+
+          text = text.replace('  Music2,\n  Video,', '  Music2,\n  AudioWaveform,\n  Video,')
+          text = text.replace('  changeSpeed,\n  clamp,', '  changeSpeed,\n  clamp,\n  detectSilenceRanges,')
+          text = text.replace('  removeClips,\n  split,', '  removeClips,\n  removeTimelineRanges,\n  split,')
+          engine_import = 'import { recordingFormat, renderVideo } from "./editor/engine";\n'
+          analysis_import = 'import { analyzeAudioPeaks } from "./editor/audioAnalysis";\n'
+          if analysis_import not in text:
+              text = text.replace(engine_import, engine_import + analysis_import)
+
+          anchor = '''  const generateAutomaticCaptions = async () => {'''
+          block = '''  const removeAutomaticSilence = async () => {\n    if (busy || captioning) return;\n    if (!selectedClip?.assetId || selectedClip.type === "text") {\n      setNotice("Selecione um vídeo ou áudio para remover as pausas.");\n      return;\n    }\n    if (project.tracks.some((track) => track.locked)) {\n      setNotice(\n        "Desbloqueie as trilhas antes de remover silêncio para manter vídeo, áudio, textos e legendas sincronizados.",\n      );\n      return;\n    }\n    const asset = project.assets.find((item) => item.id === selectedClip.assetId);\n    if (!asset?.path || !asset.duration) {\n      setNotice("Reconecte a mídia antes de analisar os silêncios.");\n      return;\n    }\n\n    setPlaying(false);\n    setBusy(true);\n    setNotice("Analisando pausas e preservando a sincronização do projeto…");\n    try {\n      let peaks = asset.peaks;\n      if (!peaks?.length) {\n        const response = await fetch(asset.path);\n        if (!response.ok)\n          throw new Error("Não foi possível abrir a mídia selecionada.");\n        const analysis = await analyzeAudioPeaks(await response.blob());\n        peaks = analysis.peaks;\n        edit((p) => ({\n          ...p,\n          assets: p.assets.map((item) =>\n            item.id === asset.id ? { ...item, peaks } : item,\n          ),\n        }));\n      }\n\n      const ranges = detectSilenceRanges(\n        selectedClip,\n        peaks,\n        asset.duration,\n      );\n      if (!ranges.length) {\n        setNotice(\n          "Não encontrei pausas longas o bastante nesse trecho. O áudio foi mantido como está.",\n        );\n        return;\n      }\n\n      const removed = ranges.reduce(\n        (seconds, range) => seconds + range.end - range.start,\n        0,\n      );\n      const returnTime = selectedClip.start;\n      edit((p) => removeTimelineRanges(p, ranges));\n      setSelected([]);\n      setTimelineMode(undefined);\n      setTime(returnTime);\n      setNotice(\n        `${ranges.length} pausa(s) removida(s) · ${removed.toFixed(1)} s encurtados mantendo as camadas sincronizadas.`,\n      );\n    } catch (e) {\n      setNotice(error(e));\n    } finally {\n      setBusy(false);\n    }\n  };\n'''
+          if block not in text:
+              text = text.replace(anchor, block + anchor)
+
+          caption_button = '''          <button\n            onClick={() => void generateAutomaticCaptions()}'''
+          silence_button = '''          {selectedClip && selectedClip.type !== "text" && (\n            <button\n              onClick={() => void removeAutomaticSilence()}\n              disabled={busy || exporting || captioning}\n              title="Detectar pausas e removê-las de todas as camadas sincronizadas"\n            >\n              <AudioWaveform size={16} />\n              Remover silêncio\n            </button>\n          )}\n'''
+          if silence_button not in text:
+              text = text.replace(caption_button, silence_button + caption_button)
+
+          path.write_text(text, encoding='utf-8')
+      - name: Commit patch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/App.tsx
+          git diff --cached --quiet || git commit -m "feat: add automatic silence removal"
+          git push origin HEAD:feat/editor-studio-foundation
