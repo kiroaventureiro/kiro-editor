@@ -15,6 +15,7 @@ import "./styles/caption-tools-v1.css";
 import "./styles/transition-tools-v1.css";
 import "./styles/effects-tools-v1.css";
 import "./styles/beat-markers-v1.css";
+import "./styles/kiro-library-v1.css";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
