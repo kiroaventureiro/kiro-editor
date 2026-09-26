@@ -1,0 +1,91 @@
+/* KIRO Editor — caption styling controls */
+.caption-style-section {
+  display: grid;
+  gap: 12px;
+}
+
+.caption-style-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.caption-convert {
+  min-height: 28px !important;
+  padding: 5px 8px !important;
+  font-size: 10px !important;
+}
+
+.caption-presets {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 7px;
+}
+
+.caption-presets > button {
+  min-width: 0;
+  min-height: 66px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 7px 5px;
+  white-space: normal;
+  text-align: center;
+  font-size: 9px;
+  line-height: 1.2;
+}
+
+.caption-preview {
+  min-width: 38px;
+  min-height: 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3px 7px;
+  border-radius: 4px;
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.caption-preview.clean {
+  color: #fff;
+  background: transparent;
+  text-shadow: 0 1px 2px #000, 0 0 2px #000;
+}
+
+.caption-preview.yellow {
+  color: #111;
+  background: #ffd84d;
+}
+
+.caption-preview.impact {
+  color: #fff;
+  background: rgba(0, 0, 0, .76);
+  text-shadow: 0 1px 2px #000;
+}
+
+.caption-color-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 9px;
+}
+
+.caption-color-row .color-control {
+  margin-bottom: 0 !important;
+}
+
+.caption-color-row input[type="color"] {
+  width: 100%;
+  min-height: 34px;
+  padding: 3px;
+}
+
+@media (max-width: 1100px) {
+  .caption-presets {
+    grid-template-columns: 1fr;
+  }
+}
