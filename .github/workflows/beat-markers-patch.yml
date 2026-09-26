@@ -1,0 +1,70 @@
+name: Apply beat marker patch
+
+on:
+  push:
+    branches:
+      - feat/editor-studio-foundation
+    paths:
+      - .github/workflows/beat-markers-patch.yml
+
+permissions:
+  contents: write
+
+jobs:
+  patch-editor:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feat/editor-studio-foundation
+      - name: Patch beat markers
+        shell: python
+        run: |
+          from pathlib import Path
+
+          app = Path('src/App.tsx')
+          text = app.read_text(encoding='utf-8')
+          text = text.replace('  AudioWaveform,\n  Video,', '  AudioWaveform,\n  CircleDot,\n  Video,')
+          text = text.replace('import { analyzeAudioPeaks } from "./editor/audioAnalysis";', 'import { analyzeAudioPeaks, detectBeatTimes } from "./editor/audioAnalysis";')
+
+          anchor = '''  const removeAutomaticSilence = async () => {'''
+          block = '''  const markAutomaticBeats = async () => {\n    if (busy || captioning) return;\n    if (!selectedClip?.assetId || selectedClip.type === "text") {\n      setNotice("Selecione um vídeo ou áudio para detectar as batidas.");\n      return;\n    }\n    const asset = project.assets.find((item) => item.id === selectedClip.assetId);\n    if (!asset?.path || !asset.duration) {\n      setNotice("Reconecte a mídia antes de detectar as batidas.");\n      return;\n    }\n\n    setPlaying(false);\n    setBusy(true);\n    setNotice("Analisando ritmo e procurando batidas…");\n    try {\n      let peaks = asset.peaks;\n      if (!peaks?.length) {\n        const response = await fetch(asset.path);\n        if (!response.ok)\n          throw new Error("Não foi possível abrir a mídia selecionada.");\n        const analysis = await analyzeAudioPeaks(await response.blob());\n        peaks = analysis.peaks;\n        edit((p) => ({\n          ...p,\n          assets: p.assets.map((item) =>\n            item.id === asset.id ? { ...item, peaks } : item,\n          ),\n        }));\n      }\n\n      const times = detectBeatTimes(selectedClip, peaks, asset.duration);\n      if (!times.length) {\n        setNotice(\n          "Não encontrei batidas fortes o bastante nesse trecho. A mídia não foi alterada.",\n        );\n        return;\n      }\n\n      const clipStart = selectedClip.start;\n      const clipEnd = selectedClip.start + selectedClip.duration;\n      edit((p) => ({\n        ...p,\n        markers: [\n          ...(p.markers ?? []).filter(\n            (marker) =>\n              !(\n                marker.kind === "beat" &&\n                marker.sourceAssetId === asset.id &&\n                marker.time >= clipStart - 0.001 &&\n                marker.time <= clipEnd + 0.001\n              ),\n          ),\n          ...times.map((beat, index) => ({\n            id: crypto.randomUUID(),\n            time: frameTime(beat, p.settings.fps),\n            label: `Batida ${index + 1}`,\n            kind: "beat" as const,\n            sourceAssetId: asset.id,\n          })),\n        ].sort((a, b) => a.time - b.time),\n      }));\n      setNotice(\n        `${times.length} batida(s) marcada(s). Elas agora aparecem na régua e servem de encaixe para cortes e clipes.`,\n      );\n    } catch (e) {\n      setNotice(error(e));\n    } finally {\n      setBusy(false);\n    }\n  };\n'''
+          if block not in text:
+              text = text.replace(anchor, block + anchor)
+
+          silence_button_end = '''              Remover silêncio\n            </button>\n          )}\n'''
+          beat_button = '''          {selectedClip && selectedClip.type !== "text" && (\n            <button\n              onClick={() => void markAutomaticBeats()}\n              disabled={busy || exporting || captioning}\n              title="Detectar batidas e criar marcadores magnéticos na timeline"\n            >\n              <CircleDot size={16} />\n              Marcar batidas\n            </button>\n          )}\n'''
+          if beat_button not in text:
+              text = text.replace(silence_button_end, silence_button_end + beat_button)
+          app.write_text(text, encoding='utf-8')
+
+          timeline = Path('src/components/Timeline.tsx')
+          text = timeline.read_text(encoding='utf-8')
+          old_candidates = '''  const candidates = [\n    0,\n    p.time,\n    ...p.project.tracks.flatMap((t) =>'''
+          new_candidates = '''  const candidates = [\n    0,\n    p.time,\n    ...(p.project.markers ?? []).map((marker) => marker.time),\n    ...p.project.tracks.flatMap((t) =>'''
+          text = text.replace(old_candidates, new_candidates)
+
+          playhead = '''              <div className="ruler-playhead" style={{ left: p.time * zoom }}>\n                <span />\n              </div>'''
+          markers = '''              {(p.project.markers ?? []).map((marker) => (\n                <button\n                  key={marker.id}\n                  className={`timeline-marker marker-${marker.kind}`}\n                  style={{ left: marker.time * zoom }}\n                  title={`${marker.label} · ${formatRulerTime(marker.time)}`}\n                  aria-label={`${marker.label} em ${formatRulerTime(marker.time)}`}\n                  onPointerDown={(event) => {\n                    event.preventDefault();\n                    event.stopPropagation();\n                  }}\n                  onClick={(event) => {\n                    event.preventDefault();\n                    event.stopPropagation();\n                    p.onSeek(marker.time);\n                  }}\n                />\n              ))}\n''' + playhead
+          if 'className={`timeline-marker marker-${marker.kind}`}' not in text:
+              text = text.replace(playhead, markers)
+
+          lane_anchor = '''                <div className="track-lane" {...scrubProps}>\n                  {dragVisual?.trackId === t.id &&'''
+          lane_markers = '''                <div className="track-lane" {...scrubProps}>\n                  {(p.project.markers ?? []).map((marker) => (\n                    <i\n                      key={`${t.id}-${marker.id}`}\n                      className={`beat-guide marker-${marker.kind}`}\n                      style={{ left: marker.time * zoom }}\n                      aria-hidden="true"\n                    />\n                  ))}\n                  {dragVisual?.trackId === t.id &&'''
+          if 'key={`${t.id}-${marker.id}`}' not in text:
+              text = text.replace(lane_anchor, lane_markers)
+          timeline.write_text(text, encoding='utf-8')
+
+          operations = Path('src/editor/operations.ts')
+          text = operations.read_text(encoding='utf-8')
+          old_return = '''  return {\n    ...project,\n    tracks: project.tracks.map((track) => ({\n      ...track,\n      clips: track.clips.flatMap(cutClip).sort((a, b) => a.start - b.start),\n    })),\n  };'''
+          new_return = '''  return {\n    ...project,\n    tracks: project.tracks.map((track) => ({\n      ...track,\n      clips: track.clips.flatMap(cutClip).sort((a, b) => a.start - b.start),\n    })),\n    markers: project.markers?.flatMap((marker) => {\n      if (normalized.some((range) => marker.time >= range.start && marker.time < range.end))\n        return [];\n      return [\n        {\n          ...marker,\n          time: Math.max(0, marker.time - removedBefore(marker.time)),\n        },\n      ];\n    }),\n  };'''
+          text = text.replace(old_return, new_return)
+          operations.write_text(text, encoding='utf-8')
+      - name: Commit patch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/App.tsx src/components/Timeline.tsx src/editor/operations.ts
+          git diff --cached --quiet || git commit -m "feat: add beat markers to timeline"
+          git push origin HEAD:feat/editor-studio-foundation
