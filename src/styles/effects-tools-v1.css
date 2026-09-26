@@ -1,0 +1,10 @@
+.effect-preset-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.effect-preset-row button {
+  min-height: 30px;
+}

@@ -444,10 +444,54 @@ export default function Inspector({
           </button>
         </section>
       )}
+      {clip.type !== "audio" && clip.type !== "text" && (
+        <section className="inspector-section visual-effects-section">
+          <span className="section-kicker">AJUSTES VISUAIS</span>
+          {range("Brilho", "brightness", 0.2, 2, 0.05, 1)}
+          {range("Contraste", "contrast", 0.2, 2, 0.05, 1)}
+          {range("Saturação", "saturation", 0, 2, 0.05, 1)}
+          {range("Desfoque", "blur", 0, 3, 0.05, 0)}
+          <div className="effect-preset-row">
+            <button
+              type="button"
+              onClick={() =>
+                onChange({ brightness: 1.08, contrast: 1.12, saturation: 1.14, blur: 0 })
+              }
+            >
+              Vivo
+            </button>
+            <button
+              type="button"
+              onClick={() =>
+                onChange({ brightness: 0.9, contrast: 1.22, saturation: 0.72, blur: 0 })
+              }
+            >
+              Cinema
+            </button>
+            <button
+              type="button"
+              onClick={() =>
+                onChange({ brightness: 1, contrast: 1, saturation: 0, blur: 0 })
+              }
+            >
+              P&B
+            </button>
+            <button
+              type="button"
+              onClick={() =>
+                onChange({ brightness: 1, contrast: 1, saturation: 1, blur: 0 })
+              }
+            >
+              Limpar
+            </button>
+          </div>
+          <small>Esses ajustes são renderizados no Canvas e no arquivo exportado.</small>
+        </section>
+      )}
       <div className="future-effects">
         <strong>Próximos efeitos</strong>
         <span>
-          Filtros, desfoque, sombra e animações avançadas entrarão nesta aba.
+          Sombras, máscaras, glow, glitch e animações avançadas entrarão nesta aba.
         </span>
       </div>
     </fieldset>

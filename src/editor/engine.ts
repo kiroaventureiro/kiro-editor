@@ -456,6 +456,12 @@ export class Composition {
         if (c.type === "text") {
           drawTextClip(ctx, c, w, h);
         } else {
+          const brightness = clamp(c.brightness ?? 1, 0, 3);
+          const contrast = clamp(c.contrast ?? 1, 0, 3);
+          const saturation = clamp(c.saturation ?? 1, 0, 3);
+          const blurPx =
+            clamp(c.blur ?? 0, 0, 10) * (Math.min(w, h) / 100);
+          ctx.filter = `brightness(${brightness}) contrast(${contrast}) saturate(${saturation}) blur(${blurPx}px)`;
           const source = this.resources.get(c.id);
           if (
             source instanceof HTMLImageElement ||

@@ -162,6 +162,10 @@ export function validateProject(value: unknown): KiroProject {
         "fadeOut",
         "fontSize",
         "transitionDuration",
+        "brightness",
+        "contrast",
+        "saturation",
+        "blur",
       ] as const) {
         if (c[key] !== undefined && !finite(c[key]))
           throw new Error("Ajuste de clipe inválido.");

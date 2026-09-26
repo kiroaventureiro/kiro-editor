@@ -51,6 +51,10 @@ export interface Clip {
   backgroundPadding?: number;
   transitionIn?: TransitionType;
   transitionDuration?: number;
+  brightness?: number;
+  contrast?: number;
+  saturation?: number;
+  blur?: number;
   notes?: string;
 }
 
