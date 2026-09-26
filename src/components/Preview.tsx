@@ -221,16 +221,18 @@ export default function Preview({
     const composition = engine.current;
     if (!composition) return;
     composition.setMonitorVolume(volume);
+
     if (!playing && !playbackIntent.current) {
       composition.pause();
       return;
     }
+
+    // Não chamamos startPlayback novamente aqui. O clique no botão Play já
+    // inicia todas as camadas dentro do gesto do usuário. Reiniciar os mesmos
+    // vídeos logo depois abortava/ressincronizava uma das camadas. Para play
+    // iniciado por teclado, o loop sync() acima assume os elementos pausados.
     if (playing) {
-      const at = latest.current.time;
-      void Promise.all([
-        composition.enableAudio(true),
-        composition.startPlayback(at),
-      ]).catch((e: Error) => {
+      void composition.enableAudio(true).catch((e: Error) => {
         setStatus(e.message);
         playbackIntent.current = false;
         onPlaying(false);
@@ -256,7 +258,6 @@ export default function Preview({
     playbackIntent.current = true;
     latest.current.time = startAt;
     latest.current.playing = true;
-    onPlaying(true);
 
     const composition = engine.current;
     if (composition) {
@@ -270,6 +271,8 @@ export default function Preview({
         onPlaying(false);
       });
     }
+
+    onPlaying(true);
   };
 
   const toggleMute = () => {
