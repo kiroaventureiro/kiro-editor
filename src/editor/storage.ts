@@ -109,7 +109,11 @@ export function validateProject(value: unknown): KiroProject {
       ids.has(a.id) ||
       typeof a.name !== "string" ||
       !["video", "audio", "image"].includes(a.type) ||
-      (a.duration !== undefined && (!finite(a.duration) || a.duration <= 0))
+      (a.duration !== undefined && (!finite(a.duration) || a.duration <= 0)) ||
+      (a.peaks !== undefined &&
+        (!Array.isArray(a.peaks) ||
+          a.peaks.length > 10000 ||
+          a.peaks.some((peak) => !finite(peak) || peak < 0 || peak > 1)))
     )
       throw new Error("Mídia inválida no projeto.");
     ids.add(a.id);
@@ -251,25 +255,36 @@ export async function inspectFile(
       };
       if (el instanceof HTMLVideoElement)
         result.thumbnail = thumbnail(el, el.videoWidth, el.videoHeight);
-      // Decode bounded audio files only: large media must not freeze import or exhaust memory.
-      if (type === "audio" && file.size < 24 * 1024 * 1024) {
+
+      // Gera uma análise de amplitude para waveform, detecção de pausas e
+      // futuras marcações de batida. Também tentamos ler a faixa de áudio de
+      // vídeos; se o codec/container não for aceito pelo Web Audio, a mídia
+      // continua sendo importada normalmente, apenas sem análise automática.
+      if ((type === "audio" || type === "video") && file.size < 40 * 1024 * 1024) {
         const context = new AudioContext();
         try {
           const audio = await context.decodeAudioData(await file.arrayBuffer());
-          const data = audio.getChannelData(0),
-            stride = Math.max(1, Math.floor(data.length / 160));
-          result.peaks = Array.from({ length: 160 }, (_, i) => {
+          const points = Math.max(
+            240,
+            Math.min(5000, Math.ceil(audio.duration * 20)),
+          );
+          const channels = Array.from(
+            { length: Math.min(2, audio.numberOfChannels) },
+            (_, channel) => audio.getChannelData(channel),
+          );
+          const stride = Math.max(1, Math.floor(audio.length / points));
+          const sampleStep = Math.max(1, Math.floor(stride / 48));
+          result.peaks = Array.from({ length: points }, (_, i) => {
             let peak = 0;
-            for (
-              let j = i * stride;
-              j < Math.min(data.length, (i + 1) * stride);
-              j += 16
-            )
-              peak = Math.max(peak, Math.abs(data[j]));
-            return peak;
+            const from = i * stride;
+            const to = Math.min(audio.length, (i + 1) * stride);
+            for (const data of channels)
+              for (let j = from; j < to; j += sampleStep)
+                peak = Math.max(peak, Math.abs(data[j]));
+            return Math.min(1, peak);
           });
         } catch {
-          /* Waveform is optional; original audio is still imported. */
+          /* A análise é opcional; a mídia original continua disponível. */
         } finally {
           await context.close();
         }
