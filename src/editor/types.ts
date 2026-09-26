@@ -34,7 +34,15 @@ export interface Clip {
   fadeIn?: number;
   fadeOut?: number;
   fontSize?: number;
+  fontWeight?: number;
   color?: string;
+  strokeColor?: string;
+  strokeWidth?: number;
+  caption?: boolean;
+  captionStyle?: "clean" | "yellow-bar" | "impact";
+  backgroundColor?: string;
+  backgroundOpacity?: number;
+  backgroundPadding?: number;
   notes?: string;
 }
 
