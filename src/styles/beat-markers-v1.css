@@ -1,0 +1,57 @@
+.timeline-marker {
+  position: absolute;
+  top: 0;
+  width: 12px;
+  height: 100%;
+  margin-left: -6px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  z-index: 6;
+  cursor: pointer;
+}
+
+.timeline-marker::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 2px;
+  height: 100%;
+  transform: translateX(-50%);
+  background: currentColor;
+  opacity: 0.55;
+}
+
+.timeline-marker::after {
+  content: "";
+  position: absolute;
+  top: 1px;
+  left: 50%;
+  width: 8px;
+  height: 8px;
+  transform: translateX(-50%) rotate(45deg);
+  border-radius: 2px;
+  background: currentColor;
+}
+
+.timeline-marker.marker-beat {
+  color: #ffb347;
+}
+
+.beat-guide {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  pointer-events: none;
+  background: #ffb347;
+  opacity: 0.22;
+  z-index: 1;
+}
+
+.clip,
+.playhead,
+.clip-drop-slot {
+  z-index: 2;
+}
