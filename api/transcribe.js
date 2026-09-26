@@ -2,7 +2,9 @@ export const config = {
   maxDuration: 60,
 };
 
-const MAX_AUDIO_BYTES = 25 * 1024 * 1024;
+// Vercel Functions limitam o corpo da requisição a 4.5 MB. Mantemos uma
+// margem para cabeçalhos e metadados e rejeitamos antes de o proxy falhar.
+const MAX_PROXY_BYTES = 4_300_000;
 
 function send(res, status, body, contentType = "application/json; charset=utf-8") {
   res.statusCode = status;
@@ -28,6 +30,7 @@ export default async function handler(req, res) {
     return send(res, 200, {
       ready: Boolean(process.env.OPENAI_API_KEY),
       feature: "automatic-captions",
+      maxBytes: MAX_PROXY_BYTES,
     });
   }
 
@@ -45,9 +48,10 @@ export default async function handler(req, res) {
   }
 
   const declaredLength = Number(req.headers["content-length"] || 0);
-  if (declaredLength > MAX_AUDIO_BYTES) {
+  if (declaredLength > MAX_PROXY_BYTES) {
     return send(res, 413, {
-      error: "O arquivo para transcrição deve ter no máximo 25 MB.",
+      error:
+        "Nesta primeira versão, a transcrição automática aceita arquivos de até 4,3 MB. A próxima etapa usará upload direto para arquivos maiores.",
     });
   }
 
@@ -55,9 +59,10 @@ export default async function handler(req, res) {
   let received = 0;
   for await (const chunk of req) {
     received += chunk.length;
-    if (received > MAX_AUDIO_BYTES) {
+    if (received > MAX_PROXY_BYTES) {
       return send(res, 413, {
-        error: "O arquivo para transcrição deve ter no máximo 25 MB.",
+        error:
+          "Nesta primeira versão, a transcrição automática aceita arquivos de até 4,3 MB. A próxima etapa usará upload direto para arquivos maiores.",
       });
     }
     chunks.push(chunk);
