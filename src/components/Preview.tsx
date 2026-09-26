@@ -218,16 +218,11 @@ export default function Preview({
     previewQuality / Math.min(project.settings.width, project.settings.height);
 
   const toggle = () => {
-    if (playing) {
-      onPlaying(false);
-      return;
+    if (playing) onPlaying(false);
+    else {
+      if (time >= duration) onTime(0);
+      onPlaying(true);
     }
-    const startAt = time >= duration ? 0 : time;
-    if (startAt !== time) onTime(startAt);
-    void engine.current?.startPlayback(startAt).catch((e: Error) => {
-      setStatus(e.message);
-    });
-    onPlaying(true);
   };
 
   const toggleMute = () => {
@@ -269,7 +264,12 @@ export default function Preview({
 
   const selectFromCanvas = (clientX: number, clientY: number) => {
     const hit = pickClip(clientX, clientY);
-    if (!hit) return;
+    if (!hit) {
+      window.dispatchEvent(
+        new CustomEvent<string>(CANVAS_SELECT_EVENT, { detail: "" }),
+      );
+      return;
+    }
     if (hit.id !== selectedClip?.id) {
       window.dispatchEvent(
         new CustomEvent<string>(CANVAS_SELECT_EVENT, { detail: hit.id }),
