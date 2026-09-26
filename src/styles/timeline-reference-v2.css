@@ -1,5 +1,5 @@
-/* KIRO Editor — timeline reference v4
-   Régua legível + cabeçalhos de trilha mais próximos do layout de referência. */
+/* KIRO Editor — timeline reference v5
+   Régua legível + cabeçalhos de trilha com controles na mesma linha do título. */
 
 .timeline-premium .ruler {
   overflow: hidden;
@@ -38,11 +38,12 @@
   --track-accent: #79aef8;
   width: 210px !important;
   min-width: 210px !important;
+  position: relative !important;
   display: grid !important;
-  grid-template-columns: 28px minmax(0, 1fr) 56px !important;
+  grid-template-columns: 28px minmax(0, 1fr) !important;
   align-items: center !important;
   gap: 8px !important;
-  padding: 7px 10px 7px 8px !important;
+  padding: 7px 70px 7px 8px !important;
   border-left: 3px solid var(--track-accent) !important;
   background: #0e151c !important;
   overflow: hidden;
@@ -87,6 +88,7 @@
   width: 100%;
   max-width: none !important;
   margin: 0 !important;
+  padding-right: 4px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -104,14 +106,20 @@
   letter-spacing: .05em;
 }
 
+/* Volume/visibilidade e bloqueio ficam na mesma linha visual do título. */
 .timeline-premium .track-actions {
+  position: absolute !important;
+  top: 7px !important;
+  right: 9px !important;
   width: 56px;
   min-width: 56px;
+  height: 24px;
   display: flex !important;
   align-items: center !important;
   justify-content: flex-end !important;
   gap: 4px !important;
   flex-wrap: nowrap !important;
+  z-index: 2;
 }
 
 .timeline-premium .track-actions button {
