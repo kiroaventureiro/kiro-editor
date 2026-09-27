@@ -156,3 +156,15 @@
   .canvas-module { grid-template-rows:29px minmax(0,1fr) 74px !important; }
   .canvas-transport { grid-template-rows:29px 32px !important; }
 }
+
+@media (min-width: 851px) {
+  /* Higher specificity is required to override legacy monitor-deck breakpoints. */
+  .monitor-deck > .preview-wrap.canvas-module {
+    grid-template-rows: 32px minmax(0, 1fr) 76px !important;
+  }
+}
+@media (min-width: 851px) and (max-height: 700px) {
+  .monitor-deck > .preview-wrap.canvas-module {
+    grid-template-rows: 29px minmax(0, 1fr) 74px !important;
+  }
+}
