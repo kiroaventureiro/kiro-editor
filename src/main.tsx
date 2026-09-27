@@ -21,6 +21,7 @@ import "./styles/kiro-ai-v1.css";
 import "./styles/creator-hub-v1.css";
 import "./styles/interface-foundation-v1.css";
 import "./styles/reference-desk-v1.css";
+import "./styles/reference-desk-v2.css";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
