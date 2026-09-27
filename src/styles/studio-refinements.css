@@ -1096,3 +1096,214 @@ body {
     padding: 10px 14px;
   }
 }
+
+
+/* Main editor usability pass — clearer type and balanced workspace proportions. */
+:root {
+  --editor-type: 12px;
+}
+
+.app-shell {
+  grid-template-rows: 58px 42px minmax(250px, 1fr) 7px var(--timeline-height);
+}
+
+.workspace {
+  grid-template-columns: minmax(220px, min(var(--library-width), 264px)) 5px minmax(320px, 1fr) minmax(244px, 276px);
+}
+
+.panel,
+.inspector {
+  padding: 15px 14px;
+}
+
+.panel h2,
+.inspector h2 {
+  font-size: 17px;
+  line-height: 1.25;
+}
+
+.eyebrow {
+  font-size: 10px;
+  letter-spacing: .12em;
+}
+
+.workspace-tools {
+  gap: 12px;
+  padding-inline: 14px;
+}
+
+.workspace-tools > div {
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #314a55 transparent;
+}
+
+.workspace-tools button,
+.workspace-tools .button {
+  min-height: 34px;
+  padding-inline: 10px;
+  font-size: 12px;
+}
+
+.preview-wrap {
+  padding: 7px 12px 5px;
+  grid-template-rows: 32px minmax(0, 1fr) 50px;
+}
+
+.preview-heading {
+  font-size: 11px;
+}
+
+.preview-stage {
+  padding: 10px;
+  border-radius: 6px;
+}
+
+.canvas-shell[data-aspect="16:9"] {
+  width: min(100%, calc((100dvh - var(--timeline-height) - 150px) * 16 / 9));
+  height: auto;
+  max-height: 100%;
+  aspect-ratio: 16 / 9;
+}
+
+.canvas-shell[data-aspect="9:16"] {
+  height: min(100%, 560px);
+}
+
+.canvas-shell[data-aspect="4:5"] {
+  height: min(100%, 540px);
+}
+
+.canvas-shell[data-aspect="1:1"] {
+  height: min(100%, 510px);
+}
+
+.transport {
+  gap: 12px;
+}
+
+.inspector {
+  width: auto;
+}
+
+.inspector-tabs button {
+  min-height: 34px;
+  font-size: 10px;
+}
+
+.inspector label,
+.inspector .control > span,
+.inspector .specs {
+  font-size: 11px;
+}
+
+.inspector input,
+.inspector select,
+.inspector textarea {
+  min-height: 34px;
+  font-size: 12px;
+}
+
+.timeline-toolbar {
+  min-height: 42px;
+  padding-inline: 12px;
+}
+
+.timeline-toolbar button {
+  min-height: 32px;
+  font-size: 11px;
+}
+
+.ruler-tick {
+  font-size: 10px;
+}
+
+.track-row {
+  height: 76px;
+}
+
+.track-name > strong {
+  font-size: 11px;
+}
+
+.clip strong,
+.clip small {
+  font-size: 11px;
+}
+
+@media (max-width: 1180px) and (min-width: 851px) {
+  .workspace {
+    grid-template-columns: minmax(206px, min(var(--library-width), 224px)) 5px minmax(300px, 1fr) 236px;
+  }
+
+  .panel,
+  .inspector {
+    padding-inline: 11px;
+  }
+
+  .canvas-shell[data-aspect="16:9"] {
+    width: min(100%, calc((100dvh - var(--timeline-height) - 145px) * 16 / 9));
+  }
+}
+
+@media (max-height: 720px) and (min-width: 851px) {
+  .app-shell {
+    grid-template-rows: 52px 38px minmax(220px, 1fr) 7px var(--timeline-height);
+  }
+
+  .workspace-tools button,
+  .workspace-tools .button {
+    min-height: 30px;
+  }
+
+  .preview-wrap {
+    grid-template-rows: 26px minmax(0, 1fr) 42px;
+    padding-block: 3px;
+  }
+
+  .preview-stage {
+    padding: 5px;
+  }
+
+  .canvas-shell[data-aspect="16:9"] {
+    width: min(100%, calc((100dvh - var(--timeline-height) - 126px) * 16 / 9));
+    height: auto;
+  }
+
+  .track-row {
+    height: 68px;
+  }
+}
+
+@media (max-width: 850px) {
+  .workspace-tools > div {
+    overflow-x: auto;
+  }
+
+  .workspace-tools button,
+  .workspace-tools .button {
+    min-height: 34px;
+    padding-inline: 8px;
+    font-size: 11px;
+  }
+
+  .canvas-shell[data-aspect="16:9"] {
+    width: min(100%, calc((100dvh - var(--timeline-height) - 190px) * 16 / 9));
+    height: auto;
+  }
+
+  .track-name {
+    padding-inline: 6px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  button,
+  .button,
+  input,
+  select,
+  textarea {
+    transition: none;
+  }
+}
