@@ -87,10 +87,10 @@ try {
     name: "Ferramentas do editor",
   });
   assert.equal(await toolsPanel.count(), 1);
-  const mediaButton = toolsPanel.getByRole("button", {
-    name: "Mídia",
-    exact: true,
+  const mediaButton = toolsPanel.locator("button").filter({
+    hasText: "Mídia",
   });
+  assert.equal(await mediaButton.count(), 1);
   assert.equal(await mediaButton.getAttribute("aria-pressed"), "false");
   assert(
     Number.parseFloat(
