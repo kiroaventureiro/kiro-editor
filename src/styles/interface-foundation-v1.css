@@ -1,0 +1,142 @@
+/* KIRO Editor — interface foundation
+   Refinamento visual progressivo: melhora hierarquia, legibilidade e feedback
+   sem alterar geometria, estado do editor, timeline ou comportamento de mídia. */
+
+:root {
+  --kiro-ui-bg: #090d12;
+  --kiro-ui-surface: #111820;
+  --kiro-ui-surface-raised: #17212b;
+  --kiro-ui-border: rgba(154, 177, 194, 0.16);
+  --kiro-ui-border-strong: rgba(154, 177, 194, 0.3);
+  --kiro-ui-text: #edf4f7;
+  --kiro-ui-muted: #a6b4c0;
+  --kiro-ui-accent: #8ee8c5;
+  --kiro-ui-ring: rgba(142, 232, 197, 0.78);
+}
+
+html,
+body,
+#root {
+  color: var(--kiro-ui-text);
+}
+
+button,
+.button,
+input,
+select,
+textarea {
+  transition:
+    background-color 140ms ease,
+    border-color 140ms ease,
+    color 140ms ease,
+    box-shadow 140ms ease,
+    opacity 140ms ease;
+}
+
+button:focus-visible,
+.button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+[role="button"]:focus-visible,
+[role="tab"]:focus-visible,
+[role="separator"]:focus-visible {
+  outline: 2px solid var(--kiro-ui-ring);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px rgba(142, 232, 197, 0.13);
+}
+
+button:disabled,
+.button:disabled,
+button[aria-disabled="true"],
+[role="button"][aria-disabled="true"] {
+  cursor: not-allowed;
+  filter: saturate(0.65);
+}
+
+.topbar {
+  border-bottom-color: var(--kiro-ui-border-strong);
+}
+
+.brand-mark {
+  border: 1px solid rgba(142, 232, 197, 0.32);
+  background:
+    radial-gradient(circle at 30% 22%, rgba(142, 232, 197, 0.2), transparent 58%),
+    var(--kiro-ui-surface-raised);
+}
+
+.project-name input {
+  color: var(--kiro-ui-text);
+}
+
+.project-name small {
+  color: var(--kiro-ui-muted);
+}
+
+.workspace-tools button,
+.workspace-tools .button,
+.top-actions button,
+.timeline-toolbar button {
+  min-height: 36px;
+}
+
+.workspace-tools button:hover:not(:disabled),
+.workspace-tools .button:hover:not(:disabled),
+.top-actions button:hover:not(:disabled),
+.timeline-toolbar button:hover:not(:disabled) {
+  border-color: var(--kiro-ui-border-strong);
+}
+
+.panel,
+.preview-wrap,
+.timeline-region {
+  border-color: var(--kiro-ui-border);
+}
+
+.library-heading,
+.preview-heading,
+.panel-heading {
+  color: var(--kiro-ui-text);
+}
+
+.library-heading small,
+.panel-heading h2 small,
+.preview-heading i,
+.panel-tip,
+.preview-message span {
+  color: var(--kiro-ui-muted);
+}
+
+.import-dropzone {
+  border-color: rgba(142, 232, 197, 0.32);
+  background:
+    linear-gradient(145deg, rgba(142, 232, 197, 0.055), transparent 62%),
+    var(--kiro-ui-surface);
+}
+
+.import-dropzone:hover:not(.disabled) {
+  border-color: rgba(142, 232, 197, 0.62);
+  background-color: var(--kiro-ui-surface-raised);
+}
+
+.preview-stage {
+  box-shadow:
+    0 12px 34px rgba(0, 0, 0, 0.24),
+    0 0 0 1px rgba(205, 226, 236, 0.06);
+}
+
+.inspector-section,
+.library-status-card {
+  border-color: var(--kiro-ui-border);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
