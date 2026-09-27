@@ -281,3 +281,44 @@
     grid-template-columns: 1fr;
   }
 }
+
+
+/* Keep the Creator Hub in the same blue-petrol/cyan studio language. */
+.creator-hub-shell {
+  background:
+    radial-gradient(circle at 18% 8%, rgba(64, 157, 177, .12), transparent 28%),
+    radial-gradient(circle at 85% 15%, rgba(102, 213, 228, .06), transparent 24%),
+    linear-gradient(180deg, #0d151b 0%, #080d12 100%);
+}
+
+.creator-hub-kicker,
+.creator-hub-tabs button.active {
+  color: #9beaf2;
+}
+
+.creator-hub-section,
+.creator-hub-context-card,
+.creator-hub-feature-card,
+.creator-hub-connector,
+.creator-hub-permissions {
+  border-color: rgba(141, 187, 202, .19);
+  background-color: rgba(16, 26, 33, .96);
+  border-radius: 8px;
+}
+
+.creator-hub-tabs button.active {
+  border-color: rgba(102, 213, 228, .42);
+  background: rgba(102, 213, 228, .1);
+}
+
+.creator-hub-badges span,
+.creator-hub-library-flow span {
+  border-color: rgba(102, 213, 228, .24);
+  background: rgba(102, 213, 228, .075);
+  color: #c8f6fb;
+}
+
+.creator-hub-library-flow {
+  border-radius: 7px;
+  background: rgba(13, 21, 27, .72);
+}
