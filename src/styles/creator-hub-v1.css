@@ -888,3 +888,79 @@
     min-height: 170px;
   }
 }
+
+
+@media (max-height: 720px) and (min-width: 761px) {
+  .creator-hub-generation-form,
+  .creator-hub-generation-preview {
+    padding: 12px;
+  }
+
+  .creator-hub-generation-form {
+    gap: 7px;
+  }
+
+  .creator-hub-generation-heading h2 {
+    margin: 3px 0 4px;
+    font-size: 20px;
+  }
+
+  .creator-hub-generation-heading p {
+    font-size: 11px;
+    line-height: 1.35;
+  }
+
+  .creator-hub-generation-types button {
+    min-height: 58px;
+    padding: 8px 10px;
+  }
+
+  .creator-hub-prompt-label {
+    gap: 5px;
+    font-size: 12px;
+  }
+
+  .creator-hub-prompt-label textarea {
+    min-height: 82px;
+    padding: 9px 11px;
+    font-size: 12px;
+  }
+
+  .creator-hub-prompt-count {
+    margin-top: -3px;
+  }
+
+  .creator-hub-generation-safety {
+    gap: 8px;
+    padding: 8px 9px;
+  }
+
+  .creator-hub-generation-safety p {
+    font-size: 10px;
+    line-height: 1.3;
+  }
+
+  .creator-hub-generation-safety button {
+    min-height: 30px;
+    padding-inline: 9px;
+    font-size: 10px;
+  }
+
+  .creator-hub-generation-actions {
+    gap: 8px;
+  }
+
+  .creator-hub-generation-actions small {
+    font-size: 10px;
+  }
+
+  .creator-hub-generation-actions button {
+    min-height: 34px;
+    padding-block: 6px;
+    font-size: 11px;
+  }
+
+  .creator-hub-preview-stage {
+    min-height: 135px;
+  }
+}
