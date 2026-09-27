@@ -155,7 +155,7 @@ export default function CreatorHub({
               <div className="creator-hub-generation-heading">
                 <span className="creator-hub-kicker">ESTÚDIO DE CRIAÇÃO</span>
                 <h2 id="creator-generation-title">O que vamos criar?</h2>
-                <p>Prepare sua ideia e escolha imagem ou vídeo. O envio só será liberado quando a conexão segura e as cotas estiverem ativas.</p>
+                <p>Escolha um formato e descreva a ideia. A geração depende de conexão segura e cotas por usuário.</p>
               </div>
 
               <div className="creator-hub-generation-types" role="group" aria-label="Tipo de mídia">
@@ -199,7 +199,7 @@ export default function CreatorHub({
                   <strong>Geração protegida</strong>
                   <p>{xai?.configured
                     ? "O provedor está preparado no servidor, mas a geração continua bloqueada até autenticação KIRO e cotas por usuário."
-                    : "Conecte um provedor. A geração continuará bloqueada até autenticação KIRO e cotas por usuário."}</p>
+                    : "Conecte um provedor. A geração abre após login KIRO e cotas por usuário."}</p>
                 </div>
                 <button type="button" onClick={() => setTab("connections")}>Ver conexões</button>
               </div>
