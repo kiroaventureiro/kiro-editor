@@ -224,7 +224,7 @@ export default function MediaLibrary({
       <div className="library-heading">
         <div>
           <span className="eyebrow">
-            {section === "kiro" ? "CATÁLOGO KIRO" : "MEDIA POOL"}
+            {section === "kiro" ? "CATÁLOGO KIRO" : "ACERVO DE MÍDIA"}
           </span>
           <h2>
             {sectionTitle} <small>{visibleAssets.length}</small>
@@ -248,7 +248,10 @@ export default function MediaLibrary({
         </div>
       </div>
 
-      <nav className="library-sections" aria-label="Áreas da biblioteca">
+      <div className="library-browser-layout">
+        <div className="library-folder-rail">
+          <span className="eyebrow">PASTAS</span>
+          <nav className="library-sections" aria-label="Áreas da biblioteca">
         <button
           className={section === "mine" ? "active" : ""}
           onClick={() => setSection("mine")}
@@ -273,8 +276,10 @@ export default function MediaLibrary({
         >
           <Clock3 size={14} /> Recentes
         </button>
-      </nav>
+          </nav>
+        </div>
 
+        <div className="library-browser-content">
       {section === "mine" && (
         <>
           <label
@@ -541,6 +546,8 @@ export default function MediaLibrary({
           Seus arquivos ficam guardados neste navegador enquanto você edita.
         </p>
       )}
+        </div>
+      </div>
     </aside>
   );
 }
