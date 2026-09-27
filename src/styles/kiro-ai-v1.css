@@ -1,8 +1,8 @@
 .kiro-ai-panel {
   display: grid;
   grid-template-rows: auto minmax(0, 1fr) auto auto;
-  background: rgba(10, 13, 20, 0.96);
-  color: #f4f6fb;
+  background: var(--kiro-ui-surface, #111820);
+  color: var(--kiro-ui-text, #edf4f7);
 }
 
 .kiro-ai-heading,
@@ -19,7 +19,7 @@
   justify-content: space-between;
   gap: 12px;
   padding: 14px 16px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid var(--kiro-ui-border, rgba(154, 177, 194, 0.16));
 }
 
 .kiro-ai-heading > div {
@@ -32,7 +32,7 @@
 }
 
 .kiro-ai-heading small {
-  color: rgba(244, 246, 251, 0.5);
+  color: var(--kiro-ui-muted, #a6b4c0);
   font-size: 10px;
 }
 
@@ -47,8 +47,8 @@
   width: 30px;
   height: 30px;
   border-radius: 9px;
-  background: rgba(126, 94, 255, 0.15);
-  color: #d9d0ff;
+  background: rgba(142, 232, 197, 0.12);
+  color: var(--kiro-ui-accent, #8ee8c5);
 }
 
 .kiro-ai-messages {
@@ -69,15 +69,15 @@
 }
 
 .kiro-ai-message.user > div {
-  background: rgba(122, 93, 235, 0.16);
+  background: rgba(142, 232, 197, 0.12);
 }
 
 .kiro-ai-message > div {
   max-width: min(760px, 88%);
   padding: 10px 12px;
   border-radius: 12px;
-  background: rgba(255, 255, 255, 0.045);
-  border: 1px solid rgba(255, 255, 255, 0.07);
+  background: rgba(154, 177, 194, 0.07);
+  border: 1px solid var(--kiro-ui-border, rgba(154, 177, 194, 0.16));
 }
 
 .kiro-ai-message p {
@@ -90,7 +90,7 @@
 .kiro-ai-message small {
   gap: 5px;
   margin-top: 6px;
-  color: rgba(186, 255, 225, 0.7);
+  color: rgba(142, 232, 197, 0.82);
   font-size: 10px;
 }
 
@@ -98,8 +98,8 @@
   min-width: 30px;
   height: 30px;
   border-radius: 9px;
-  background: rgba(255, 255, 255, 0.05);
-  color: #cfc5ff;
+  background: rgba(154, 177, 194, 0.08);
+  color: var(--kiro-ui-accent, #8ee8c5);
 }
 
 .kiro-ai-avatar span {
@@ -111,14 +111,14 @@
   gap: 7px;
   flex-wrap: wrap;
   padding: 9px 14px;
-  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  border-top: 1px solid var(--kiro-ui-border, rgba(154, 177, 194, 0.16));
 }
 
 .kiro-ai-context span {
   padding: 3px 7px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.04);
-  color: rgba(244, 246, 251, 0.5);
+  background: rgba(9, 13, 18, 0.72);
+  color: var(--kiro-ui-muted, #a6b4c0);
   font-size: 9px;
 }
 
@@ -132,9 +132,9 @@
   flex: 1;
   min-height: 68px;
   resize: vertical;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--kiro-ui-border-strong, rgba(154, 177, 194, 0.3));
   border-radius: 10px;
-  background: rgba(255, 255, 255, 0.04);
+  background: rgba(9, 13, 18, 0.72);
   color: inherit;
   padding: 10px;
 }
