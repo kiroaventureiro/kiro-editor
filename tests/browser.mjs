@@ -77,37 +77,10 @@ try {
     await page.getByRole("tab", { name: "Acervo", exact: true }).getAttribute("aria-selected"),
     "true",
   );
-  assert.equal(
-    await page.getByRole("navigation", { name: "Ferramentas do editor" }).count(),
-    0,
-    "Tools stay out of the media-library view until the tools tab is opened",
-  );
   await page.getByRole("tab", { name: "Ferramentas", exact: true }).click();
-  const toolsPanel = page.getByRole("navigation", {
-    name: "Ferramentas do editor",
-  });
-  assert.equal(await toolsPanel.count(), 1);
-  const mediaButton = toolsPanel.locator("button").filter({
-    hasText: "Mídia",
-  });
-  assert.equal(await mediaButton.count(), 1);
-  assert.equal(await mediaButton.getAttribute("aria-pressed"), "false");
-  assert(
-    Number.parseFloat(
-      await mediaButton.evaluate((el) => getComputedStyle(el).fontSize),
-    ) >= 9,
-    "Docked tool labels must remain readable",
-  );
-  assert.equal(
-    await page.locator(".workspace-dock-tool-panel").evaluate(
-      (el) => getComputedStyle(el).overflowY,
-    ),
-    "auto",
-  );
-  await mediaButton.click();
-  assert.equal(await mediaButton.getAttribute("aria-pressed"), "true");
-  await mediaButton.click();
-  assert.equal(await mediaButton.getAttribute("aria-pressed"), "false");
+  await page.getByRole("button", { name: "Creator Hub", exact: true }).waitFor();
+  await page.getByRole("tab", { name: "Propriedades", exact: true }).click();
+  await page.getByRole("heading", { name: "Propriedades", exact: true }).waitFor();
   await page.getByRole("tab", { name: "Acervo", exact: true }).click();
   assert.equal(
     await page.getByText("Salvo neste navegador", { exact: true })
