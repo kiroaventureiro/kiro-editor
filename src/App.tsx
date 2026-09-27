@@ -84,6 +84,7 @@ export default function App() {
     ),
     [libraryWidth, setLibraryWidth] = useState(260);
   const [targetTrack, setTargetTrack] = useState("video-1");
+  const [sourceAsset, setSourceAsset] = useState<MediaAsset>();
   const [timelineMode, setTimelineMode] = useState<TimelineMode>(undefined);
   const [libraryAdminOpen, setLibraryAdminOpen] = useState(() => {
     if (typeof window === "undefined") return false;
@@ -179,6 +180,7 @@ export default function App() {
   const begin = () => dispatch({ type: "begin" }),
     end = () => dispatch({ type: "end" });
   const select = (c: Clip, multiple = false) => {
+    setSourceAsset(undefined);
     setSelected((ids) =>
       multiple
         ? ids.includes(c.id)
@@ -330,6 +332,7 @@ export default function App() {
     return () => window.removeEventListener("keydown", key);
   });
   const add = (asset: MediaAsset) => {
+    setSourceAsset(undefined);
     const type = asset.type === "audio" ? "audio" : "video",
       id = crypto.randomUUID();
     let start = 0;
@@ -1022,6 +1025,7 @@ export default function App() {
           targetTrack={targetTrack}
           onTargetTrack={setTargetTrack}
           assets={project.assets}
+          onPreviewAsset={setSourceAsset}
           onImport={importFiles}
           onAddToTimeline={add}
           onAddLibraryAsset={addLibraryAsset}
@@ -1040,7 +1044,7 @@ export default function App() {
             asset={
               selectedClip?.assetId
                 ? project.assets.find((asset) => asset.id === selectedClip.assetId)
-                : undefined
+                : sourceAsset
             }
             clip={selectedClip}
           />
