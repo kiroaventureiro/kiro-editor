@@ -4,7 +4,7 @@
 
 @media (min-width: 851px) {
   :root {
-    --kiro-rail: 58px;
+    --kiro-rail: 64px;
     --kiro-library: clamp(218px, 19vw, 280px);
     --kiro-inspector: clamp(258px, 22vw, 320px);
     --kiro-topbar: 54px;
@@ -45,6 +45,10 @@
     min-height: 0 !important;
     max-height: none !important;
     padding: 7px 4px 8px !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
     justify-content: flex-start !important;
     align-self: stretch !important;
     border-bottom: 1px solid #25303a !important;
@@ -56,14 +60,18 @@
     display: flex !important;
     flex-direction: column !important;
     width: 100% !important;
-    gap: 2px !important;
+    gap: 4px !important;
+    flex: 0 0 auto;
   }
 
   .workspace-tools button,
   .workspace-tools .button {
-    min-height: 44px !important;
-    padding: 5px 2px !important;
-    font-size: 8px !important;
+    min-height: 48px !important;
+    padding: 6px 3px !important;
+    font-size: 9px !important;
+    line-height: 1.15 !important;
+    white-space: normal !important;
+    text-align: center !important;
   }
 
   /* O antigo botão isolado de Propriedades vira a entrada "Mais" da rail.
@@ -72,7 +80,7 @@
     order: 20 !important;
     width: 100% !important;
     margin-top: 2px !important;
-    min-height: 44px !important;
+    min-height: 48px !important;
     font-size: 0 !important;
     background: transparent !important;
     border-color: transparent !important;
