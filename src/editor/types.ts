@@ -64,6 +64,8 @@ export interface Track {
   type: TrackType;
   muted?: boolean;
   locked?: boolean;
+  /** Linear track gain used by the audio mixer (0–1). */
+  volume?: number;
   clips: Clip[];
 }
 
