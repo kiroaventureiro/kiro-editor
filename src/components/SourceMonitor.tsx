@@ -57,7 +57,7 @@ export default function SourceMonitor({ asset, clip }: Props) {
           <div className="source-empty">
             <FileVideo2 size={30} aria-hidden="true" />
             <strong>Monitor de origem</strong>
-            <span>Selecione um clipe na timeline para revisar a mídia original.</span>
+            <span>Use o olho na biblioteca ou selecione um clipe na timeline para revisar a mídia original.</span>
           </div>
         )}
       </div>
