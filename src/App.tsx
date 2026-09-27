@@ -1029,11 +1029,12 @@ export default function App() {
             }}
             disabled={busy || !projectDuration(project) || exporting}
           >
-            <Download s{workspaceToolsPanel}      >
-          <SlidersHorizontal size={16} />
-          Propriedades
-        </button>
-      </nav>
+            <Download size={16} />
+            <span>Exportar</span>
+          </button>
+        </div>
+      </header>
+      {workspaceToolsPanel}
       <main className="workspace" inert={exportOpen || !!projects || busy}>
         <MediaLibrary
           tracks={project.tracks}
