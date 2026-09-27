@@ -2,6 +2,7 @@ import {
   Clock3,
   FolderOpen,
   Grid2X2,
+  Eye,
   Heart,
   Link2,
   List,
@@ -26,6 +27,7 @@ interface Props {
   targetTrack: string;
   onTargetTrack: (id: string) => void;
   assets: MediaAsset[];
+  onPreviewAsset: (asset: MediaAsset) => void;
   onImport: (files: FileList | null) => void;
   onAddToTimeline: (asset: MediaAsset) => void;
   onAddLibraryAsset: (asset: KiroLibraryItem) => void;
@@ -75,6 +77,7 @@ export default function MediaLibrary({
   targetTrack,
   onTargetTrack,
   assets,
+  onPreviewAsset,
   onImport,
   onAddToTimeline,
   onAddLibraryAsset,
@@ -433,7 +436,7 @@ export default function MediaLibrary({
               key={key}
               title={asset.name}
             >
-              <div className="asset-thumbnail">
+              <div className="asset-thumbnail" onDoubleClick={() => onPreviewAsset(asset)} title="Duplo clique para ver no monitor de origem">
                 {item.source === "kiro" && (
                   <span className="asset-source-badge">KIRO</span>
                 )}
@@ -468,6 +471,15 @@ export default function MediaLibrary({
                 </small>
               </div>
               {asset.path ? (
+                <>
+                <button
+                  className="asset-preview"
+                  aria-label={`Pré-visualizar ${asset.name} no monitor de origem`}
+                  title="Ver no monitor de origem"
+                  onClick={() => onPreviewAsset(asset)}
+                >
+                  <Eye size={16} />
+                </button>
                 <button
                   className="asset-add"
                   aria-label={`Adicionar ${asset.name}`}
@@ -476,6 +488,7 @@ export default function MediaLibrary({
                 >
                   <Plus size={17} />
                 </button>
+                </>
               ) : item.source === "mine" ? (
                 <label className="relink" title="Reconectar arquivo">
                   <Link2 size={17} />
