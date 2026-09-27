@@ -580,3 +580,311 @@
     padding-bottom: 5px;
   }
 }
+
+
+/* Generation workbench: a focused prompt editor plus a real preview/output area. */
+.creator-hub-generation-workspace {
+  display: grid;
+  grid-template-columns: minmax(0, 1.08fr) minmax(0, .92fr);
+  align-items: stretch;
+  gap: 14px;
+  min-height: 100%;
+}
+
+.creator-hub-generation-form,
+.creator-hub-generation-preview {
+  min-width: 0;
+  padding: clamp(16px, 2vw, 22px);
+  border: 1px solid rgba(141, 187, 202, .19);
+  border-radius: 9px;
+  background: rgba(16, 26, 33, .96);
+}
+
+.creator-hub-generation-form {
+  display: grid;
+  align-content: start;
+  gap: 14px;
+}
+
+.creator-hub-generation-heading h2 {
+  margin: 5px 0 6px;
+  font-size: clamp(19px, 2vw, 23px);
+  line-height: 1.2;
+}
+
+.creator-hub-generation-heading p {
+  max-width: 66ch;
+  margin: 0;
+  color: #a9bac4;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.creator-hub-generation-types {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.creator-hub-generation-types button {
+  justify-content: flex-start;
+  min-width: 0;
+  min-height: 66px;
+  padding: 11px 13px;
+  border-radius: 7px;
+  text-align: left;
+}
+
+.creator-hub-generation-types button.active {
+  border-color: rgba(102, 213, 228, .5);
+  background: rgba(102, 213, 228, .1);
+  color: #d5f8fb;
+  box-shadow: inset 0 0 0 1px rgba(102, 213, 228, .12);
+}
+
+.creator-hub-generation-types button > span {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.creator-hub-generation-types strong {
+  font-size: 13px;
+}
+
+.creator-hub-generation-types small {
+  color: #a3b5bf;
+  font-size: 11px;
+  white-space: normal;
+}
+
+.creator-hub-prompt-label {
+  position: relative;
+  display: grid;
+  gap: 7px;
+  color: #dbe7ec;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.creator-hub-prompt-label textarea {
+  width: 100%;
+  min-height: clamp(124px, 19dvh, 190px);
+  padding: 13px;
+  border-color: #2b414c;
+  border-radius: 7px;
+  background: #0a1319;
+  color: #f2f8fa;
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 1.55;
+}
+
+.creator-hub-prompt-label textarea::placeholder {
+  color: #748a96;
+}
+
+.creator-hub-prompt-count {
+  justify-self: end;
+  margin-top: -4px;
+  color: #8398a3;
+  font-size: 10px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+.creator-hub-generation-safety {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid rgba(102, 213, 228, .18);
+  border-radius: 7px;
+  background: rgba(102, 213, 228, .045);
+}
+
+.creator-hub-lock-mark {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  border-radius: 7px;
+  background: rgba(102, 213, 228, .12);
+  color: #82e1eb;
+  font-size: 10px;
+}
+
+.creator-hub-generation-safety strong {
+  font-size: 12px;
+}
+
+.creator-hub-generation-safety p {
+  margin: 3px 0 0;
+  color: #9db0ba;
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.creator-hub-generation-safety button {
+  min-height: 32px;
+  font-size: 11px;
+}
+
+.creator-hub-generation-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.creator-hub-generation-actions small {
+  color: #9aadb7;
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.creator-hub-generation-actions button {
+  flex: 0 0 auto;
+  min-height: 38px;
+}
+
+.creator-hub-generation-preview {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto auto;
+  gap: 12px;
+}
+
+.creator-hub-preview-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.creator-hub-preview-heading > div {
+  display: grid;
+  gap: 4px;
+}
+
+.creator-hub-preview-heading strong {
+  font-size: 14px;
+}
+
+.creator-hub-preview-status {
+  padding: 5px 8px;
+  border: 1px solid rgba(154, 177, 194, .18);
+  border-radius: 5px;
+  color: #a9b9c2;
+  font-size: 10px;
+}
+
+.creator-hub-preview-stage {
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: 9px;
+  min-height: 240px;
+  padding: 18px;
+  border: 1px dashed #2b4753;
+  border-radius: 7px;
+  background:
+    linear-gradient(rgba(102, 213, 228, .025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(102, 213, 228, .025) 1px, transparent 1px),
+    radial-gradient(ellipse at center, rgba(31, 90, 107, .16), transparent 70%),
+    #0a1217;
+  background-size: 24px 24px, 24px 24px, auto, auto;
+  color: #7895a0;
+  text-align: center;
+}
+
+.creator-hub-preview-stage svg {
+  color: #75cbd8;
+  opacity: .85;
+}
+
+.creator-hub-preview-stage strong {
+  color: #d8e6eb;
+  font-size: 13px;
+}
+
+.creator-hub-preview-stage span {
+  max-width: 36ch;
+  color: #91a5af;
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.creator-hub-output-flow {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  flex-wrap: wrap;
+  color: #b7c8d0;
+  font-size: 11px;
+}
+
+.creator-hub-output-flow span {
+  padding: 6px 8px;
+  border: 1px solid rgba(102, 213, 228, .18);
+  border-radius: 5px;
+  background: rgba(102, 213, 228, .045);
+}
+
+.creator-hub-generation-preview > .creator-hub-muted {
+  margin: 0;
+  font-size: 11px;
+}
+
+@media (max-width: 760px) {
+  .creator-hub-generation-workspace {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .creator-hub-preview-stage {
+    min-height: 200px;
+  }
+}
+
+@media (max-width: 620px) {
+  .creator-hub-generation-safety {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .creator-hub-generation-safety button {
+    grid-column: 1 / -1;
+    justify-self: start;
+  }
+
+  .creator-hub-generation-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .creator-hub-generation-actions button {
+    width: 100%;
+  }
+}
+
+@media (max-height: 720px) and (min-width: 761px) {
+  .creator-hub-generation-workspace {
+    gap: 10px;
+  }
+
+  .creator-hub-generation-form,
+  .creator-hub-generation-preview {
+    padding: 14px;
+  }
+
+  .creator-hub-generation-form {
+    gap: 10px;
+  }
+
+  .creator-hub-prompt-label textarea {
+    min-height: 108px;
+  }
+
+  .creator-hub-preview-stage {
+    min-height: 170px;
+  }
+}
