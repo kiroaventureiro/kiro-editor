@@ -2,10 +2,10 @@
   min-height: 100vh;
   padding: 22px;
   background:
-    radial-gradient(circle at 18% 8%, rgba(116, 75, 255, 0.18), transparent 28%),
-    radial-gradient(circle at 85% 15%, rgba(75, 214, 255, 0.08), transparent 24%),
-    linear-gradient(180deg, #07090f 0%, #0a0d14 100%);
-  color: #f5f7fb;
+    radial-gradient(circle at 18% 8%, rgba(78, 160, 176, 0.11), transparent 28%),
+    radial-gradient(circle at 85% 15%, rgba(142, 232, 197, 0.06), transparent 24%),
+    linear-gradient(180deg, #0d141a 0%, #090d11 100%);
+  color: var(--kiro-ui-text, #edf4f7);
 }
 
 .creator-hub-topbar,
@@ -32,14 +32,14 @@
 .creator-hub-section-heading p,
 .creator-hub-muted {
   margin: 0;
-  color: rgba(245, 247, 251, 0.58);
+  color: var(--kiro-ui-muted, #a6b4c0);
 }
 
 .creator-hub-kicker {
   font-size: 10px;
   font-weight: 800;
   letter-spacing: 0.14em;
-  color: #b7a8ff;
+  color: var(--kiro-ui-accent, #8ee8c5);
 }
 
 .creator-hub-close {
@@ -66,9 +66,9 @@
 }
 
 .creator-hub-tabs button.active {
-  border-color: rgba(173, 153, 255, 0.46);
-  background: rgba(120, 91, 236, 0.15);
-  color: #eee9ff;
+  border-color: rgba(142, 232, 197, 0.42);
+  background: rgba(142, 232, 197, 0.11);
+  color: #d9fff0;
 }
 
 .creator-hub-main {
@@ -81,8 +81,8 @@
 .creator-hub-feature-card,
 .creator-hub-connector,
 .creator-hub-permissions {
-  border: 1px solid rgba(255, 255, 255, 0.09);
-  background: rgba(15, 19, 29, 0.92);
+  border: 1px solid var(--kiro-ui-border, rgba(154, 177, 194, 0.16));
+  background: rgba(17, 24, 32, 0.94);
   box-shadow: 0 20px 55px rgba(0, 0, 0, 0.2);
 }
 
@@ -116,7 +116,7 @@
 }
 
 .creator-hub-context-card > span:not(.creator-hub-kicker) {
-  color: rgba(245, 247, 251, 0.62);
+  color: rgba(237, 244, 247, 0.72);
   font-size: 12px;
 }
 
@@ -136,14 +136,14 @@
 
 .creator-hub-feature-card p {
   margin: 0;
-  color: rgba(245, 247, 251, 0.62);
+  color: rgba(237, 244, 247, 0.72);
   line-height: 1.5;
   font-size: 12px;
 }
 
 .creator-hub-feature-card small,
 .creator-hub-connector small {
-  color: rgba(245, 247, 251, 0.43);
+  color: rgba(166, 180, 192, 0.72);
 }
 
 .creator-hub-connectors {
@@ -165,7 +165,7 @@
 }
 
 .creator-hub-connector > div:first-child span {
-  color: rgba(245, 247, 251, 0.58);
+  color: var(--kiro-ui-muted, #a6b4c0);
   font-size: 12px;
   line-height: 1.4;
 }
@@ -181,9 +181,9 @@
 .creator-hub-badges span {
   padding: 4px 7px;
   border-radius: 999px;
-  border: 1px solid rgba(148, 126, 255, 0.22);
-  background: rgba(126, 94, 255, 0.08);
-  color: #dcd3ff;
+  border: 1px solid rgba(142, 232, 197, 0.22);
+  background: rgba(142, 232, 197, 0.07);
+  color: #c9f8e6;
   font-size: 9px;
   font-weight: 800;
 }
@@ -212,7 +212,7 @@
 }
 
 .creator-hub-permissions span:not(.creator-hub-kicker) {
-  color: rgba(245, 247, 251, 0.53);
+  color: rgba(166, 180, 192, 0.84);
   font-size: 11px;
 }
 
@@ -222,14 +222,14 @@
   padding: 16px;
   margin-bottom: 12px;
   border-radius: 12px;
-  background: rgba(255, 255, 255, 0.025);
+  background: rgba(17, 24, 32, 0.56);
 }
 
 .creator-hub-library-flow span {
   padding: 8px 10px;
   border-radius: 9px;
-  background: rgba(126, 94, 255, 0.1);
-  border: 1px solid rgba(148, 126, 255, 0.18);
+  background: rgba(142, 232, 197, 0.08);
+  border: 1px solid rgba(142, 232, 197, 0.18);
 }
 
 .creator-hub-chat-grid .kiro-ai-panel {
@@ -239,7 +239,7 @@
   height: calc(100vh - 170px);
   min-height: 560px;
   border-radius: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.09);
+  border: 1px solid var(--kiro-ui-border, rgba(154, 177, 194, 0.16));
   overflow: hidden;
 }
 
