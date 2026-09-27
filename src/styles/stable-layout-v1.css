@@ -76,7 +76,13 @@
     text-align: center !important;
   }
 
+  .workspace-tools > div > button:not(.creator-hub-tool),
+  .workspace-tools > div > .button {
+    order: 0 !important;
+  }
+
   .workspace-tools > div > .creator-hub-tool {
+    order: 20 !important;
     margin-top: 7px !important;
     padding-top: 9px !important;
     border-top: 1px solid #34424e !important;
