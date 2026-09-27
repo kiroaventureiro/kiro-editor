@@ -505,7 +505,7 @@ export default function Inspector({
   return (
     <aside className="panel inspector">
       <div className="panel-heading compact-heading">
-        <span className="eyebrow">CONTROLE CRIATIVO</span>
+        <span className="eyebrow">INSPECTOR</span>
         <h2>Propriedades</h2>
       </div>
 
