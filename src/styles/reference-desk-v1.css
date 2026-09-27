@@ -181,3 +181,35 @@ button, input, select, textarea {
     min-height: 36px !important;
   }
 }
+
+
+/* Compact program header on narrow editing viewports: never collide with transport controls. */
+@media (min-width: 851px) and (max-width: 1180px) {
+  .monitor-deck > .preview-wrap .canvas-meta {
+    gap: 5px !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
+  }
+
+  .monitor-deck > .preview-wrap .canvas-meta > i,
+  .monitor-deck > .preview-wrap .canvas-meta > span {
+    display: none !important;
+  }
+
+  .monitor-deck > .preview-wrap .canvas-meta strong {
+    white-space: nowrap !important;
+    letter-spacing: .12em !important;
+    text-transform: uppercase !important;
+  }
+
+  .monitor-deck > .preview-wrap .canvas-actions {
+    flex: 0 0 auto !important;
+    gap: 3px !important;
+  }
+
+  .monitor-deck > .preview-wrap .canvas-actions button {
+    min-width: 29px !important;
+    width: 29px !important;
+    padding-inline: 3px !important;
+  }
+}
