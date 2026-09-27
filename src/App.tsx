@@ -7,10 +7,10 @@ import {
   Captions,
   Film,
   Music2,
+  SlidersHorizontal,
   AudioWaveform,
   CircleDot,
   Video,
-  SlidersHorizontal,
   WandSparkles,
   X,
 } from "lucide-react";
@@ -75,6 +75,7 @@ export default function App() {
     [saveState, setSaveState] = useState("Carregando…"),
     [focus, setFocus] = useState(false),
     [drawer, setDrawer] = useState<"media" | "inspector" | "none">("none");
+  const [workspacePanel, setWorkspacePanel] = useState<"library" | "tools" | "properties">("library");
   const [projects, setProjects] = useState<KiroProject[] | null>(null),
     [exportOpen, setExportOpen] = useState(false),
     [resolution, setResolution] = useState(720),
@@ -803,116 +804,12 @@ export default function App() {
     window.addEventListener("pointerup", stop, { once: true });
     window.addEventListener("pointercancel", stop, { once: true });
   };
-  if (creatorHubOpen)
-    return (
-      <CreatorHub
-        project={project}
-        currentTime={time}
-        selectedClipId={selectedClip?.id}
-        onApplyProject={(next, message) => {
-          edit(() => next);
-          setNotice(message);
-        }}
-        onClose={() => {
-          setCreatorHubOpen(false);
-          const url = new URL(window.location.href);
-          url.searchParams.delete("hub");
-          window.history.replaceState({}, "", url);
-        }}
-      />
-    );
-  if (libraryAdminOpen)
-    return (
-      <LibraryAdmin
-        onClose={() => {
-          setLibraryAdminOpen(false);
-          const url = new URL(window.location.href);
-          url.searchParams.delete("admin");
-          window.history.replaceState({}, "", url);
-        }}
-      />
-    );
-  if (!loaded) return <div className="loading">Abrindo seu estúdio…</div>;
-  return (
-    <div
-      className={`app-shell ${focus ? "focus" : ""} drawer-${drawer}`}
-      style={
-        {
-          "--timeline-height": `${timelineHeight}px`,
-          "--library-width": `${libraryWidth}px`,
-        } as React.CSSProperties
-      }
-    >
-      <header className="topbar" inert={!!projects || exportOpen}>
-        <div className="brand">
-          <span className="brand-mark">K</span>
-          <div>
-            <strong>
-              KIRO <em>Editor</em>
-            </strong>
-            <small>STUDIO · 0.5</small>
-          </div>
-        </div>
-        <div className="project-name">
-          <input
-            aria-label="Nome do projeto"
-            value={project.name}
-            onFocus={begin}
-            onBlur={end}
-            onChange={(e) => edit((p) => ({ ...p, name: e.target.value }))}
-          />
-          <small role="status" aria-live="polite" aria-atomic="true" className={saveState === "Falha ao salvar" ? "error" : ""}>
-            {saveState}
-          </small>
-        </div>
-        <div className="top-actions">
-          <button
-            onClick={() => void newProject()}
-            disabled={busy || exporting}
-          >
-            <Plus size={16} />
-            <span>Novo</span>
-          </button>
-          <button
-            onClick={() => {
-              setPlaying(false);
-              void enqueueSave(current.current)
-                .then(listProjects)
-                .then(setProjects)
-                .catch((e) => setNotice(error(e)));
-            }}
-            disabled={busy || exporting}
-          >
-            <FolderOpen size={16} />
-            <span>Projetos</span>
-          </button>
-          <button
-            aria-label="Baixar cópia do projeto"
-            title="Baixar cópia do projeto (Ctrl+S)"
-            onClick={() => void manualSave()}
-            disabled={busy || exporting}
-          >
-            <Save size={16} />
-          </button>
-          <button
-            className="primary"
-            onClick={() => {
-              setPlaying(false);
-              setExportOpen(true);
-            }}
-            disabled={busy || !projectDuration(project) || exporting}
-          >
-            <Download size={17} />
-            <span>Exportar</span>
-          </button>
-        </div>
-      </header>
-      <nav aria-label="Ferramentas do editor" className="workspace-tools" inert={busy || !!projects || exportOpen}>
+  const workspaceToolsPanel = <nav aria-label="Ferramentas do editor" className="workspace-tools docked-tools" inert={busy || !!projects || exportOpen}>
         <div>
           <button
             className={drawer === "media" ? "active" : ""}
             aria-pressed={drawer === "media"}
-            onClick={() => setDrawer(drawer === "media" ? "none" : "media")}
+            onClick={() => { setWorkspacePanel("library"); setDrawer("media"); }}
           >
             <Film size={16} />
             Mídia
@@ -1013,10 +910,126 @@ export default function App() {
         </div>
         <button
           aria-pressed={drawer === "inspector"}
-          onClick={() =>
-            setDrawer(drawer === "inspector" ? "none" : "inspector")
-          }
+          onClick={() => { setWorkspacePanel("properties"); setDrawer("inspector"); }}
         >
+          <SlidersHorizontal size={16} />
+          Propriedades
+        </button>
+      </nav>;
+  const inspectorPanel = <Inspector
+          settings={project.settings}
+          clip={selectedClip}
+          locked={locked}
+          onAspect={(r) =>
+            edit((p) => ({
+              ...p,
+              settings: { ...p.settings, aspectRatio: r, ...projectPresets[r] },
+            }))
+          }
+          onChange={updateClip}
+          onBegin={begin}
+          onEnd={end}
+        />;
+  if (creatorHubOpen)
+    return (
+      <CreatorHub
+        project={project}
+        currentTime={time}
+        selectedClipId={selectedClip?.id}
+        onApplyProject={(next, message) => {
+          edit(() => next);
+          setNotice(message);
+        }}
+        onClose={() => {
+          setCreatorHubOpen(false);
+          const url = new URL(window.location.href);
+          url.searchParams.delete("hub");
+          window.history.replaceState({}, "", url);
+        }}
+      />
+    );
+  if (libraryAdminOpen)
+    return (
+      <LibraryAdmin
+        onClose={() => {
+          setLibraryAdminOpen(false);
+          const url = new URL(window.location.href);
+          url.searchParams.delete("admin");
+          window.history.replaceState({}, "", url);
+        }}
+      />
+    );
+  if (!loaded) return <div className="loading">Abrindo seu estúdio…</div>;
+  return (
+    <div
+      className={`app-shell ${focus ? "focus" : ""} drawer-${drawer}`}
+      style={
+        {
+          "--timeline-height": `${timelineHeight}px`,
+          "--library-width": `${libraryWidth}px`,
+        } as React.CSSProperties
+      }
+    >
+      <header className="topbar" inert={!!projects || exportOpen}>
+        <div className="brand">
+          <span className="brand-mark">K</span>
+          <div>
+            <strong>
+              KIRO <em>Editor</em>
+            </strong>
+            <small>STUDIO · 0.5</small>
+          </div>
+        </div>
+        <div className="project-name">
+          <input
+            aria-label="Nome do projeto"
+            value={project.name}
+            onFocus={begin}
+            onBlur={end}
+            onChange={(e) => edit((p) => ({ ...p, name: e.target.value }))}
+          />
+          <small role="status" aria-live="polite" aria-atomic="true" className={saveState === "Falha ao salvar" ? "error" : ""}>
+            {saveState}
+          </small>
+        </div>
+        <div className="top-actions">
+          <button
+            onClick={() => void newProject()}
+            disabled={busy || exporting}
+          >
+            <Plus size={16} />
+            <span>Novo</span>
+          </button>
+          <button
+            onClick={() => {
+              setPlaying(false);
+              void enqueueSave(current.current)
+                .then(listProjects)
+                .then(setProjects)
+                .catch((e) => setNotice(error(e)));
+            }}
+            disabled={busy || exporting}
+          >
+            <FolderOpen size={16} />
+            <span>Projetos</span>
+          </button>
+          <button
+            aria-label="Baixar cópia do projeto"
+            title="Baixar cópia do projeto (Ctrl+S)"
+            onClick={() => void manualSave()}
+            disabled={busy || exporting}
+          >
+            <Save size={16} />
+          </button>
+          <button
+            className="primary"
+            onClick={() => {
+              setPlaying(false);
+              setExportOpen(true);
+            }}
+            disabled={busy || !projectDuration(project) || exporting}
+          >
+            <Download s{workspaceToolsPanel}      >
           <SlidersHorizontal size={16} />
           Propriedades
         </button>
@@ -1033,6 +1046,10 @@ export default function App() {
           onAddLibraryAsset={addLibraryAsset}
           onRelink={relink}
           busy={busy}
+          activeWorkspace={workspacePanel}
+          onWorkspaceChange={setWorkspacePanel}
+          workspaceTools={workspaceToolsPanel}
+          inspectorPanel={inspectorPanel}
         />
         <div
           role="separator"
@@ -1064,42 +1081,27 @@ export default function App() {
             onEnd={end}
           />
         </div>
-        <Inspector
-          settings={project.settings}
+        <div className="mobile-inspector">{inspectorPanel}</div>
+        <EffectsControl
           clip={selectedClip}
-          locked={locked}
-          onAspect={(r) =>
-            edit((p) => ({
-              ...p,
-              settings: { ...p.settings, aspectRatio: r, ...projectPresets[r] },
-            }))
-          }
+          disabled={locked}
           onChange={updateClip}
           onBegin={begin}
           onEnd={end}
         />
-        <div className="control-rack">
-          <EffectsControl
-            clip={selectedClip}
-            disabled={locked}
-            onChange={updateClip}
-            onBegin={begin}
-            onEnd={end}
-          />
-          <AudioMixer
-            tracks={project.tracks}
-            onTrack={(id, patch) =>
-              edit((p) => ({
-                ...p,
-                tracks: p.tracks.map((track) =>
-                  track.id === id ? { ...track, ...patch } : track,
-                ),
-              }))
-            }
-            onBegin={begin}
-            onEnd={end}
-          />
-        </div>
+        <AudioMixer
+          tracks={project.tracks}
+          onTrack={(id, patch) =>
+            edit((p) => ({
+              ...p,
+              tracks: p.tracks.map((track) =>
+                track.id === id ? { ...track, ...patch } : track,
+              ),
+            }))
+          }
+          onBegin={begin}
+          onEnd={end}
+        />
       </main>
       <div
         className="timeline-resizer"

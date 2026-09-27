@@ -21,11 +21,11 @@ export default function EffectsControl({ clip, disabled, onChange, onBegin, onEn
   const unavailable = !clip || clip.type === "text" || !!disabled;
 
   return (
-    <section className="effects-control" aria-label="Controle de efeitos">
+    <section className="effects-control" aria-label="Ajustes de imagem">
       <header className="dock-panel-heading">
         <div>
           <span className="dock-eyebrow">AJUSTES · IMAGEM</span>
-          <strong><SlidersHorizontal size={14} aria-hidden="true" /> Efeitos de imagem</strong>
+          <strong><SlidersHorizontal size={14} aria-hidden="true" /> Ajustes de imagem</strong>
         </div>
         <span className="effects-selection">{clip?.name ?? "SEM SELEÇÃO"}</span>
       </header>

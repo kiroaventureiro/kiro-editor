@@ -12,7 +12,7 @@ import {
   Sparkles,
   Upload,
 } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import {
   libraryAssetLabel,
   parseKiroLibraryResponse,
@@ -33,6 +33,10 @@ interface Props {
   onAddLibraryAsset: (asset: KiroLibraryItem) => void;
   onRelink: (id: string, file: File) => void;
   busy: boolean;
+  activeWorkspace: "library" | "tools" | "properties";
+  onWorkspaceChange: (workspace: "library" | "tools" | "properties") => void;
+  workspaceTools: ReactNode;
+  inspectorPanel: ReactNode;
 }
 
 type Filter = "all" | MediaAsset["type"];
@@ -83,6 +87,10 @@ export default function MediaLibrary({
   onAddLibraryAsset,
   onRelink,
   busy,
+  activeWorkspace,
+  onWorkspaceChange,
+  workspaceTools,
+  inspectorPanel,
 }: Props) {
   const [section, setSection] = useState<LibrarySection>("mine");
   const [search, setSearch] = useState("");
@@ -248,7 +256,26 @@ export default function MediaLibrary({
         </div>
       </div>
 
-      <div className="library-browser-layout">
+      <nav className="workspace-dock-tabs" aria-label="Painel de trabalho" role="tablist">
+        {([
+          ["library", "Acervo"],
+          ["tools", "Ferramentas"],
+          ["properties", "Propriedades"],
+        ] as const).map(([value, label]) => (
+          <button
+            key={value}
+            type="button"
+            role="tab"
+            aria-selected={activeWorkspace === value}
+            aria-controls={`workspace-dock-${value}`}
+            className={activeWorkspace === value ? "active" : ""}
+            onClick={() => onWorkspaceChange(value)}
+          >
+            {label}
+          </button>
+        ))}
+      </nav>
+      {activeWorkspace === "library" && <div className="library-browser-layout" id="workspace-dock-library" role="tabpanel">
         <div className="library-folder-rail">
           <span className="eyebrow">PASTAS</span>
           <nav className="library-sections" aria-label="Áreas da biblioteca">
@@ -547,7 +574,17 @@ export default function MediaLibrary({
         </p>
       )}
         </div>
-      </div>
+      </div>}
+      {activeWorkspace === "tools" && (
+        <section className="workspace-dock-tool-panel" id="workspace-dock-tools" role="tabpanel">
+          {workspaceTools}
+        </section>
+      )}
+      {activeWorkspace === "properties" && (
+        <section className="workspace-dock-properties" id="workspace-dock-properties" role="tabpanel">
+          {inspectorPanel}
+        </section>
+      )}
     </aside>
   );
 }

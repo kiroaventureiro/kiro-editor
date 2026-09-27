@@ -15,11 +15,11 @@ export default function AudioMixer({ tracks, onTrack, onBegin, onEnd }: Props) {
   );
 
   return (
-    <section className="audio-mixer" aria-label="Mixer de áudio">
+    <section className="audio-mixer" aria-label="Ajustes de áudio">
       <header className="dock-panel-heading">
         <div>
           <span className="dock-eyebrow">MONITORAMENTO</span>
-          <strong><AudioLines size={15} aria-hidden="true" /> Mixer de áudio</strong>
+          <strong><AudioLines size={15} aria-hidden="true" /> Ajustes de áudio</strong>
         </div>
         <span className="mixer-channel-count">{channels.length} CH</span>
       </header>

@@ -31,3 +31,4 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
     <App />
   </React.StrictMode>,
 );
+import "./styles/desktop-media-workspace-v3.css";

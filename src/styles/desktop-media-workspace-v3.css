@@ -1,0 +1,269 @@
+/* Desktop workspace: keep media, tools and properties inside one dock. */
+@media (min-width: 851px) {
+  .app-shell {
+    grid-template-rows: 52px 0 minmax(155px, 1fr) 6px min(var(--timeline-height), var(--ref-dock-height)) !important;
+  }
+
+  .app-shell > .workspace-tools {
+    display: none !important;
+  }
+
+  .media-panel {
+    grid-row: 3 !important;
+  }
+
+  .workspace-dock-tabs {
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 5px !important;
+    flex: 0 0 auto !important;
+    min-width: 0 !important;
+    margin: 7px 0 0 !important;
+    padding: 4px !important;
+    border: 1px solid #2c424d !important;
+    border-radius: 9px !important;
+    background: #0b151c !important;
+  }
+
+  .workspace-dock-tabs button {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    min-width: 0 !important;
+    min-height: 32px !important;
+    padding: 5px 8px !important;
+    border: 1px solid transparent !important;
+    border-radius: 6px !important;
+    background: transparent !important;
+    color: #a9bec5 !important;
+    font-family: inherit !important;
+    font-size: 10px !important;
+    font-weight: 650 !important;
+    line-height: 1.2 !important;
+    cursor: pointer !important;
+  }
+
+  .workspace-dock-tabs button:hover {
+    border-color: #34525f !important;
+    background: #14232c !important;
+    color: #e3f3f5 !important;
+  }
+
+  .workspace-dock-tabs button[aria-selected="true"] {
+    border-color: rgba(102, 208, 216, .55) !important;
+    background: linear-gradient(135deg, rgba(37, 102, 114, .5), rgba(20, 45, 54, .95)) !important;
+    color: #e9fcfd !important;
+    box-shadow: inset 0 1px rgba(196, 250, 252, .08) !important;
+  }
+
+  .workspace-dock-tabs button:focus-visible {
+    outline: 2px solid #72dce0 !important;
+    outline-offset: 2px !important;
+  }
+
+  .library-browser-layout,
+  .workspace-dock-tool-panel,
+  .workspace-dock-properties {
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    margin-top: 0 !important;
+    overflow: auto !important;
+    border: 1px solid #2a414d !important;
+    border-top: 0 !important;
+    border-radius: 0 0 8px 8px !important;
+    background: #0c151c !important;
+  }
+
+  .workspace-dock-tool-panel {
+    padding: 11px !important;
+    scrollbar-color: #38545e transparent !important;
+  }
+
+  .media-panel .workspace-tools.docked-tools {
+    display: flex !important;
+    position: static !important;
+    inset: auto !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    gap: 10px !important;
+    padding: 0 !important;
+    overflow: visible !important;
+    border: 0 !important;
+    background: transparent !important;
+  }
+
+  .media-panel .workspace-tools.docked-tools > div {
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+    width: 100% !important;
+  }
+
+  .media-panel .workspace-tools.docked-tools button,
+  .media-panel .workspace-tools.docked-tools .button {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    gap: 7px !important;
+    min-width: 0 !important;
+    min-height: 40px !important;
+    padding: 7px 9px !important;
+    overflow: hidden !important;
+    border: 1px solid #2e4651 !important;
+    border-radius: 8px !important;
+    background: linear-gradient(180deg, #15232c, #101b22) !important;
+    color: #d0e0e4 !important;
+    font-family: inherit !important;
+    font-size: 10px !important;
+    font-weight: 650 !important;
+    line-height: 1.25 !important;
+    text-align: left !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+    cursor: pointer !important;
+  }
+
+  .media-panel .workspace-tools.docked-tools button svg,
+  .media-panel .workspace-tools.docked-tools .button svg {
+    flex: 0 0 auto !important;
+    color: #75d4da !important;
+  }
+
+  .media-panel .workspace-tools.docked-tools button:hover,
+  .media-panel .workspace-tools.docked-tools .button:hover {
+    border-color: #5a9ca5 !important;
+    background: #19303a !important;
+    color: #f0fcfd !important;
+  }
+
+  .media-panel .workspace-tools.docked-tools button:focus-visible,
+  .media-panel .workspace-tools.docked-tools .button:focus-visible {
+    outline: 2px solid #72dce0 !important;
+    outline-offset: 2px !important;
+  }
+
+  .workspace-dock-properties {
+    padding: 0 !important;
+    scrollbar-color: #38545e transparent !important;
+  }
+
+  .workspace-dock-properties > .inspector {
+    display: flex !important;
+    width: 100% !important;
+    height: auto !important;
+    min-width: 0 !important;
+    min-height: 100% !important;
+    max-height: none !important;
+    padding: 9px 11px !important;
+    overflow: visible !important;
+    border: 0 !important;
+    background: transparent !important;
+  }
+
+  .workspace-dock-properties .inspector h2 {
+    font-size: 14px !important;
+  }
+
+  .workspace-dock-properties .inspector-tabs {
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    gap: 5px !important;
+    padding: 4px !important;
+  }
+
+  .workspace-dock-properties .inspector-tabs button {
+    min-width: 0 !important;
+    min-height: 31px !important;
+    padding: 4px 6px !important;
+    font-size: 9px !important;
+  }
+
+  .mobile-inspector {
+    display: none !important;
+  }
+
+  .effects-control {
+    grid-column: 1 !important;
+    grid-row: 5 !important;
+    display: grid !important;
+    grid-template-rows: 36px minmax(0, 1fr) !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
+    padding: 2px 10px 6px !important;
+    border-top: 1px solid #38505b !important;
+    border-right: 1px solid #2a414d !important;
+    background: #101a22 !important;
+  }
+
+  .effects-control .dock-panel-heading strong {
+    font-size: 11px !important;
+  }
+
+  .effect-control-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    grid-template-rows: repeat(2, minmax(0, 1fr)) !important;
+    gap: 4px 10px !important;
+    padding: 5px 2px 2px !important;
+  }
+
+  .effect-control {
+    grid-template-rows: 16px 18px !important;
+    gap: 2px !important;
+    min-width: 0 !important;
+  }
+
+  .effect-control > span {
+    align-items: center !important;
+    font-size: 9px !important;
+  }
+
+  .effect-control-hint {
+    display: block !important;
+    grid-column: 1 / -1 !important;
+    align-self: end !important;
+    margin: 0 !important;
+    color: #96acb3 !important;
+    font-size: 8px !important;
+    text-align: center !important;
+  }
+
+  .audio-mixer {
+    grid-column: 2 !important;
+    grid-row: 5 !important;
+    display: grid !important;
+    grid-template-rows: 36px minmax(0, 1fr) 22px !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    padding: 0 7px !important;
+    overflow: hidden !important;
+    border-top: 1px solid #38505b !important;
+    border-right: 1px solid #2a414d !important;
+    background: #101a22 !important;
+  }
+
+  .audio-mixer .dock-panel-heading {
+    border-bottom: 1px solid #273d47 !important;
+  }
+
+  .audio-mixer .dock-eyebrow {
+    display: block !important;
+  }
+
+  .mixer-channels {
+    gap: 5px !important;
+    padding-block: 5px 3px !important;
+  }
+}
+
+@media (max-width: 850px) {
+  .workspace-dock-tabs,
+  .workspace-dock-tool-panel,
+  .workspace-dock-properties {
+    display: none !important;
+  }
+}
