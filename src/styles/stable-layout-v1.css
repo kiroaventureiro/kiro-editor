@@ -68,10 +68,23 @@
   .workspace-tools .button {
     min-height: 48px !important;
     padding: 6px 3px !important;
-    font-size: 9px !important;
-    line-height: 1.15 !important;
+    font-size: 10px !important;
+    font-weight: 560 !important;
+    line-height: 1.18 !important;
+    color: #d8e2e8 !important;
     white-space: normal !important;
     text-align: center !important;
+  }
+
+  .workspace-tools > div > .creator-hub-tool {
+    margin-top: 7px !important;
+    padding-top: 9px !important;
+    border-top: 1px solid #34424e !important;
+    color: #b8d8ff !important;
+  }
+
+  .workspace-tools > div > .creator-hub-tool svg {
+    color: #9b8cff !important;
   }
 
   /* O antigo botão isolado de Propriedades vira a entrada "Mais" da rail.
