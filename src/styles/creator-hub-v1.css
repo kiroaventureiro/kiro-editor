@@ -322,3 +322,261 @@
   border-radius: 7px;
   background: rgba(13, 21, 27, .72);
 }
+
+
+/* Viewport fit and type scale: keep the Hub a dedicated, calm workspace,
+   never force the chat panel to overflow short laptop windows. */
+.creator-hub-shell {
+  box-sizing: border-box;
+  height: 100dvh;
+  min-height: 0;
+  display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr);
+  gap: 0;
+  overflow: hidden;
+  padding: clamp(12px, 2vw, 22px);
+}
+
+.creator-hub-topbar {
+  margin-bottom: 10px;
+}
+
+.creator-hub-topbar h1 {
+  font-size: clamp(21px, 2vw, 26px);
+  line-height: 1.15;
+}
+
+.creator-hub-topbar p {
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.creator-hub-kicker {
+  font-size: 10px;
+  letter-spacing: .12em;
+}
+
+.creator-hub-tabs {
+  margin-bottom: 10px;
+  gap: 6px;
+  min-height: 36px;
+}
+
+.creator-hub-tabs button {
+  min-height: 36px;
+  padding-inline: 12px;
+  font-size: 12px;
+}
+
+.creator-hub-main {
+  min-height: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+  scrollbar-color: #31515c transparent;
+  scrollbar-width: thin;
+}
+
+.creator-hub-chat-grid {
+  height: 100%;
+  min-height: 0;
+  align-items: stretch;
+  gap: 12px;
+}
+
+.creator-hub-context-card {
+  min-width: 0;
+  max-height: 100%;
+  overflow: auto;
+  align-content: start;
+  padding: 14px;
+}
+
+.creator-hub-context-card > span:not(.creator-hub-kicker) {
+  overflow-wrap: anywhere;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.creator-hub-chat-grid .kiro-ai-panel {
+  height: 100%;
+  min-height: 0;
+  max-height: 100%;
+}
+
+.creator-hub-chat-grid .kiro-ai-panel .kiro-ai-messages {
+  min-height: 0;
+}
+
+.creator-hub-section {
+  min-height: 100%;
+  padding: clamp(16px, 2vw, 24px);
+}
+
+.creator-hub-section-heading {
+  margin-bottom: 18px;
+}
+
+.creator-hub-section-heading h2 {
+  font-size: clamp(17px, 1.8vw, 21px);
+  line-height: 1.25;
+}
+
+.creator-hub-section-heading p,
+.creator-hub-muted {
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.creator-hub-card-grid {
+  gap: 14px;
+}
+
+.creator-hub-feature-card {
+  min-height: 156px;
+  padding: 18px;
+}
+
+.creator-hub-feature-card strong,
+.creator-hub-connector strong,
+.creator-hub-permissions strong {
+  font-size: 14px;
+  line-height: 1.35;
+}
+
+.creator-hub-feature-card p,
+.creator-hub-connector > div:first-child span {
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.creator-hub-feature-card small,
+.creator-hub-connector small {
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.creator-hub-connector {
+  grid-template-columns: minmax(0, 1fr) minmax(150px, auto);
+  gap: 9px 18px;
+  padding: 14px 16px;
+}
+
+.creator-hub-badges span {
+  font-size: 10px;
+}
+
+.creator-hub-permissions {
+  margin-top: 12px;
+  padding: 14px 16px;
+}
+
+.creator-hub-permissions > div {
+  grid-template-columns: minmax(150px, .35fr) minmax(0, 1fr);
+  gap: 12px;
+  align-items: baseline;
+  padding: 8px 0;
+}
+
+.creator-hub-permissions span:not(.creator-hub-kicker) {
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+@media (max-height: 720px) and (min-width: 621px) {
+  .creator-hub-shell {
+    padding: 12px 16px;
+  }
+
+  .creator-hub-topbar {
+    margin-bottom: 7px;
+  }
+
+  .creator-hub-topbar h1 {
+    font-size: 21px;
+  }
+
+  .creator-hub-topbar p {
+    font-size: 12px;
+  }
+
+  .creator-hub-tabs {
+    margin-bottom: 7px;
+    min-height: 32px;
+  }
+
+  .creator-hub-tabs button {
+    min-height: 32px;
+    padding-block: 5px;
+  }
+
+  .creator-hub-feature-card {
+    min-height: 132px;
+    padding: 14px;
+  }
+}
+
+@media (max-width: 900px) and (min-width: 621px) {
+  .creator-hub-chat-grid {
+    grid-template-columns: minmax(180px, .34fr) minmax(0, 1fr);
+  }
+
+  .creator-hub-card-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .creator-hub-connector {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .creator-hub-badges {
+    justify-content: flex-start;
+  }
+
+  .creator-hub-permissions > div {
+    grid-template-columns: 1fr;
+    gap: 3px;
+  }
+}
+
+@media (max-width: 620px) {
+  .creator-hub-shell {
+    display: block;
+    height: auto;
+    min-height: 100dvh;
+    overflow: visible;
+  }
+
+  .creator-hub-main {
+    overflow: visible;
+  }
+
+  .creator-hub-chat-grid {
+    height: auto;
+  }
+
+  .creator-hub-chat-grid .kiro-ai-panel {
+    height: min(62dvh, 560px);
+    min-height: 340px;
+  }
+
+  .creator-hub-section {
+    min-height: 0;
+  }
+
+  .creator-hub-card-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .creator-hub-connector {
+    grid-template-columns: 1fr;
+  }
+
+  .creator-hub-permissions > div {
+    grid-template-columns: 1fr;
+    gap: 3px;
+  }
+
+  .creator-hub-tabs {
+    padding-bottom: 5px;
+  }
+}
