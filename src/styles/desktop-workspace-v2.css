@@ -1,0 +1,192 @@
+/* Desktop refinement: restore breathing room without changing the mobile layout. */
+@media (min-width: 851px) {
+  :root {
+    --ref-library-column: minmax(190px, 18vw);
+    --ref-secondary-column: minmax(190px, 18vw);
+  }
+
+  /* Give the monitors more horizontal room while preserving a useful inspector. */
+  .media-panel {
+    padding: 10px !important;
+  }
+
+  .monitor-deck {
+    gap: 10px !important;
+    padding: 9px !important;
+  }
+
+  /* Keep effect controls readable in their own compact, balanced rack. */
+  .control-rack {
+    grid-template-rows: minmax(0, 1.1fr) minmax(0, .9fr) !important;
+    padding: 0 !important;
+  }
+
+  .effects-control {
+    grid-template-rows: 34px minmax(0, 1fr) !important;
+    padding: 2px 10px 6px !important;
+  }
+
+  .effects-control .dock-panel-heading {
+    gap: 8px !important;
+  }
+
+  .effects-control .dock-panel-heading > div {
+    display: flex !important;
+    align-items: center !important;
+    gap: 9px !important;
+    min-width: 0 !important;
+  }
+
+  .effects-control .dock-eyebrow {
+    flex: 0 0 auto !important;
+    font-size: 8px !important;
+    letter-spacing: .08em !important;
+  }
+
+  .effects-control .dock-panel-heading strong {
+    gap: 6px !important;
+    white-space: nowrap !important;
+    font-size: 11px !important;
+  }
+
+  .effects-selection {
+    flex: 0 1 92px !important;
+    max-width: 92px !important;
+    font-size: 8px !important;
+  }
+
+  .effect-control-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    grid-template-rows: repeat(2, minmax(0, 1fr)) !important;
+    gap: 4px 12px !important;
+    padding: 5px 2px 2px !important;
+  }
+
+  .effect-control {
+    grid-template-rows: 16px 18px !important;
+    gap: 2px !important;
+    min-width: 0 !important;
+  }
+
+  .effect-control > span {
+    align-items: center !important;
+    font-size: 10px !important;
+    line-height: 1.2 !important;
+  }
+
+  .effect-control > span strong {
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+  }
+
+  .effect-control output {
+    padding-left: 4px !important;
+    font-size: 9px !important;
+  }
+
+  .effect-control input[type="range"] {
+    width: 100% !important;
+    height: 17px !important;
+    min-height: 17px !important;
+  }
+
+  .effect-control-hint {
+    display: none !important;
+  }
+
+  /* Toolbar is icon-led with tooltips, so every action remains in view with no
+     horizontal scrollbar; ARIA labels and title text stay available. */
+  .timeline-toolbar {
+    justify-content: space-between !important;
+    gap: 5px !important;
+    padding-inline: 8px !important;
+    overflow: hidden !important;
+    scrollbar-width: none !important;
+  }
+
+  .timeline-toolbar::-webkit-scrollbar {
+    display: none !important;
+  }
+
+  .timeline-toolbar .tool-group {
+    gap: 4px !important;
+    min-width: 0 !important;
+  }
+
+  .timeline-toolbar .timeline-edit-tools {
+    flex: 1 1 auto !important;
+  }
+
+  .timeline-toolbar .timeline-view-tools {
+    flex: 0 0 auto !important;
+    margin-left: 8px !important;
+  }
+
+  .timeline-toolbar button {
+    flex: 0 0 32px !important;
+    width: 32px !important;
+    min-width: 32px !important;
+    padding: 4px !important;
+    border-radius: 7px !important;
+    font-size: 0 !important;
+  }
+
+  .timeline-toolbar button svg {
+    width: 16px !important;
+    height: 16px !important;
+  }
+
+  .timeline-toolbar .fit-timeline {
+    flex-basis: 58px !important;
+    width: 58px !important;
+    min-width: 58px !important;
+    font-size: 9px !important;
+  }
+
+  .timeline-toolbar .zoom {
+    flex: 0 1 112px !important;
+    min-width: 76px !important;
+    gap: 5px !important;
+    font-size: 9px !important;
+  }
+
+  .timeline-toolbar .zoom input {
+    min-width: 38px !important;
+    width: 100% !important;
+  }
+
+  .timeline-toolbar .layer-picker {
+    flex: 0 1 100px !important;
+    min-width: 0 !important;
+    font-size: 9px !important;
+  }
+}
+
+@media (min-width: 851px) and (max-width: 1180px) {
+  .timeline-toolbar .timeline-view-tools {
+    margin-left: 4px !important;
+    gap: 3px !important;
+  }
+
+  .timeline-toolbar .timeline-edit-tools {
+    gap: 3px !important;
+  }
+
+  .timeline-toolbar button {
+    flex-basis: 28px !important;
+    width: 28px !important;
+    min-width: 28px !important;
+  }
+
+  .timeline-toolbar .fit-timeline {
+    flex-basis: 50px !important;
+    width: 50px !important;
+    min-width: 50px !important;
+  }
+
+  .timeline-toolbar .zoom {
+    flex-basis: 92px !important;
+    min-width: 68px !important;
+  }
+}
