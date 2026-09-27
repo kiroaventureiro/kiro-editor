@@ -60,6 +60,8 @@ export default function CreatorHub({
   onClose,
 }: Props) {
   const [tab, setTab] = useState<HubTab>("chat");
+  const [generationType, setGenerationType] = useState<"image" | "video">("image");
+  const [generationPrompt, setGenerationPrompt] = useState("");
   const [serverConnectors, setServerConnectors] = useState<ConnectorSnapshot>({});
   const [connectorStatus, setConnectorStatus] = useState("Verificando conexões…");
   const selectedClip = useMemo(
@@ -148,43 +150,87 @@ export default function CreatorHub({
         )}
 
         {tab === "generate" && (
-          <section className="creator-hub-section">
-            <div className="creator-hub-section-heading">
-              <div>
-                <span className="creator-hub-kicker">GERAÇÃO</span>
-                <h2>Crie mídia com o provedor que você conectar</h2>
-                <p>{connectorStatus}</p>
+          <section className="creator-hub-generation-workspace" aria-labelledby="creator-generation-title">
+            <div className="creator-hub-generation-form">
+              <div className="creator-hub-generation-heading">
+                <span className="creator-hub-kicker">ESTÚDIO DE CRIAÇÃO</span>
+                <h2 id="creator-generation-title">O que vamos criar?</h2>
+                <p>Prepare sua ideia e escolha imagem ou vídeo. O envio só será liberado quando a conexão segura e as cotas estiverem ativas.</p>
               </div>
-              <Sparkles size={23} />
+
+              <div className="creator-hub-generation-types" role="group" aria-label="Tipo de mídia">
+                <button
+                  type="button"
+                  className={generationType === "image" ? "active" : ""}
+                  aria-pressed={generationType === "image"}
+                  onClick={() => setGenerationType("image")}
+                >
+                  <ImageIcon size={18} />
+                  <span><strong>Imagem</strong><small>Arte, quadro ou conceito</small></span>
+                </button>
+                <button
+                  type="button"
+                  className={generationType === "video" ? "active" : ""}
+                  aria-pressed={generationType === "video"}
+                  onClick={() => setGenerationType("video")}
+                >
+                  <Video size={18} />
+                  <span><strong>Vídeo</strong><small>Texto ou imagem para vídeo</small></span>
+                </button>
+              </div>
+
+              <label className="creator-hub-prompt-label" htmlFor="creator-generation-prompt">
+                Descreva sua ideia
+                <textarea
+                  id="creator-generation-prompt"
+                  value={generationPrompt}
+                  onChange={(event) => setGenerationPrompt(event.target.value)}
+                  maxLength={1200}
+                  placeholder={generationType === "image"
+                    ? "Ex.: uma cena cinematográfica de Kiro chegando a uma cidade futurista azul…"
+                    : "Ex.: um travelling suave revela a cidade enquanto Kiro caminha em direção à câmera…"}
+                />
+                <span className="creator-hub-prompt-count">{generationPrompt.length}/1200</span>
+              </label>
+
+              <div className="creator-hub-generation-safety" role="status">
+                <span className="creator-hub-lock-mark">●</span>
+                <div>
+                  <strong>Geração protegida</strong>
+                  <p>{xai?.configured
+                    ? "O provedor está preparado no servidor, mas a geração continua bloqueada até autenticação KIRO e cotas por usuário."
+                    : "Conecte um provedor. A geração continuará bloqueada até autenticação KIRO e cotas por usuário."}</p>
+                </div>
+                <button type="button" onClick={() => setTab("connections")}>Ver conexões</button>
+              </div>
+
+              <div className="creator-hub-generation-actions">
+                <small>Seu texto fica nesta tela; nenhum pedido é enviado agora.</small>
+                <button type="button" className="primary" disabled aria-disabled="true">
+                  <Sparkles size={16} />
+                  {generationType === "image" ? "Gerar imagem" : "Gerar vídeo"}
+                </button>
+              </div>
             </div>
-            <div className="creator-hub-card-grid">
-              <article className="creator-hub-feature-card">
-                <ImageIcon size={23} />
-                <strong>Imagem</strong>
-                <p>Prompt, referência, edição e envio direto para a KIRO Library.</p>
-                <small>
-                  {xai?.configured
-                    ? "Grok/xAI está configurado no servidor. A geração fica bloqueada até a autenticação KIRO e os limites estarem ativos."
-                    : "Disponível quando um conector com image.generate estiver autenticado."}
-                </small>
-              </article>
-              <article className="creator-hub-feature-card">
-                <Video size={23} />
-                <strong>Vídeo</strong>
-                <p>Texto para vídeo, imagem para vídeo e edição por IA quando o provedor suportar.</p>
-                <small>
-                  {xai?.configured
-                    ? "Gateway Grok/xAI instalado. Vídeos usam fila assíncrona e polling para não prender a interface."
-                    : "Projetado para Grok/xAI e outros conectores compatíveis."}
-                </small>
-              </article>
-              <article className="creator-hub-feature-card">
-                <Link2 size={23} />
-                <strong>Adicionar ao projeto</strong>
-                <p>O resultado poderá ir para a Library ou entrar diretamente na timeline.</p>
-                <small>Nenhum upload externo é executado enquanto a conexão não estiver ativa.</small>
-              </article>
-            </div>
+
+            <aside className="creator-hub-generation-preview" aria-label="Prévia e destino">
+              <div className="creator-hub-preview-heading">
+                <div>
+                  <span className="creator-hub-kicker">PRÉVIA</span>
+                  <strong>{generationType === "image" ? "Imagem" : "Vídeo"}</strong>
+                </div>
+                <span className="creator-hub-preview-status">Aguardando</span>
+              </div>
+              <div className="creator-hub-preview-stage">
+                {generationType === "image" ? <ImageIcon size={34} /> : <Video size={34} />}
+                <strong>Sua criação aparecerá aqui</strong>
+                <span>Depois de habilitada, você poderá revisar o resultado antes de enviar para o projeto.</span>
+              </div>
+              <div className="creator-hub-output-flow">
+                <span>Resultado</span><b>→</b><span>KIRO Library</span><b>→</b><span>Timeline</span>
+              </div>
+              <p className="creator-hub-muted">Nada entra na timeline sem sua confirmação.</p>
+            </aside>
           </section>
         )}
 
