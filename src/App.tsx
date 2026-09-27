@@ -855,7 +855,7 @@ export default function App() {
             onBlur={end}
             onChange={(e) => edit((p) => ({ ...p, name: e.target.value }))}
           />
-          <small className={saveState === "Falha ao salvar" ? "error" : ""}>
+          <small role="status" aria-live="polite" aria-atomic="true" className={saveState === "Falha ao salvar" ? "error" : ""}>
             {saveState}
           </small>
         </div>
@@ -901,7 +901,7 @@ export default function App() {
           </button>
         </div>
       </header>
-      <nav className="workspace-tools" inert={busy || !!projects || exportOpen}>
+      <nav aria-label="Ferramentas do editor" className="workspace-tools" inert={busy || !!projects || exportOpen}>
         <div>
           <button
             onClick={() => {
@@ -918,6 +918,7 @@ export default function App() {
           </button>
           <button
             className={drawer === "media" ? "active" : ""}
+            aria-pressed={drawer === "media"}
             onClick={() => setDrawer(drawer === "media" ? "none" : "media")}
           >
             <Film size={16} />
@@ -925,6 +926,7 @@ export default function App() {
           </button>
           <button
             className={timelineMode === "video" ? "active" : ""}
+            aria-pressed={timelineMode === "video"}
             onClick={() => {
               setTimelineMode("video");
               const track = project.tracks.find((t) => t.type === "video");
@@ -937,6 +939,7 @@ export default function App() {
           </button>
           <button
             className={timelineMode === "text" ? "active" : ""}
+            aria-pressed={timelineMode === "text"}
             onClick={() => setTimelineMode("text")}
             title="Editar textos"
           >
@@ -945,6 +948,7 @@ export default function App() {
           </button>
           <button
             className={timelineMode === "audio" ? "active" : ""}
+            aria-pressed={timelineMode === "audio"}
             onClick={() => {
               setTimelineMode("audio");
               const track = project.tracks.find((t) => t.type === "audio");
@@ -1001,6 +1005,7 @@ export default function App() {
           </label>
         </div>
         <button
+          aria-pressed={drawer === "inspector"}
           onClick={() =>
             setDrawer(drawer === "inspector" ? "none" : "inspector")
           }
