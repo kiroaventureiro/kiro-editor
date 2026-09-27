@@ -168,3 +168,22 @@
     grid-template-rows: 29px minmax(0, 1fr) 74px !important;
   }
 }
+
+
+@media (min-width: 851px) and (max-height: 760px) {
+  /* Compact image adjustments so the four primary controls fit in a 720p desktop viewport. */
+  .workspace-dock-image { gap: 5px !important; padding: 7px !important; }
+  .workspace-dock-image .dock-panel-heading { min-height: 30px !important; padding: 0 2px 4px !important; }
+  .workspace-dock-image .dock-tool-tabs { gap: 3px !important; padding: 3px !important; }
+  .workspace-dock-image .dock-tool-tabs button { min-height: 28px !important; padding: 3px 5px !important; }
+  .workspace-dock-image .dock-tool-content { padding: 4px 1px !important; }
+  .workspace-dock-image .effect-control-grid {
+    grid-auto-rows: minmax(38px, auto) !important; gap: 6px 10px !important; padding: 2px !important;
+  }
+  .workspace-dock-image .effect-control { grid-template-rows: auto 18px !important; gap: 2px !important; }
+  .workspace-dock-image .effect-control > span { font-size: 10px !important; }
+  .workspace-dock-image .effect-control input { height: 16px !important; margin: 0 !important; }
+  .workspace-dock-image .effect-control-hint {
+    margin-top: 4px !important; padding: 5px 7px !important; font-size: 10px !important; line-height: 1.25 !important;
+  }
+}
