@@ -75,10 +75,9 @@ try {
       .count(),
     1,
   );
-  const mediaButton = page.getByRole("button", {
-    name: "Mídia",
-    exact: true,
-  });
+  const mediaButton = page
+    .getByRole("navigation", { name: "Ferramentas do editor" })
+    .getByRole("button", { name: "Mídia", exact: true });
   assert.equal(await mediaButton.getAttribute("aria-pressed"), "false");
   await mediaButton.click();
   assert.equal(await mediaButton.getAttribute("aria-pressed"), "true");
