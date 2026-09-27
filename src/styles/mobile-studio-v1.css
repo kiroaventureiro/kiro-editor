@@ -546,3 +546,115 @@
   .monitor-deck { padding: 4px; gap: 5px; }
   .timeline-toolbar { gap: 3px; padding-inline: 3px; }
 }
+
+
+/* Final mobile overrides: the legacy desktop rules include !important declarations. */
+@media (max-width: 850px) {
+  .app-shell {
+    grid-template-columns: minmax(0, 1fr) !important;
+    grid-template-rows: 78px 44px minmax(210px, 1fr) 5px min(var(--timeline-height), clamp(205px, 33dvh, 260px)) !important;
+  }
+
+  .workspace {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+    grid-template-rows: minmax(0, 1fr) !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
+  }
+
+  .monitor-deck {
+    display: grid !important;
+    grid-template-columns: none !important;
+    grid-template-rows: minmax(0, 1fr) !important;
+    grid-auto-columns: 100% !important;
+    grid-auto-flow: column !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    scroll-snap-type: x mandatory !important;
+  }
+
+  .source-monitor,
+  .monitor-deck > .preview-wrap {
+    display: grid !important;
+    grid-column: auto !important;
+    grid-row: auto !important;
+    width: 100% !important;
+    min-width: 100% !important;
+    max-width: none !important;
+    min-height: 0 !important;
+    flex: none !important;
+    scroll-snap-align: start !important;
+  }
+
+  .source-monitor {
+    grid-template-rows: 38px minmax(0, 1fr) 22px !important;
+  }
+
+  .monitor-deck > .preview-wrap {
+    height: 100% !important;
+    grid-template-rows: 38px minmax(0, 1fr) 48px !important;
+    padding: 0 !important;
+  }
+
+  .monitor-deck > .preview-wrap .preview-stage {
+    min-width: 0 !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
+  }
+
+  .monitor-deck > .preview-wrap .canvas-shell[data-aspect="16:9"] {
+    width: min(100%, calc((100dvh - 178px - 260px) * 16 / 9)) !important;
+    max-width: 100% !important;
+    height: auto !important;
+    max-height: 100% !important;
+    aspect-ratio: 16 / 9 !important;
+  }
+
+  .timeline-resizer {
+    display: none !important;
+    grid-column: 1 !important;
+    grid-row: 4 !important;
+  }
+
+  .timeline-region {
+    display: block !important;
+    grid-column: 1 !important;
+    grid-row: 5 !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    height: 100% !important;
+    margin: 0 !important;
+    overflow: hidden !important;
+  }
+
+  .timeline-shell {
+    display: flex !important;
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
+    flex-direction: column !important;
+  }
+
+  .timeline-toolbar {
+    flex: 0 0 42px !important;
+    min-height: 42px !important;
+    height: 42px !important;
+  }
+
+  .timeline-shell > :not(.timeline-toolbar) {
+    min-height: 0 !important;
+  }
+}
+
+@media (max-width: 520px) {
+  .app-shell {
+    grid-template-rows: 78px 44px minmax(205px, 1fr) 5px min(var(--timeline-height), clamp(205px, 33dvh, 260px)) !important;
+  }
+}
