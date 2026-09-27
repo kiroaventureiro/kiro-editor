@@ -32,3 +32,4 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
   </React.StrictMode>,
 );
 import "./styles/desktop-media-workspace-v3.css";
+import "./styles/desktop-program-monitor-v4.css";
