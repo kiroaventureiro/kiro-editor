@@ -33,10 +33,12 @@ interface Props {
   onAddLibraryAsset: (asset: KiroLibraryItem) => void;
   onRelink: (id: string, file: File) => void;
   busy: boolean;
-  activeWorkspace: "library" | "tools" | "properties";
-  onWorkspaceChange: (workspace: "library" | "tools" | "properties") => void;
+  activeWorkspace: "library" | "image" | "audio" | "tools" | "properties";
+  onWorkspaceChange: (workspace: "library" | "image" | "audio" | "tools" | "properties") => void;
   workspaceTools: ReactNode;
   inspectorPanel: ReactNode;
+  imagePanel: ReactNode;
+  audioPanel: ReactNode;
 }
 
 type Filter = "all" | MediaAsset["type"];
@@ -91,6 +93,8 @@ export default function MediaLibrary({
   onWorkspaceChange,
   workspaceTools,
   inspectorPanel,
+  imagePanel,
+  audioPanel,
 }: Props) {
   const [section, setSection] = useState<LibrarySection>("mine");
   const [search, setSearch] = useState("");
@@ -259,6 +263,8 @@ export default function MediaLibrary({
       <nav className="workspace-dock-tabs" aria-label="Painel de trabalho" role="tablist">
         {([
           ["library", "Acervo"],
+          ["image", "Imagem"],
+          ["audio", "Áudio"],
           ["tools", "Ferramentas"],
           ["properties", "Propriedades"],
         ] as const).map(([value, label]) => (
@@ -575,6 +581,16 @@ export default function MediaLibrary({
       )}
         </div>
       </div>}
+      {activeWorkspace === "image" && (
+        <section className="workspace-dock-tool-panel workspace-dock-image" id="workspace-dock-image" role="tabpanel">
+          {imagePanel}
+        </section>
+      )}
+      {activeWorkspace === "audio" && (
+        <section className="workspace-dock-tool-panel workspace-dock-audio" id="workspace-dock-audio" role="tabpanel">
+          {audioPanel}
+        </section>
+      )}
       {activeWorkspace === "tools" && (
         <section className="workspace-dock-tool-panel" id="workspace-dock-tools" role="tabpanel">
           {workspaceTools}
