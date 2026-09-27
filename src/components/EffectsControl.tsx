@@ -24,8 +24,8 @@ export default function EffectsControl({ clip, disabled, onChange, onBegin, onEn
     <section className="effects-control" aria-label="Controle de efeitos">
       <header className="dock-panel-heading">
         <div>
-          <span className="dock-eyebrow">INSPECTOR · IMAGEM</span>
-          <strong><SlidersHorizontal size={14} aria-hidden="true" /> Effects Control</strong>
+          <span className="dock-eyebrow">AJUSTES · IMAGEM</span>
+          <strong><SlidersHorizontal size={14} aria-hidden="true" /> Efeitos de imagem</strong>
         </div>
         <span className="effects-selection">{clip?.name ?? "SEM SELEÇÃO"}</span>
       </header>
@@ -61,7 +61,7 @@ export default function EffectsControl({ clip, disabled, onChange, onBegin, onEn
         })}
         {unavailable && (
           <p className="effect-control-hint">
-            Selecione um vídeo ou imagem na timeline para ajustar a imagem.
+            Selecione um vídeo ou uma imagem na timeline para ajustar.
           </p>
         )}
       </div>
