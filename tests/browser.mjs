@@ -69,6 +69,26 @@ try {
   page.on("pageerror", (e) => errors.push(e.message));
   await page.goto("http://127.0.0.1:4173");
   await page.getByText("Salvo neste navegador", { exact: true }).waitFor();
+  assert.equal(
+    await page
+      .getByRole("navigation", { name: "Ferramentas do editor" })
+      .count(),
+    1,
+  );
+  const mediaButton = page.getByRole("button", {
+    name: "Mídia",
+    exact: true,
+  });
+  assert.equal(await mediaButton.getAttribute("aria-pressed"), "false");
+  await mediaButton.click();
+  assert.equal(await mediaButton.getAttribute("aria-pressed"), "true");
+  await mediaButton.click();
+  assert.equal(await mediaButton.getAttribute("aria-pressed"), "false");
+  assert.equal(
+    await page.getByText("Salvo neste navegador", { exact: true })
+      .getAttribute("aria-live"),
+    "polite",
+  );
   await page
     .getByLabel("Importar mídia", { exact: true })
     .setInputFiles(
