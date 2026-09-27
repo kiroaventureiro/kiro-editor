@@ -982,7 +982,7 @@ export default function App() {
             Creator Hub
           </button>
           <button
-            onClick={() => void generateAutomaticCaptions()
+            onClick={() => void generateAutomaticCaptions()}
             disabled={busy || exporting || captioning}
             title="Gerar legendas automaticamente a partir do vídeo ou áudio selecionado"
           >
