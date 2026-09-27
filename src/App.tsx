@@ -20,6 +20,7 @@ import LibraryAdmin from "./components/LibraryAdmin";
 import CreatorHub from "./components/CreatorHub";
 import Preview from "./components/Preview";
 import SourceMonitor from "./components/SourceMonitor";
+import AudioMixer from "./components/AudioMixer";
 import Inspector from "./components/Inspector";
 import Timeline, { type TimelineMode } from "./components/Timeline";
 import { createEmptyProject, projectPresets } from "./editor/project";
@@ -1073,6 +1074,19 @@ export default function App() {
             }))
           }
           onChange={updateClip}
+          onBegin={begin}
+          onEnd={end}
+        />
+        <AudioMixer
+          tracks={project.tracks}
+          onTrack={(id, patch) =>
+            edit((p) => ({
+              ...p,
+              tracks: p.tracks.map((track) =>
+                track.id === id ? { ...track, ...patch } : track,
+              ),
+            }))
+          }
           onBegin={begin}
           onEnd={end}
         />
