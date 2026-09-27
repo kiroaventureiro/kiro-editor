@@ -19,6 +19,7 @@ import "./styles/library-admin-v1.css";
 import "./styles/kiro-library-v1.css";
 import "./styles/kiro-ai-v1.css";
 import "./styles/creator-hub-v1.css";
+import "./styles/interface-foundation-v1.css";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
