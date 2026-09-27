@@ -434,7 +434,7 @@ export default function Preview({
     >
       <div className="preview-heading canvas-module-heading">
         <div className="canvas-meta">
-          <strong>Canvas</strong>
+          <strong>Programa</strong>
           <i />
           <span>{project.settings.width} × {project.settings.height}</span>
           <i />
