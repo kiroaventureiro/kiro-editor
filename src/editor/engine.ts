@@ -1,4 +1,5 @@
 import type { Clip, KiroProject, Track } from "./types";
+import fixWebmDuration from "fix-webm-duration";
 import { activeAt, clamp, envelope, projectDuration } from "./operations";
 
 type Resource = HTMLVideoElement | HTMLAudioElement | HTMLImageElement;
@@ -613,13 +614,16 @@ export async function renderVideo(
 
     engine.pause();
     await new Promise((r) => setTimeout(r, 120));
+    const recordedDurationMs = performance.now() - start;
     recorder.stop();
     await stopped;
 
-    return {
-      blob: new Blob(chunks, { type: format.mime }),
-      extension: format.extension,
-    };
+    const recording = new Blob(chunks, { type: format.mime });
+    const blob =
+      format.extension === "webm"
+        ? await fixWebmDuration(recording, recordedDurationMs, { logger: false })
+        : recording;
+    return { blob, extension: format.extension };
   } finally {
     cancelAnimationFrame(frame);
     engine.dispose();
