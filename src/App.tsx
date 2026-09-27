@@ -75,7 +75,7 @@ export default function App() {
     [saveState, setSaveState] = useState("Carregando…"),
     [focus, setFocus] = useState(false),
     [drawer, setDrawer] = useState<"media" | "inspector" | "none">("none");
-  const [workspacePanel, setWorkspacePanel] = useState<"library" | "tools" | "properties">("library");
+  const [workspacePanel, setWorkspacePanel] = useState<"library" | "image" | "audio" | "tools" | "properties">("library");
   const [projects, setProjects] = useState<KiroProject[] | null>(null),
     [exportOpen, setExportOpen] = useState(false),
     [resolution, setResolution] = useState(720),
@@ -1051,6 +1051,28 @@ export default function App() {
           onWorkspaceChange={setWorkspacePanel}
           workspaceTools={workspaceToolsPanel}
           inspectorPanel={inspectorPanel}
+          imagePanel={<EffectsControl
+            clip={selectedClip}
+            disabled={locked}
+            onChange={updateClip}
+            onBegin={begin}
+            onEnd={end}
+          />}
+          audioPanel={<AudioMixer
+            tracks={project.tracks}
+            clip={selectedClip}
+            onTrack={(id, patch) =>
+              edit((p) => ({
+                ...p,
+                tracks: p.tracks.map((track) =>
+                  track.id === id ? { ...track, ...patch } : track,
+                ),
+              }))
+            }
+            onClipChange={updateClip}
+            onBegin={begin}
+            onEnd={end}
+          />}
         />
         <div
           role="separator"
@@ -1075,7 +1097,6 @@ export default function App() {
             onTime={setTime}
             onPlaying={setPlaying}
             focus={focus}
-            onFocus={() => setFocus(!focus)}
             selectedClip={locked ? undefined : selectedClip}
             onTransform={updateClip}
             onBegin={begin}
@@ -1083,26 +1104,7 @@ export default function App() {
           />
         </div>
         <div className="mobile-inspector">{inspectorPanel}</div>
-        <EffectsControl
-          clip={selectedClip}
-          disabled={locked}
-          onChange={updateClip}
-          onBegin={begin}
-          onEnd={end}
-        />
-        <AudioMixer
-          tracks={project.tracks}
-          onTrack={(id, patch) =>
-            edit((p) => ({
-              ...p,
-              tracks: p.tracks.map((track) =>
-                track.id === id ? { ...track, ...patch } : track,
-              ),
-            }))
-          }
-          onBegin={begin}
-          onEnd={end}
-        />
+
       </main>
       <div
         className="timeline-resizer"
