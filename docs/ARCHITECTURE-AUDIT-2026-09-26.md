@@ -57,3 +57,16 @@ PR observado: #2, contra `feat/editor-studio-foundation`.
 7. Validar Preview, builds e escopo dos dados antes de qualquer produção.
 
 Não inserir secret, token de usuário ou chave de provedor em código ou localStorage. Não compartilhar dados ou schema entre Guardiões, Gestão, Sistema Origem e Editor sem contrato explícito.
+
+
+## Follow-up de implementação — 2026-09-27
+
+- Commit `9bdbf0c69d0444eb970d110977468fc97488bd2d`: o teste E2E passou a posicionar o playhead pela régua real da timeline (`.ruler`) e validar avanço por `.ruler-playhead`; nenhuma lógica de playback/sincronização foi alterada.
+- O primeiro E2E atualizado expôs que o WebM exportado não continha duração nos metadados, embora vídeo e áudio fossem decodificáveis. A dependência já presente `fix-webm-duration` não era chamada pelo renderizador.
+- Commit `0a16438520d5d61c842f0c96832b50aea22b2fa4`: o renderizador corrige os metadados da exportação WebM com o tempo gravado medido, sem mudar a timeline nem o formato da captura.
+- CI run #201 passou: TypeScript, 7 testes unitários, build e E2E Playwright. O E2E validou seeks nos três vídeos, reprodução contínua, persistência, exportação 1280×720 com vídeo/áudio, duração e conteúdo de cada trecho.
+- Check Vercel do commit #201: success. Sem alteração de produção.
+
+## Bloqueio remanescente para auth e quotas
+
+A única sessão de usuário encontrada é a autenticação Supabase usada pelo painel administrativo da Library. Ela não é identidade central KIRO nem deve ser reutilizada como tal. Antes de implementar conexões server-side, OAuth/BYOK seguro ou quotas, falta definir e disponibilizar: issuer/URL da autenticação KIRO, audience/claims e estratégia de revogação; persistência isolada do Editor; e limites/unidades de consumo por plano/provedor. Até lá, geração paga segue fechada e o bearer administrativo não é tratado como login de usuário.
