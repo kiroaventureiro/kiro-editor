@@ -1,4 +1,4 @@
-import { FileVideo2, Image as ImageIcon, Music2 } from "lucide-react";
+import { FileVideo2, Music2 } from "lucide-react";
 import type { Clip, MediaAsset } from "../editor/types";
 
 interface Props {
