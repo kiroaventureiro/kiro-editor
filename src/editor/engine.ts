@@ -272,11 +272,11 @@ export class Composition {
 
         if (gain)
           gain.gain.value = audible
-            ? clamp(c.volume ?? 1, 0, 1) * envelope(c, time)
+            ? clamp(c.volume ?? 1, 0, 1) * clamp(track.volume ?? 1, 0, 1) * envelope(c, time)
             : 0;
         else
           media.volume = audible
-            ? clamp(c.volume ?? 1, 0, 1) * envelope(c, time)
+            ? clamp(c.volume ?? 1, 0, 1) * clamp(track.volume ?? 1, 0, 1) * envelope(c, time)
             : 0;
 
         if (media instanceof HTMLVideoElement) {
