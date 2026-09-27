@@ -978,3 +978,354 @@
     width: 100% !important;
   }
 }
+
+
+/* Dual-monitor editing desk, following the supplied NLE reference.
+   Source is the selected original media; Program remains the composed timeline output. */
+@media (min-width: 851px) {
+  :root {
+    --kiro-library: clamp(230px, 17vw, 300px);
+    --kiro-inspector: clamp(260px, 19vw, 330px);
+  }
+
+  .workspace {
+    grid-template-columns: var(--kiro-library) 5px minmax(0, 1fr) var(--kiro-inspector) !important;
+  }
+
+  .monitor-deck {
+    grid-column: 3 !important;
+    grid-row: 1 !important;
+    display: grid !important;
+    grid-template-columns: minmax(0, .92fr) minmax(0, 1.08fr) !important;
+    gap: 10px !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    padding: 10px !important;
+    overflow: hidden !important;
+    background:
+      radial-gradient(ellipse at 52% 0%, rgba(41, 101, 120, .16), transparent 48%),
+      #0a1218 !important;
+  }
+
+  .source-monitor,
+  .monitor-deck > .preview-wrap {
+    display: grid !important;
+    grid-template-rows: 42px minmax(0, 1fr) 26px !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    border: 1px solid #2b414c !important;
+    border-radius: 9px !important;
+    background: linear-gradient(180deg, #111d26, #0b131a) !important;
+    box-shadow: 0 12px 28px rgba(0, 0, 0, .22) !important;
+  }
+
+  .source-monitor-heading,
+  .monitor-deck > .preview-wrap .preview-heading {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    padding: 6px 10px !important;
+    margin: 0 !important;
+    border-bottom: 1px solid #233741 !important;
+    background: linear-gradient(90deg, rgba(24, 47, 59, .82), rgba(15, 27, 36, .72)) !important;
+    color: #cfdee4 !important;
+  }
+
+  .source-monitor-heading > div {
+    display: grid !important;
+    gap: 3px !important;
+    min-width: 0 !important;
+  }
+
+  .monitor-kicker,
+  .source-kind,
+  .source-monitor-footer {
+    color: #72cad8 !important;
+    font-size: 9px !important;
+    font-weight: 750 !important;
+    letter-spacing: .12em !important;
+  }
+
+  .source-monitor-heading strong {
+    max-width: 100% !important;
+    overflow: hidden !important;
+    color: #eff8fa !important;
+    font-size: 11px !important;
+    font-weight: 600 !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+  }
+
+  .source-kind {
+    flex: 0 0 auto !important;
+    padding: 4px 6px !important;
+    border: 1px solid rgba(103, 205, 219, .28) !important;
+    border-radius: 4px !important;
+    background: rgba(49, 126, 140, .13) !important;
+    color: #abdce3 !important;
+    font-size: 8px !important;
+  }
+
+  .source-monitor-stage {
+    position: relative !important;
+    display: grid !important;
+    place-items: center !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    padding: 8px !important;
+    overflow: hidden !important;
+    background:
+      radial-gradient(ellipse at 50% 48%, rgba(37, 86, 101, .16), transparent 67%),
+      #050a0e !important;
+  }
+
+  .source-monitor-stage video,
+  .source-monitor-stage img {
+    display: block !important;
+    width: 100% !important;
+    height: 100% !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    object-fit: contain !important;
+    background: #020405 !important;
+  }
+
+  .source-monitor-stage video {
+    border: 1px solid #283d47 !important;
+    border-radius: 4px !important;
+  }
+
+  .source-empty,
+  .source-audio {
+    display: flex !important;
+    width: 100% !important;
+    height: 100% !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex-direction: column !important;
+    gap: 10px !important;
+    padding: 12px !important;
+    color: #82d6df !important;
+    text-align: center !important;
+  }
+
+  .source-empty strong,
+  .source-audio strong {
+    color: #e5f2f5 !important;
+    font-size: 12px !important;
+    font-weight: 650 !important;
+  }
+
+  .source-empty span {
+    max-width: 240px !important;
+    color: #9babb4 !important;
+    font-size: 10px !important;
+    line-height: 1.5 !important;
+  }
+
+  .source-audio audio {
+    width: min(100%, 360px) !important;
+  }
+
+  .source-monitor-footer {
+    display: flex !important;
+    align-items: center !important;
+    padding-inline: 10px !important;
+    border-top: 1px solid #233741 !important;
+    background: #0e1820 !important;
+    color: #8faab3 !important;
+    font-size: 8px !important;
+  }
+
+  .monitor-deck > .preview-wrap {
+    grid-template-rows: 42px minmax(0, 1fr) 50px !important;
+    background: linear-gradient(180deg, #111d26, #0b131a) !important;
+  }
+
+  .monitor-deck > .preview-wrap .preview-heading {
+    font-size: 10px !important;
+    letter-spacing: .06em !important;
+  }
+
+  .monitor-deck > .preview-wrap .preview-stage {
+    display: flex !important;
+    place-items: unset !important;
+    justify-content: center !important;
+    align-items: center !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 8px !important;
+    overflow: hidden !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background:
+      radial-gradient(ellipse at 50% 48%, rgba(37, 86, 101, .16), transparent 67%),
+      #050a0e !important;
+    box-shadow: none !important;
+  }
+
+  .monitor-deck > .preview-wrap .canvas-shell[data-aspect="16:9"] {
+    width: min(100%, calc((100dvh - var(--kiro-timeline-cap) - 210px) * 16 / 9)) !important;
+    height: auto !important;
+    max-height: 100% !important;
+    aspect-ratio: 16 / 9 !important;
+  }
+
+  .monitor-deck > .preview-wrap .canvas-shell {
+    max-width: 100% !important;
+    max-height: 100% !important;
+    border: 1px solid #385560 !important;
+    border-radius: 4px !important;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, .5) !important;
+  }
+
+  .monitor-deck > .preview-wrap .transport {
+    min-height: 0 !important;
+    padding: 4px 8px !important;
+    gap: 6px !important;
+  }
+
+  .monitor-deck > .preview-wrap .transport .play {
+    width: 38px !important;
+    height: 38px !important;
+  }
+}
+
+@media (min-width: 851px) and (max-width: 1180px) {
+  .workspace {
+    grid-template-columns: minmax(200px, 22vw) 4px minmax(0, 1fr) minmax(218px, 24vw) !important;
+  }
+
+  .monitor-deck {
+    grid-template-columns: minmax(0, .95fr) minmax(0, 1.05fr) !important;
+    gap: 7px !important;
+    padding: 7px !important;
+  }
+
+  .source-monitor-heading,
+  .monitor-deck > .preview-wrap .preview-heading {
+    padding-inline: 7px !important;
+  }
+}
+
+@media (max-width: 850px) {
+  .monitor-deck {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr) !important;
+    gap: 6px !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    padding: 5px !important;
+    overflow: hidden !important;
+  }
+
+  .source-monitor {
+    display: grid !important;
+    grid-template-rows: 38px minmax(0, 1fr) 22px !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
+    border: 1px solid #2b414c !important;
+    border-radius: 7px !important;
+    background: #0b131a !important;
+  }
+
+  .source-monitor-heading {
+    display: flex !important;
+    align-items: center !important;
+    min-width: 0 !important;
+    padding: 5px !important;
+    border-bottom: 1px solid #233741 !important;
+  }
+
+  .source-monitor-heading > div {
+    display: grid !important;
+    min-width: 0 !important;
+  }
+
+  .monitor-kicker,
+  .source-monitor-footer,
+  .source-kind {
+    font-size: 7px !important;
+    letter-spacing: .06em !important;
+  }
+
+  .source-monitor-heading strong {
+    overflow: hidden !important;
+    font-size: 9px !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+  }
+
+  .source-monitor-stage {
+    display: grid !important;
+    place-items: center !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    padding: 4px !important;
+    overflow: hidden !important;
+    background: #050a0e !important;
+  }
+
+  .source-monitor-stage video,
+  .source-monitor-stage img {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: contain !important;
+  }
+
+  .source-empty,
+  .source-audio {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex-direction: column !important;
+    gap: 4px !important;
+    padding: 4px !important;
+    color: #82d6df !important;
+    text-align: center !important;
+  }
+
+  .source-empty strong {
+    color: #e5f2f5 !important;
+    font-size: 8px !important;
+  }
+
+  .source-empty span {
+    color: #9babb4 !important;
+    font-size: 7px !important;
+  }
+
+  .source-monitor-footer {
+    display: flex !important;
+    align-items: center !important;
+    padding-inline: 5px !important;
+    border-top: 1px solid #233741 !important;
+    color: #8faab3 !important;
+  }
+
+  .monitor-deck > .preview-wrap {
+    grid-template-rows: 38px minmax(0, 1fr) 42px !important;
+    min-width: 0 !important;
+    padding: 0 !important;
+  }
+
+  .monitor-deck > .preview-wrap .preview-heading {
+    min-width: 0 !important;
+    padding-inline: 6px !important;
+    font-size: 8px !important;
+  }
+
+  .monitor-deck > .preview-wrap .preview-stage {
+    padding: 4px !important;
+  }
+
+  .monitor-deck > .preview-wrap .canvas-shell[data-aspect="16:9"] {
+    height: auto !important;
+    width: min(100%, calc((100dvh - var(--timeline-height) - 190px) * 16 / 9)) !important;
+  }
+}
