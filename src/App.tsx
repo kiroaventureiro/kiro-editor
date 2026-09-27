@@ -19,6 +19,7 @@ import MediaLibrary from "./components/MediaLibrary";
 import LibraryAdmin from "./components/LibraryAdmin";
 import CreatorHub from "./components/CreatorHub";
 import Preview from "./components/Preview";
+import SourceMonitor from "./components/SourceMonitor";
 import Inspector from "./components/Inspector";
 import Timeline, { type TimelineMode } from "./components/Timeline";
 import { createEmptyProject, projectPresets } from "./editor/project";
@@ -1034,19 +1035,29 @@ export default function App() {
           className="library-resizer"
           onPointerDown={(e) => resize(e, "horizontal")}
         />
-        <Preview
-          project={project}
-          time={time}
-          playing={playing}
-          onTime={setTime}
-          onPlaying={setPlaying}
-          focus={focus}
-          onFocus={() => setFocus(!focus)}
-          selectedClip={locked ? undefined : selectedClip}
-          onTransform={updateClip}
-          onBegin={begin}
-          onEnd={end}
-        />
+        <div className="monitor-deck" aria-label="Monitores de vídeo">
+          <SourceMonitor
+            asset={
+              selectedClip?.assetId
+                ? project.assets.find((asset) => asset.id === selectedClip.assetId)
+                : undefined
+            }
+            clip={selectedClip}
+          />
+          <Preview
+            project={project}
+            time={time}
+            playing={playing}
+            onTime={setTime}
+            onPlaying={setPlaying}
+            focus={focus}
+            onFocus={() => setFocus(!focus)}
+            selectedClip={locked ? undefined : selectedClip}
+            onTransform={updateClip}
+            onBegin={begin}
+            onEnd={end}
+          />
+        </div>
         <Inspector
           settings={project.settings}
           clip={selectedClip}
