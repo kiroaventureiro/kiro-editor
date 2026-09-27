@@ -104,12 +104,32 @@ try {
           c.getContext("2d").getImageData(c.width / 2, c.height / 2, 1, 1).data,
         ),
       );
+  const seekTo = async (time) => {
+    const zoom = Number(
+      await page.getByLabel("Zoom da timeline").inputValue(),
+    );
+    const targetX = time * zoom;
+    await page
+      .getByRole("region", { name: "Timeline" })
+      .locator(".ruler")
+      .click({ position: { x: targetX, y: 8 } });
+    await page.waitForFunction(
+      (expectedX) => {
+        const playhead = document.querySelector(".ruler-playhead");
+        return (
+          Math.abs(Number.parseFloat(playhead?.style.left || "NaN") - expectedX) <
+          2
+        );
+      },
+      targetX,
+    );
+  };
   for (const [time, channel] of [
     [0.5, 0],
     [2.5, 1],
     [4.5, 2],
   ]) {
-    await page.getByLabel("Posição em segundos").fill(String(time));
+    await seekTo(time);
     await page.waitForFunction((ch) => {
       const c = document.querySelector("canvas");
       const p = c
@@ -119,21 +139,24 @@ try {
     }, channel);
     console.log("Scrub frame", time, await pixel());
   }
-  await page.getByLabel("Posição em segundos").fill("0");
+  await seekTo(0);
   await page
     .getByRole("button", { name: "Reproduzir montagem", exact: true })
     .click();
+  const fittedZoom = Number(
+    await page.getByLabel("Zoom da timeline").inputValue(),
+  );
   await page.waitForFunction(
-    () =>
-      Number(
-        document.querySelector('input[aria-label="Posição em segundos"]').value,
-      ) > 4.5,
-    {},
+    (targetX) => {
+      const playhead = document.querySelector(".ruler-playhead");
+      return Number.parseFloat(playhead?.style.left || "0") > targetX;
+    },
+    4.5 * fittedZoom,
     { timeout: 15000 },
   );
   await page.getByRole("button", { name: "Pausar", exact: true }).click();
   console.log("Continuous playback passed");
-  await page.getByLabel("Posição em segundos").fill("0.5");
+  await seekTo(0.5);
   await page.getByRole("button", { name: "Silenciar Vídeo principal", exact: true }).click();
   await page.waitForTimeout(150);
   assert((await pixel())[0] > 200, "Muting video must not hide the picture");
@@ -144,7 +167,7 @@ try {
   await page.waitForFunction(
     () => document.querySelectorAll(".clip-text").length === 1,
   );
-  await page.getByLabel("Posição em segundos").fill("0.75");
+  await seekTo(0.75);
   await page.waitForTimeout(800);
   await page.screenshot({ path: `${output}/desktop.png` });
   await page.reload();
