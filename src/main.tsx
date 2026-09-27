@@ -24,6 +24,7 @@ import "./styles/reference-desk-v1.css";
 import "./styles/reference-desk-v2.css";
 import "./styles/mobile-studio-v1.css";
 import "./styles/desktop-legibility-v1.css";
+import "./styles/desktop-workspace-v2.css";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
