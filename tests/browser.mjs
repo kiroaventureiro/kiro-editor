@@ -79,6 +79,18 @@ try {
     .getByRole("navigation", { name: "Ferramentas do editor" })
     .getByRole("button", { name: "Mídia", exact: true });
   assert.equal(await mediaButton.getAttribute("aria-pressed"), "false");
+  assert(
+    Number.parseFloat(
+      await mediaButton.evaluate((el) => getComputedStyle(el).fontSize),
+    ) >= 9,
+    "Desktop tool rail labels must remain readable",
+  );
+  assert.equal(
+    await page.locator(".workspace-tools").evaluate(
+      (el) => getComputedStyle(el).overflowY,
+    ),
+    "auto",
+  );
   await mediaButton.click();
   assert.equal(await mediaButton.getAttribute("aria-pressed"), "true");
   await mediaButton.click();
