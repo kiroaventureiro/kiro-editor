@@ -904,19 +904,6 @@ export default function App() {
       <nav aria-label="Ferramentas do editor" className="workspace-tools" inert={busy || !!projects || exportOpen}>
         <div>
           <button
-            onClick={() => {
-              setPlaying(false);
-              setCreatorHubOpen(true);
-              const url = new URL(window.location.href);
-              url.searchParams.set("hub", "creator");
-              window.history.replaceState({}, "", url);
-            }}
-            title="Abrir o Creator Hub de IA, geração e conexões"
-          >
-            <WandSparkles size={16} />
-            Creator Hub
-          </button>
-          <button
             className={drawer === "media" ? "active" : ""}
             aria-pressed={drawer === "media"}
             onClick={() => setDrawer(drawer === "media" ? "none" : "media")}
@@ -981,7 +968,21 @@ export default function App() {
             </button>
           )}
           <button
-            onClick={() => void generateAutomaticCaptions()}
+            className="creator-hub-tool"
+            onClick={() => {
+              setPlaying(false);
+              setCreatorHubOpen(true);
+              const url = new URL(window.location.href);
+              url.searchParams.set("hub", "creator");
+              window.history.replaceState({}, "", url);
+            }}
+            title="Abrir o Creator Hub de IA, geração e conexões"
+          >
+            <WandSparkles size={16} />
+            Creator Hub
+          </button>
+          <button
+            onClick={() => void generateAutomaticCaptions()
             disabled={busy || exporting || captioning}
             title="Gerar legendas automaticamente a partir do vídeo ou áudio selecionado"
           >
