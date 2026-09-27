@@ -18,7 +18,7 @@ export default function SourceMonitor({ asset, clip }: Props) {
     <section className="source-monitor" aria-label="Monitor de origem">
       <header className="source-monitor-heading">
         <div>
-          <span className="monitor-kicker">SOURCE · MONITOR DE ORIGEM</span>
+          <span className="monitor-kicker">ORIGEM · MONITOR DE ORIGEM</span>
           <strong title={asset?.name ?? "Nenhuma mídia selecionada"}>
             {asset?.name ?? "Selecione uma mídia"}
           </strong>
@@ -57,7 +57,7 @@ export default function SourceMonitor({ asset, clip }: Props) {
           <div className="source-empty">
             <FileVideo2 size={30} aria-hidden="true" />
             <strong>Monitor de origem</strong>
-            <span>Use o olho na biblioteca ou selecione um clipe na timeline para revisar a mídia original.</span>
+            <span>Use o olho na biblioteca ou selecione um clipe na linha do tempo para revisar a mídia original.</span>
           </div>
         )}
       </div>
@@ -65,7 +65,7 @@ export default function SourceMonitor({ asset, clip }: Props) {
       <footer className="source-monitor-footer">
         {asset
           ? `${asset.duration ? `${Math.floor(asset.duration / 60).toString().padStart(2, "0")}:${Math.floor(asset.duration % 60).toString().padStart(2, "0")} · ` : ""}MÍDIA ORIGINAL`
-          : "SOURCE"}
+          : "ORIGEM"}
       </footer>
     </section>
   );
