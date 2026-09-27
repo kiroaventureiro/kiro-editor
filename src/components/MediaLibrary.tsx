@@ -224,7 +224,7 @@ export default function MediaLibrary({
       <div className="library-heading">
         <div>
           <span className="eyebrow">
-            {section === "kiro" ? "CATÁLOGO KIRO" : "BIBLIOTECA"}
+            {section === "kiro" ? "CATÁLOGO KIRO" : "MEDIA POOL"}
           </span>
           <h2>
             {sectionTitle} <small>{visibleAssets.length}</small>
