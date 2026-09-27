@@ -17,6 +17,19 @@ export type ConnectorCapability =
   | "agent"
   | "mcp";
 
+/**
+ * User-approved connection permissions are separate from provider capabilities.
+ * This catalog is descriptive until server-side identity, persistence, and
+ * enforcement are implemented; it must not be used as an authorization check.
+ */
+export type ConnectionPermission =
+  | "project.read"
+  | "timeline.edit"
+  | "media.add"
+  | "media.generate"
+  | "project.export"
+  | "media.delete";
+
 export interface ConnectorDefinition {
   id: string;
   name: string;
@@ -98,42 +111,48 @@ export const connectorRegistry: ConnectorDefinition[] = [
   },
 ];
 
+/** Server-side grant shape to persist only after KIRO auth is available. */
 export interface ConnectorGrant {
   connectorId: string;
-  scopes: ConnectorCapability[];
+  permissions: ConnectionPermission[];
   createdAt: string;
   expiresAt?: string;
 }
 
 export const editorPermissionCatalog: {
-  id: ConnectorCapability;
+  id: ConnectionPermission;
   label: string;
   description: string;
 }[] = [
   {
-    id: "editor.read",
+    id: "project.read",
     label: "Ler o projeto",
-    description: "Permite consultar timeline, trilhas, clipes e seleção atual.",
+    description: "Permite consultar o projeto e o estado da timeline.",
   },
   {
-    id: "editor.write",
-    label: "Editar o projeto",
-    description: "Permite solicitar ações validadas pelo motor do KIRO Editor.",
+    id: "timeline.edit",
+    label: "Editar a timeline",
+    description: "Permite aplicar ações validadas na timeline do projeto.",
   },
   {
-    id: "image.generate",
-    label: "Gerar imagens",
-    description: "Permite gerar imagens e adicioná-las à Library ou timeline.",
+    id: "media.add",
+    label: "Adicionar mídia",
+    description: "Permite adicionar arquivos aprovados à Library ou à timeline.",
   },
   {
-    id: "video.generate",
-    label: "Gerar vídeos",
-    description: "Permite gerar vídeos e adicioná-los à Library ou timeline.",
+    id: "media.generate",
+    label: "Gerar mídia",
+    description: "Permite solicitar geração de mídia sujeita à autenticação e quota.",
   },
   {
-    id: "video.edit",
-    label: "Editar mídia por IA",
-    description: "Permite enviar mídia para recursos de edição suportados pelo provedor.",
+    id: "project.export",
+    label: "Exportar",
+    description: "Permite iniciar a exportação do projeto atual.",
+  },
+  {
+    id: "media.delete",
+    label: "Excluir mídia",
+    description: "Permite remover mídia; ações destrutivas exigem validação explícita.",
   },
 ];
 
@@ -146,4 +165,12 @@ export function connectorSupports(
   capability: ConnectorCapability,
 ) {
   return connector.capabilities.includes(capability);
+}
+
+/** Pure helper for the future server authorization layer; not auth by itself. */
+export function grantAllows(
+  grant: ConnectorGrant,
+  permission: ConnectionPermission,
+) {
+  return grant.permissions.includes(permission);
 }
