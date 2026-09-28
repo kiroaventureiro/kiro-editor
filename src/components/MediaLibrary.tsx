@@ -1,17 +1,15 @@
 import {
   Clock3,
   FolderOpen,
-  Grid2X2,
+  Eye,
   Heart,
   Link2,
-  List,
-  Music2,
   Plus,
   Search,
   Sparkles,
   Upload,
 } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import {
   libraryAssetLabel,
   parseKiroLibraryResponse,
@@ -26,11 +24,16 @@ interface Props {
   targetTrack: string;
   onTargetTrack: (id: string) => void;
   assets: MediaAsset[];
+  onPreviewAsset: (asset: MediaAsset) => void;
   onImport: (files: FileList | null) => void;
   onAddToTimeline: (asset: MediaAsset) => void;
   onAddLibraryAsset: (asset: KiroLibraryItem) => void;
   onRelink: (id: string, file: File) => void;
   busy: boolean;
+  activeWorkspace: "library" | "tools" | "properties";
+  onWorkspaceChange: (workspace: "library" | "tools" | "properties") => void;
+  workspaceTools: ReactNode;
+  inspectorPanel: ReactNode;
 }
 
 type Filter = "all" | MediaAsset["type"];
@@ -75,16 +78,20 @@ export default function MediaLibrary({
   targetTrack,
   onTargetTrack,
   assets,
+  onPreviewAsset,
   onImport,
   onAddToTimeline,
   onAddLibraryAsset,
   onRelink,
   busy,
+  activeWorkspace,
+  onWorkspaceChange,
+  workspaceTools,
+  inspectorPanel,
 }: Props) {
   const [section, setSection] = useState<LibrarySection>("mine");
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<Filter>("all");
-  const [view, setView] = useState<"grid" | "list">("grid");
   const [libraryCategory, setLibraryCategory] = useState<
     "all" | LibraryCategory
   >("all");
@@ -202,6 +209,13 @@ export default function MediaLibrary({
     else onAddToTimeline(item.asset);
   };
 
+  const selectSection = (next: LibrarySection) => {
+    setSection(next);
+    setSearch("");
+    setFilter("all");
+    setLibraryCategory("all");
+  };
+
   const duration = (seconds?: number) => {
     if (!seconds) return "";
     const mins = Math.floor(seconds / 60);
@@ -211,7 +225,7 @@ export default function MediaLibrary({
 
   const sectionTitle = {
     mine: "Meus arquivos",
-    kiro: "KIRO Library",
+    kiro: "Biblioteca KIRO",
     favorites: "Favoritos",
     recent: "Recentes",
   }[section];
@@ -221,57 +235,65 @@ export default function MediaLibrary({
       <div className="library-heading">
         <div>
           <span className="eyebrow">
-            {section === "kiro" ? "CATÁLOGO KIRO" : "BIBLIOTECA"}
+            {section === "kiro" ? "MÍDIAS COMPARTILHADAS" : "ACERVO DE MÍDIA"}
           </span>
           <h2>
             {sectionTitle} <small>{visibleAssets.length}</small>
           </h2>
         </div>
-        <div className="library-view-toggle" aria-label="Visualização da biblioteca">
-          <button
-            className={view === "grid" ? "active" : ""}
-            aria-label="Grade"
-            onClick={() => setView("grid")}
-          >
-            <Grid2X2 size={15} />
-          </button>
-          <button
-            className={view === "list" ? "active" : ""}
-            aria-label="Lista"
-            onClick={() => setView("list")}
-          >
-            <List size={16} />
-          </button>
-        </div>
       </div>
 
-      <nav className="library-sections" aria-label="Áreas da biblioteca">
+      <nav className="workspace-dock-tabs" aria-label="Painel de trabalho" role="tablist">
+        {([
+          ["library", "Acervo"],
+          ["tools", "Ferramentas"],
+          ["properties", "Propriedades"],
+        ] as const).map(([value, label]) => (
+          <button
+            key={value}
+            type="button"
+            role="tab"
+            aria-selected={activeWorkspace === value}
+            aria-controls={`workspace-dock-${value}`}
+            className={activeWorkspace === value ? "active" : ""}
+            onClick={() => onWorkspaceChange(value)}
+          >
+            {label}
+          </button>
+        ))}
+      </nav>
+      {activeWorkspace === "library" && <div className="library-browser-layout" id="workspace-dock-library" role="tabpanel">
+        <div className="library-folder-rail">
+          <span className="eyebrow">NAVEGAR</span>
+          <nav className="library-sections" aria-label="Coleções do acervo">
         <button
           className={section === "mine" ? "active" : ""}
-          onClick={() => setSection("mine")}
+          onClick={() => selectSection("mine")}
         >
           <FolderOpen size={14} /> Meus arquivos
         </button>
         <button
           className={section === "kiro" ? "active" : ""}
-          onClick={() => setSection("kiro")}
+          onClick={() => selectSection("kiro")}
         >
-          <Sparkles size={14} /> KIRO Library
+          <Sparkles size={14} /> Biblioteca KIRO
         </button>
         <button
           className={section === "favorites" ? "active" : ""}
-          onClick={() => setSection("favorites")}
+          onClick={() => selectSection("favorites")}
         >
           <Heart size={14} /> Favoritos
         </button>
         <button
           className={section === "recent" ? "active" : ""}
-          onClick={() => setSection("recent")}
+          onClick={() => selectSection("recent")}
         >
           <Clock3 size={14} /> Recentes
         </button>
-      </nav>
+          </nav>
+        </div>
 
+        <div className="library-browser-content">
       {section === "mine" && (
         <>
           <label
@@ -283,8 +305,8 @@ export default function MediaLibrary({
             }}
           >
             <Upload size={26} />
-            <strong>{busy ? "Importando…" : "Importar arquivos"}</strong>
-            <span>Ou arraste vídeos, imagens e áudios para esta área</span>
+            <strong>{busy ? "Importando mídia…" : "Importar mídia"}</strong>
+            <span>Selecione ou arraste vídeos, imagens e áudios</span>
             <input
               aria-label="Importar mídia"
               hidden
@@ -299,31 +321,8 @@ export default function MediaLibrary({
             />
           </label>
 
-          <div className="library-audio-entry">
-            <label className={`button audio-import-button ${busy ? "disabled" : ""}`}>
-              <Music2 size={16} />
-              <span>Importar áudio</span>
-              <input
-                aria-label="Importar áudio"
-                hidden
-                type="file"
-                accept="audio/*"
-                multiple
-                disabled={busy}
-                onChange={(e) => {
-                  setFilter("audio");
-                  onImport(e.target.files);
-                  e.target.value = "";
-                }}
-              />
-            </label>
-            <small>
-              Músicas, narrações e efeitos. Depois use + para inserir na timeline.
-            </small>
-          </div>
           <p className="library-source-note">
-            Seus arquivos pessoais continuam guardados neste navegador e não são
-            publicados na KIRO Library.
+            Seus arquivos pessoais ficam neste navegador e permanecem separados da Biblioteca KIRO.
           </p>
         </>
       )}
@@ -331,7 +330,7 @@ export default function MediaLibrary({
       {section === "kiro" && (
         <>
           <div className="kiro-library-hero">
-            <strong>Catálogo para quem usa o KIRO Editor</strong>
+            <strong>Conteúdo compartilhado pela KIRO</strong>
             <span>
               Aqui entrarão vídeos, imagens, músicas, efeitos, overlays e templates
               liberados pela KIRO Produções. O acervo interno da produtora fica em
@@ -373,7 +372,7 @@ export default function MediaLibrary({
         />
       </label>
 
-      <div className="media-filters" aria-label="Filtros da biblioteca">
+      <div className="media-filters" role="group" aria-label="Filtrar por tipo de mídia">
         {[
           ["all", "Todos"],
           ["video", "Vídeos"],
@@ -391,7 +390,7 @@ export default function MediaLibrary({
       </div>
 
       <label className="target-track compact-target-track">
-        Adicionar à trilha
+        Trilha de destino
         <select
           aria-label="Trilha de destino"
           value={targetTrack}
@@ -409,8 +408,8 @@ export default function MediaLibrary({
 
       {section === "kiro" && catalogState === "loading" && (
         <div className="library-status-card">
-          <strong>Abrindo KIRO Library…</strong>
-          <span>Carregando o catálogo público autorizado.</span>
+          <strong>Carregando a Biblioteca KIRO…</strong>
+          <span>Buscando mídias compartilhadas para este editor.</span>
         </div>
       )}
 
@@ -418,11 +417,11 @@ export default function MediaLibrary({
         <div className="library-status-card">
           <strong>KIRO Library indisponível</strong>
           <span>{catalogError}</span>
-          <button onClick={() => setCatalogState("idle")}>Tentar novamente</button>
+          <button onClick={() => setCatalogState("idle")}>Tentar carregar novamente</button>
         </div>
       )}
 
-      <div className={`asset-list asset-list-${view}`}>
+      <div className="asset-list">
         {visibleAssets.map((item) => {
           const asset = item.asset;
           const key = itemKey(item.source, asset.id);
@@ -433,7 +432,7 @@ export default function MediaLibrary({
               key={key}
               title={asset.name}
             >
-              <div className="asset-thumbnail">
+              <div className="asset-thumbnail" onDoubleClick={() => onPreviewAsset(asset)} title="Duplo clique para ver no monitor de origem">
                 {item.source === "kiro" && (
                   <span className="asset-source-badge">KIRO</span>
                 )}
@@ -468,28 +467,46 @@ export default function MediaLibrary({
                 </small>
               </div>
               {asset.path ? (
-                <button
-                  className="asset-add"
-                  aria-label={`Adicionar ${asset.name}`}
-                  title="Adicionar à timeline"
-                  onClick={() => addAsset(item)}
-                >
-                  <Plus size={17} />
-                </button>
-              ) : item.source === "mine" ? (
-                <label className="relink" title="Reconectar arquivo">
-                  <Link2 size={17} />
-                  <input
-                    aria-label={`Reconectar ${asset.name}`}
-                    hidden
-                    type="file"
-                    accept={`${asset.type}/*`}
-                    onChange={(e) => {
-                      if (e.target.files?.[0]) onRelink(asset.id, e.target.files[0]);
-                      e.target.value = "";
+                <div className="asset-actions">
+                  <button
+                    className="asset-preview"
+                    aria-label={`Ver ${asset.name} no monitor de origem`}
+                    title="Ver no monitor de origem"
+                    onClick={() => {
+                      rememberRecent(item);
+                      onPreviewAsset(asset);
                     }}
-                  />
-                </label>
+                  >
+                    <Eye size={14} />
+                    <span>Ver</span>
+                  </button>
+                  <button
+                    className="asset-add"
+                    aria-label={`Adicionar ${asset.name} à timeline`}
+                    title="Adicionar ao final da trilha escolhida"
+                    onClick={() => addAsset(item)}
+                  >
+                    <Plus size={14} />
+                    <span>Adicionar</span>
+                  </button>
+                </div>
+              ) : item.source === "mine" ? (
+                <div className="asset-actions">
+                  <label className="relink" title="Localize novamente o arquivo original">
+                    <Link2 size={14} />
+                    <span>Reconectar arquivo</span>
+                    <input
+                      aria-label={`Reconectar o arquivo ${asset.name}`}
+                      hidden
+                      type="file"
+                      accept={`${asset.type}/*`}
+                      onChange={(e) => {
+                        if (e.target.files?.[0]) onRelink(asset.id, e.target.files[0]);
+                        e.target.value = "";
+                      }}
+                    />
+                  </label>
+                </div>
               ) : null}
             </article>
           );
@@ -498,11 +515,8 @@ export default function MediaLibrary({
 
       {!visibleAssets.length && section === "kiro" && catalogState === "ready" && (
         <div className="library-status-card">
-          <strong>Catálogo público preparado</strong>
-          <span>
-            A estrutura já está separada do acervo interno. O próximo passo é
-            conectar o armazenamento e publicar os primeiros assets autorizados.
-          </span>
+          <strong>Nenhuma mídia disponível ainda</strong>
+          <span>A Biblioteca KIRO não tem itens que correspondam a esta busca e a estes filtros.</span>
         </div>
       )}
 
@@ -520,13 +534,24 @@ export default function MediaLibrary({
         </div>
       )}
 
-      {!visibleAssets.length && section === "mine" && !!assets.length && (
-        <div className="library-empty">Nenhum arquivo neste filtro.</div>
+      {!visibleAssets.length && (section === "mine" || section === "favorites" || section === "recent") && (assets.length > 0 || section !== "mine") && (
+        <div className="library-status-card">
+          <strong>{section === "mine" ? "Nenhuma mídia encontrada" : section === "favorites" ? "Nenhum favorito encontrado" : "Nenhum item recente encontrado"}</strong>
+          <span>Tente outro termo de busca ou altere o filtro de tipo.</span>
+        </div>
       )}
-      {section === "mine" && !assets.length && (
-        <p className="panel-tip">
-          Seus arquivos ficam guardados neste navegador enquanto você edita.
-        </p>
+
+        </div>
+      </div>}
+      {activeWorkspace === "tools" && (
+        <section className="workspace-dock-tool-panel" id="workspace-dock-tools" role="tabpanel">
+          {workspaceTools}
+        </section>
+      )}
+      {activeWorkspace === "properties" && (
+        <section className="workspace-dock-properties" id="workspace-dock-properties" role="tabpanel">
+          {inspectorPanel}
+        </section>
       )}
     </aside>
   );

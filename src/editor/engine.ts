@@ -1,4 +1,5 @@
 import type { Clip, KiroProject, Track } from "./types";
+import fixWebmDuration from "fix-webm-duration";
 import { activeAt, clamp, envelope, projectDuration } from "./operations";
 
 type Resource = HTMLVideoElement | HTMLAudioElement | HTMLImageElement;
@@ -271,11 +272,11 @@ export class Composition {
 
         if (gain)
           gain.gain.value = audible
-            ? clamp(c.volume ?? 1, 0, 1) * envelope(c, time)
+            ? clamp(c.volume ?? 1, 0, 1) * clamp(track.volume ?? 1, 0, 1) * envelope(c, time)
             : 0;
         else
           media.volume = audible
-            ? clamp(c.volume ?? 1, 0, 1) * envelope(c, time)
+            ? clamp(c.volume ?? 1, 0, 1) * clamp(track.volume ?? 1, 0, 1) * envelope(c, time)
             : 0;
 
         if (media instanceof HTMLVideoElement) {
@@ -459,9 +460,10 @@ export class Composition {
           const brightness = clamp(c.brightness ?? 1, 0, 3);
           const contrast = clamp(c.contrast ?? 1, 0, 3);
           const saturation = clamp(c.saturation ?? 1, 0, 3);
+          const hueRotate = clamp(c.hueRotate ?? 0, -180, 180);
           const blurPx =
             clamp(c.blur ?? 0, 0, 10) * (Math.min(w, h) / 100);
-          ctx.filter = `brightness(${brightness}) contrast(${contrast}) saturate(${saturation}) blur(${blurPx}px)`;
+          ctx.filter = `brightness(${brightness}) contrast(${contrast}) saturate(${saturation}) hue-rotate(${hueRotate}deg) blur(${blurPx}px)`;
           const source = this.resources.get(c.id);
           if (
             source instanceof HTMLImageElement ||
@@ -613,13 +615,16 @@ export async function renderVideo(
 
     engine.pause();
     await new Promise((r) => setTimeout(r, 120));
+    const recordedDurationMs = performance.now() - start;
     recorder.stop();
     await stopped;
 
-    return {
-      blob: new Blob(chunks, { type: format.mime }),
-      extension: format.extension,
-    };
+    const recording = new Blob(chunks, { type: format.mime });
+    const blob =
+      format.extension === "webm"
+        ? await fixWebmDuration(recording, recordedDurationMs, { logger: false })
+        : recording;
+    return { blob, extension: format.extension };
   } finally {
     cancelAnimationFrame(frame);
     engine.dispose();

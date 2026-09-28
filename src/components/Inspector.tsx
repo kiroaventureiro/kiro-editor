@@ -5,6 +5,7 @@ interface Props {
   settings: ProjectSettings;
   clip?: Clip;
   locked: boolean;
+  selectionCount: number;
   onAspect: (r: ProjectSettings["aspectRatio"]) => void;
   onChange: (p: Partial<Clip>) => void;
   onBegin: () => void;
@@ -18,18 +19,21 @@ export default function Inspector({
   settings,
   clip,
   locked,
+  selectionCount,
   onAspect,
   onChange,
   onBegin,
   onEnd,
 }: Props) {
   const [tab, setTab] = useState<InspectorTab>("project");
+  const multipleSelection = selectionCount > 1;
+  const activeTab: InspectorTab = multipleSelection ? "project" : tab;
 
   useEffect(() => {
-    if (!clip) setTab("project");
+    if (!clip || multipleSelection) setTab("project");
     else if (clip.type === "text") setTab("text");
     else setTab("media");
-  }, [clip?.id]);
+  }, [clip?.id, clip?.type, multipleSelection]);
 
   const range = (
     label: string,
@@ -505,55 +509,61 @@ export default function Inspector({
   return (
     <aside className="panel inspector">
       <div className="panel-heading compact-heading">
-        <span className="eyebrow">CONTROLE CRIATIVO</span>
+        <span className="eyebrow">INSPETOR</span>
         <h2>Propriedades</h2>
       </div>
 
       <nav className="inspector-tabs" aria-label="Categorias de propriedades">
         <button
-          className={tab === "project" ? "active" : ""}
+          className={activeTab === "project" ? "active" : ""}
           onClick={() => setTab("project")}
         >
           Projeto
         </button>
         <button
-          className={tab === "media" ? "active" : ""}
+          className={activeTab === "media" ? "active" : ""}
           onClick={() => setTab("media")}
-          disabled={!clip || clip.type === "text"}
+          disabled={multipleSelection || !clip || clip.type === "text"}
         >
           Mídia
         </button>
         <button
-          className={tab === "text" ? "active" : ""}
+          className={activeTab === "text" ? "active" : ""}
           onClick={() => setTab("text")}
-          disabled={clip?.type !== "text"}
+          disabled={multipleSelection || clip?.type !== "text"}
         >
           Texto
         </button>
         <button
-          className={tab === "effects" ? "active" : ""}
+          className={activeTab === "effects" ? "active" : ""}
           onClick={() => setTab("effects")}
-          disabled={!clip}
+          disabled={multipleSelection || !clip}
         >
           Efeitos
         </button>
       </nav>
 
       <div className="inspector-tab-content">
-        {tab === "project" && projectTab}
-        {tab === "media" &&
+        {multipleSelection && (
+          <div className="inspector-selection-notice" role="status" aria-live="polite">
+            <strong>{selectionCount} clipes selecionados</strong>
+            <span>As propriedades individuais estão pausadas. Selecione apenas um clipe para editar mídia, texto ou efeitos.</span>
+          </div>
+        )}
+        {activeTab === "project" && projectTab}
+        {!multipleSelection && activeTab === "media" &&
           (mediaTab ?? (
             <div className="empty-inspector">
               <strong>Selecione vídeo, imagem ou áudio</strong>
             </div>
           ))}
-        {tab === "text" &&
+        {!multipleSelection && activeTab === "text" &&
           (textTab ?? (
             <div className="empty-inspector">
               <strong>Selecione um texto</strong>
             </div>
           ))}
-        {tab === "effects" && effectsTab}
+        {!multipleSelection && activeTab === "effects" && effectsTab}
       </div>
     </aside>
   );

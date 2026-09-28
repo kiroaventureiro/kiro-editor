@@ -1,0 +1,660 @@
+/* Mobile editing layout: keep the full studio usable on touch screens. */
+@media (max-width: 850px) {
+  :root {
+    --mobile-timeline-height: clamp(210px, 35dvh, 300px);
+  }
+
+  html,
+  body,
+  #root {
+    width: 100%;
+    min-width: 0;
+    min-height: 100%;
+    overflow: hidden;
+    overscroll-behavior: none;
+  }
+
+  .app-shell {
+    width: 100%;
+    height: 100dvh;
+    min-height: 0;
+    overflow: hidden;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: 82px 42px minmax(220px, 1fr) 5px min(var(--timeline-height), var(--mobile-timeline-height));
+  }
+
+  .topbar {
+    min-width: 0;
+    min-height: 0;
+    gap: 4px 8px;
+    padding: 6px 8px;
+    overflow: hidden;
+  }
+
+  .brand {
+    min-width: 0;
+    flex: 1 1 auto;
+  }
+
+  .brand strong { font-size: 15px; }
+  .brand small { font-size: 8px; }
+
+  .top-actions {
+    min-width: 0;
+    gap: 4px;
+  }
+
+  .top-actions button {
+    min-width: 38px;
+    min-height: 38px;
+    padding: 6px;
+  }
+
+  .top-actions button.primary {
+    min-width: 42px;
+  }
+
+  .project-name {
+    order: 3;
+    width: 100%;
+    min-width: 0;
+    flex: 1 0 100%;
+    flex-direction: row;
+    justify-content: space-between;
+    gap: 6px;
+  }
+
+  .project-name input {
+    width: min(58%, 250px);
+    min-width: 0;
+    font-size: 12px;
+    text-align: left;
+  }
+
+  .project-name small {
+    font-size: 10px;
+    white-space: nowrap;
+  }
+
+  .workspace-tools {
+    position: relative;
+    inset: auto;
+    width: 100%;
+    height: 42px;
+    min-height: 42px;
+    max-height: 42px;
+    padding: 3px 6px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    flex-wrap: nowrap;
+    scrollbar-width: thin;
+    overscroll-behavior-inline: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .workspace-tools > div {
+    display: flex;
+    flex: 0 0 auto;
+    gap: 4px;
+  }
+
+  .workspace-tools button,
+  .workspace-tools .button {
+    min-width: 42px;
+    min-height: 36px;
+    padding: 6px 8px;
+    flex: 0 0 auto;
+    font-size: 10px;
+    white-space: nowrap;
+  }
+
+  .workspace-tools > button {
+    min-width: 44px;
+    min-height: 36px;
+    flex: 0 0 auto;
+  }
+
+  .workspace {
+    display: grid;
+    position: relative;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr);
+    width: 100%;
+    min-width: 0;
+    min-height: 0;
+    margin: 0;
+    overflow: hidden;
+    isolation: isolate;
+  }
+
+  .monitor-deck {
+    display: grid;
+    grid-auto-columns: 100%;
+    grid-auto-flow: column;
+    grid-template-columns: none;
+    grid-template-rows: minmax(0, 1fr);
+    gap: 8px;
+    width: 100%;
+    min-width: 0;
+    min-height: 0;
+    padding: 7px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-snap-type: x mandatory;
+    overscroll-behavior-inline: contain;
+    scrollbar-width: thin;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .source-monitor,
+  .monitor-deck > .preview-wrap {
+    width: 100%;
+    min-width: 100%;
+    min-height: 0;
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
+  }
+
+  .source-monitor {
+    grid-template-rows: 38px minmax(0, 1fr) 22px;
+  }
+
+  .monitor-deck > .preview-wrap {
+    height: 100%;
+    grid-template-rows: 38px minmax(0, 1fr) 48px;
+    padding: 0;
+  }
+
+  .source-monitor-heading,
+  .monitor-deck > .preview-wrap .preview-heading {
+    min-width: 0;
+    padding-inline: 9px;
+  }
+
+  .monitor-deck > .preview-wrap .preview-heading {
+    gap: 6px;
+    font-size: 10px;
+  }
+
+  .monitor-deck > .preview-wrap .preview-stage {
+    min-width: 0;
+    min-height: 0;
+    padding: 5px;
+    overflow: hidden;
+  }
+
+  .monitor-deck > .preview-wrap .canvas-shell[data-aspect="16:9"] {
+    width: min(100%, calc((100dvh - var(--mobile-timeline-height) - 178px) * 16 / 9));
+    max-width: 100%;
+    height: auto;
+    max-height: 100%;
+    aspect-ratio: 16 / 9;
+  }
+
+  .monitor-deck > .preview-wrap .transport {
+    min-height: 0;
+    padding: 4px 6px;
+    gap: 5px;
+  }
+
+  .monitor-deck > .preview-wrap .transport button {
+    min-width: 36px;
+    min-height: 36px;
+  }
+
+  .monitor-deck > .preview-wrap .transport .play {
+    width: 40px;
+    height: 40px;
+  }
+
+  .monitor-deck > .preview-wrap .transport input[type="range"] {
+    min-width: 50px;
+  }
+
+  .library-resizer,
+  .timeline-resizer {
+    display: none;
+  }
+
+  .workspace .media-panel,
+  .workspace .inspector,
+  .workspace .control-rack {
+    display: none;
+  }
+
+  .drawer-media .workspace .media-panel {
+    display: block;
+    position: absolute;
+    z-index: 30;
+    inset: 0 auto 0 0;
+    width: min(390px, calc(100vw - 32px));
+    max-height: none;
+    padding: 12px;
+    overflow: auto;
+    overscroll-behavior: contain;
+    border: 1px solid #304b57;
+    border-radius: 0 10px 10px 0;
+    background: #101a22;
+    box-shadow: 16px 0 42px #000b;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .drawer-inspector .workspace .inspector {
+    display: block;
+    position: absolute;
+    z-index: 31;
+    inset: 0 0 auto auto;
+    width: min(420px, calc(100vw - 24px));
+    height: 58%;
+    min-height: 190px;
+    max-height: 64%;
+    padding: 12px;
+    overflow: auto;
+    overscroll-behavior: contain;
+    border: 1px solid #304b57;
+    border-radius: 0 0 0 10px;
+    background: #101a22;
+    box-shadow: -12px 12px 35px #0009;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .drawer-inspector .workspace .control-rack {
+    display: grid;
+    position: absolute;
+    z-index: 30;
+    inset: auto 0 0 auto;
+    width: min(420px, calc(100vw - 24px));
+    height: 40%;
+    min-height: 150px;
+    max-height: 46%;
+    grid-template-rows: minmax(0, .56fr) minmax(0, .44fr);
+    overflow: hidden;
+    border: 1px solid #304b57;
+    border-radius: 10px 0 0 0;
+    background: #101a22;
+    box-shadow: -12px -12px 35px #0009;
+  }
+
+  .drawer-inspector .effects-control {
+    display: grid;
+    min-width: 0;
+    min-height: 0;
+    grid-template-rows: 34px minmax(0, 1fr);
+    padding: 0 10px 6px;
+    overflow: hidden;
+  }
+
+  .drawer-inspector .effect-control-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-rows: repeat(2, minmax(0, 1fr));
+    gap: 4px 10px;
+    min-width: 0;
+    min-height: 0;
+    padding: 5px 0;
+  }
+
+  .drawer-inspector .effect-control {
+    min-width: 0;
+  }
+
+  .drawer-inspector .effect-control input[type="range"] {
+    width: 100%;
+    min-height: 22px;
+  }
+
+  .drawer-inspector .effect-control-hint {
+    grid-column: 1 / -1;
+    margin: 0;
+    font-size: 9px;
+  }
+
+  .drawer-inspector .audio-mixer {
+    display: grid;
+    min-width: 0;
+    min-height: 0;
+    grid-template-rows: 30px minmax(0, 1fr) 18px;
+    padding-inline: 8px;
+    overflow: hidden;
+  }
+
+  .drawer-inspector .audio-mixer .dock-eyebrow,
+  .drawer-inspector .audio-mixer .mixer-master {
+    display: none;
+  }
+
+  .drawer-inspector .audio-mixer .dock-panel-heading {
+    border: 0;
+  }
+
+  .drawer-inspector .mixer-channels {
+    min-width: 0;
+    min-height: 0;
+    gap: 6px;
+    padding: 4px 0;
+    overflow-x: auto;
+    overflow-y: hidden;
+  }
+
+  .drawer-inspector .mixer-channel {
+    flex: 0 0 68px;
+    min-width: 64px;
+    max-width: 80px;
+    grid-template-rows: 18px minmax(0, 1fr) 25px;
+  }
+
+  .drawer-inspector .mixer-fader-wrap input[type="range"] {
+    width: 64px;
+  }
+
+  .timeline-region {
+    width: 100%;
+    min-width: 0;
+    min-height: 0;
+    margin: 0;
+    overflow: hidden;
+  }
+
+  .timeline-shell {
+    height: 100%;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .timeline-toolbar {
+    min-height: 42px;
+    height: 42px;
+    padding: 5px;
+    gap: 5px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    flex-wrap: nowrap;
+    scrollbar-width: thin;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .timeline-toolbar button {
+    min-width: 38px;
+    min-height: 34px;
+    padding: 5px 8px;
+    flex: 0 0 auto;
+    font-size: 10px;
+    white-space: nowrap;
+  }
+
+  .timeline-toolbar .tool-group {
+    display: flex;
+    flex: 0 0 auto;
+    gap: 4px;
+  }
+
+  .timeline-view-tools {
+    margin-left: auto;
+  }
+
+  .ruler-row { height: 27px; }
+  .track-row { height: 46px; }
+
+  .track-name,
+  .ruler-label {
+    width: 92px;
+    min-width: 92px;
+  }
+
+  .track-name {
+    gap: 4px;
+    padding-inline: 4px;
+    font-size: 9px;
+  }
+
+  .track-name strong {
+    max-width: 38px;
+    font-size: 9px;
+  }
+
+  .track-name button {
+    min-width: 27px;
+    min-height: 27px;
+  }
+
+  .clip {
+    top: 3px;
+    height: 40px;
+    padding: 4px 5px;
+    touch-action: pan-x;
+  }
+
+  .clip strong,
+  .clip small {
+    font-size: 9px;
+  }
+
+  .timeline-footer {
+    min-height: 22px;
+    padding: 4px 7px;
+    font-size: 8px;
+  }
+
+  .asset-list-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .asset-list-grid .asset-thumbnail {
+    height: clamp(76px, 22vw, 116px);
+  }
+
+  .library-heading h2,
+  .panel-heading h2 {
+    font-size: 16px;
+  }
+
+  .import-dropzone {
+    min-height: 90px;
+    padding: 12px;
+  }
+
+  .import-dropzone span {
+    display: block;
+  }
+
+  .library-sections {
+    gap: 6px;
+    margin-block: 8px;
+  }
+
+  .library-sections button,
+  .media-filters button {
+    min-height: 34px;
+    padding: 6px 8px;
+    font-size: 10px;
+  }
+
+  .search {
+    min-height: 38px;
+    margin-block: 8px;
+  }
+
+  .modal-backdrop {
+    align-items: flex-end;
+    padding: max(10px, env(safe-area-inset-top)) 10px max(10px, env(safe-area-inset-bottom));
+  }
+
+  .modal {
+    width: 100%;
+    max-width: 100%;
+    max-height: calc(100dvh - 20px);
+    overflow: auto;
+    border-radius: 14px;
+  }
+
+  .notice {
+    left: max(10px, env(safe-area-inset-left));
+    right: max(10px, env(safe-area-inset-right));
+    bottom: calc(var(--mobile-timeline-height) + 14px + env(safe-area-inset-bottom));
+    width: auto;
+  }
+}
+
+@media (max-width: 520px) {
+  .app-shell {
+    grid-template-rows: 78px 42px minmax(205px, 1fr) 5px min(var(--timeline-height), clamp(205px, 33dvh, 260px));
+  }
+
+  .brand strong { font-size: 14px; }
+  .top-actions button {
+    min-width: 36px;
+    min-height: 36px;
+  }
+
+  .workspace-tools button,
+  .workspace-tools .button {
+    min-width: 40px;
+    padding-inline: 6px;
+    font-size: 9px;
+  }
+
+  .drawer-inspector .workspace .inspector {
+    height: 56%;
+    max-height: 60%;
+  }
+
+  .drawer-inspector .workspace .control-rack {
+    height: 42%;
+    max-height: 48%;
+  }
+
+  .timeline-toolbar button {
+    min-width: 36px;
+    padding-inline: 6px;
+  }
+
+  .track-name,
+  .ruler-label {
+    width: 82px;
+    min-width: 82px;
+  }
+
+  .track-name strong { max-width: 32px; }
+}
+
+@media (max-width: 360px) {
+  .project-name small { display: none; }
+  .top-actions { gap: 2px; }
+  .top-actions button { min-width: 32px; }
+  .workspace-tools { padding-inline: 3px; }
+  .monitor-deck { padding: 4px; gap: 5px; }
+  .timeline-toolbar { gap: 3px; padding-inline: 3px; }
+}
+
+
+/* Final mobile overrides: the legacy desktop rules include !important declarations. */
+@media (max-width: 850px) {
+  .app-shell {
+    grid-template-columns: minmax(0, 1fr) !important;
+    grid-template-rows: 78px 44px minmax(210px, 1fr) 5px min(var(--timeline-height), clamp(205px, 33dvh, 260px)) !important;
+  }
+
+  .workspace {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+    grid-template-rows: minmax(0, 1fr) !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
+  }
+
+  .monitor-deck {
+    display: grid !important;
+    grid-template-columns: none !important;
+    grid-template-rows: minmax(0, 1fr) !important;
+    grid-auto-columns: 100% !important;
+    grid-auto-flow: column !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    scroll-snap-type: x mandatory !important;
+  }
+
+  .source-monitor,
+  .monitor-deck > .preview-wrap {
+    display: grid !important;
+    grid-column: auto !important;
+    grid-row: auto !important;
+    width: 100% !important;
+    min-width: 100% !important;
+    max-width: none !important;
+    min-height: 0 !important;
+    flex: none !important;
+    scroll-snap-align: start !important;
+  }
+
+  .source-monitor {
+    grid-template-rows: 38px minmax(0, 1fr) 22px !important;
+  }
+
+  .monitor-deck > .preview-wrap {
+    height: 100% !important;
+    grid-template-rows: 38px minmax(0, 1fr) 48px !important;
+    padding: 0 !important;
+  }
+
+  .monitor-deck > .preview-wrap .preview-stage {
+    min-width: 0 !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
+  }
+
+  .monitor-deck > .preview-wrap .canvas-shell[data-aspect="16:9"] {
+    width: min(100%, calc((100dvh - 178px - 260px) * 16 / 9)) !important;
+    max-width: 100% !important;
+    height: auto !important;
+    max-height: 100% !important;
+    aspect-ratio: 16 / 9 !important;
+  }
+
+  .timeline-resizer {
+    display: none !important;
+    grid-column: 1 !important;
+    grid-row: 4 !important;
+  }
+
+  .timeline-region {
+    display: block !important;
+    grid-column: 1 !important;
+    grid-row: 5 !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    height: 100% !important;
+    margin: 0 !important;
+    overflow: hidden !important;
+  }
+
+  .timeline-shell {
+    display: flex !important;
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
+    flex-direction: column !important;
+  }
+
+  .timeline-toolbar {
+    flex: 0 0 42px !important;
+    min-height: 42px !important;
+    height: 42px !important;
+  }
+
+  .timeline-shell > :not(.timeline-toolbar) {
+    min-height: 0 !important;
+  }
+}
+
+@media (max-width: 520px) {
+  .app-shell {
+    grid-template-rows: 78px 44px minmax(205px, 1fr) 5px min(var(--timeline-height), clamp(205px, 33dvh, 260px)) !important;
+  }
+}

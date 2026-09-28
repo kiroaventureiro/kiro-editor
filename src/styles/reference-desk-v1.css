@@ -1,0 +1,215 @@
+/* KIRO reference desk — final layer so the reference system remains consistent. */
+:root {
+  color-scheme: dark;
+  --desk-bg: #080f15;
+  --desk-panel: #101a22;
+  --desk-panel-raised: #14212a;
+  --desk-line: #2a414d;
+  --desk-text: #e6f0f3;
+  --desk-muted: #91a5af;
+  --desk-cyan: #65cbd6;
+  --desk-mint: #76e4c1;
+}
+
+html, body, #root {
+  background: var(--desk-bg) !important;
+  color: var(--desk-text) !important;
+  font-family: Inter, "Segoe UI", Arial, sans-serif !important;
+}
+
+button, input, select, textarea {
+  font-family: Inter, "Segoe UI", Arial, sans-serif !important;
+}
+
+.app-shell {
+  background: var(--desk-bg) !important;
+  color: var(--desk-text) !important;
+}
+
+.topbar,
+.workspace-tools,
+.media-panel,
+.inspector,
+.timeline-toolbar,
+.timeline-shell {
+  background-color: var(--desk-panel) !important;
+  border-color: var(--desk-line) !important;
+}
+
+.workspace-tools button,
+.workspace-tools .button {
+  color: #c9d9df !important;
+}
+
+.workspace-tools button.active,
+.library-sections button.active,
+.library-view-toggle button.active,
+.media-filters button.active {
+  color: #dcfbfc !important;
+  border-color: rgba(101, 203, 214, .62) !important;
+  background: linear-gradient(135deg, rgba(39, 103, 115, .48), rgba(24, 53, 62, .76)) !important;
+}
+
+.monitor-deck {
+  background:
+    radial-gradient(ellipse at 50% 0%, rgba(38, 112, 128, .13), transparent 58%),
+    #0a1218 !important;
+}
+
+.source-monitor,
+.monitor-deck > .preview-wrap {
+  border-color: #304b57 !important;
+  border-radius: 8px !important;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, .24) !important;
+}
+
+.source-monitor-heading,
+.monitor-deck > .preview-wrap .preview-heading {
+  background: linear-gradient(90deg, #172932, #111c24) !important;
+  border-color: #2a414d !important;
+}
+
+.monitor-kicker,
+.source-kind,
+.canvas-meta,
+.source-monitor-footer {
+  font-family: Inter, "Segoe UI", Arial, sans-serif !important;
+  letter-spacing: .12em !important;
+}
+
+.source-monitor-stage,
+.monitor-deck > .preview-wrap .preview-stage {
+  background: #050a0e !important;
+}
+
+.monitor-deck > .preview-wrap .preview-heading {
+  color: #e4f1f4 !important;
+}
+
+.asset-card {
+  position: relative !important;
+}
+
+.asset-preview {
+  position: absolute !important;
+  z-index: 3 !important;
+  top: 6px !important;
+  left: 6px !important;
+  width: 27px !important;
+  min-width: 27px !important;
+  height: 27px !important;
+  min-height: 27px !important;
+  display: grid !important;
+  place-items: center !important;
+  padding: 0 !important;
+  border: 1px solid rgba(208, 235, 240, .28) !important;
+  border-radius: 6px !important;
+  background: rgba(8, 16, 22, .86) !important;
+  color: #d9f5f7 !important;
+  opacity: .84 !important;
+  cursor: pointer !important;
+}
+
+.asset-preview:hover,
+.asset-preview:focus-visible {
+  opacity: 1 !important;
+  color: #07171b !important;
+  background: var(--desk-cyan) !important;
+  outline: 2px solid rgba(101, 203, 214, .28) !important;
+}
+
+.asset-thumbnail {
+  cursor: pointer !important;
+}
+
+@media (min-width: 851px) {
+  .app-shell {
+    height: 100dvh !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
+  }
+
+  .workspace {
+    min-height: 0 !important;
+  }
+
+  .media-panel,
+  .inspector {
+    scrollbar-color: #38545e transparent !important;
+  }
+
+  .timeline-region {
+    min-height: 0 !important;
+  }
+
+  .source-monitor,
+  .monitor-deck > .preview-wrap {
+    min-height: 0 !important;
+  }
+}
+
+@media (min-width: 851px) and (max-height: 600px) {
+  :root {
+    --kiro-timeline-cap: clamp(168px, 32dvh, 205px) !important;
+  }
+
+  .app-shell {
+    grid-template-rows: 54px 42px minmax(190px, 1fr) 6px min(var(--timeline-height), var(--kiro-timeline-cap)) !important;
+  }
+
+  .workspace-tools {
+    height: 42px !important;
+    min-height: 42px !important;
+    max-height: 42px !important;
+  }
+
+  .monitor-deck {
+    padding: 6px !important;
+    gap: 6px !important;
+  }
+
+  .source-monitor,
+  .monitor-deck > .preview-wrap {
+    grid-template-rows: 36px minmax(0, 1fr) 22px !important;
+  }
+
+  .monitor-deck > .preview-wrap {
+    grid-template-rows: 36px minmax(0, 1fr) 40px !important;
+  }
+
+  .timeline-toolbar {
+    min-height: 36px !important;
+  }
+}
+
+
+/* Compact program header on narrow editing viewports: never collide with transport controls. */
+@media (min-width: 851px) and (max-width: 1180px) {
+  .monitor-deck > .preview-wrap .canvas-meta {
+    gap: 5px !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
+  }
+
+  .monitor-deck > .preview-wrap .canvas-meta > i,
+  .monitor-deck > .preview-wrap .canvas-meta > span {
+    display: none !important;
+  }
+
+  .monitor-deck > .preview-wrap .canvas-meta strong {
+    white-space: nowrap !important;
+    letter-spacing: .12em !important;
+    text-transform: uppercase !important;
+  }
+
+  .monitor-deck > .preview-wrap .canvas-actions {
+    flex: 0 0 auto !important;
+    gap: 3px !important;
+  }
+
+  .monitor-deck > .preview-wrap .canvas-actions button {
+    min-width: 29px !important;
+    width: 29px !important;
+    padding-inline: 3px !important;
+  }
+}

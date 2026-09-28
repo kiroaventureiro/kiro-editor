@@ -1,0 +1,417 @@
+/* Desktop refinement: restore breathing room without changing the mobile layout. */
+@media (min-width: 851px) {
+  :root {
+    --ref-library-column: minmax(190px, 20vw);
+    --ref-secondary-column: minmax(190px, 20vw);
+  }
+
+  /* Give the monitors more horizontal room while preserving a useful inspector. */
+  .media-panel {
+    padding: 10px !important;
+  }
+
+  .monitor-deck {
+    gap: 10px !important;
+    padding: 9px !important;
+  }
+
+  /* Keep effect controls readable in their own compact, balanced rack. */
+  .control-rack {
+    grid-template-rows: minmax(0, 1.1fr) minmax(0, .9fr) !important;
+    padding: 0 !important;
+  }
+
+  .effects-control {
+    grid-template-rows: 34px minmax(0, 1fr) !important;
+    padding: 2px 10px 6px !important;
+  }
+
+  .effects-control .dock-panel-heading {
+    gap: 8px !important;
+  }
+
+  .effects-control .dock-panel-heading > div {
+    display: flex !important;
+    align-items: center !important;
+    gap: 9px !important;
+    min-width: 0 !important;
+  }
+
+  .effects-control .dock-eyebrow {
+    flex: 0 0 auto !important;
+    font-size: 8px !important;
+    letter-spacing: .08em !important;
+  }
+
+  .effects-control .dock-panel-heading strong {
+    gap: 6px !important;
+    white-space: nowrap !important;
+    font-size: 11px !important;
+  }
+
+  .effects-selection {
+    flex: 0 1 92px !important;
+    max-width: 92px !important;
+    font-size: 8px !important;
+  }
+
+  .effect-control-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    grid-template-rows: repeat(2, minmax(0, 1fr)) !important;
+    gap: 4px 12px !important;
+    padding: 5px 2px 2px !important;
+  }
+
+  .effect-control {
+    grid-template-rows: 16px 18px !important;
+    gap: 2px !important;
+    min-width: 0 !important;
+  }
+
+  .effect-control > span {
+    align-items: center !important;
+    font-size: 10px !important;
+    line-height: 1.2 !important;
+  }
+
+  .effect-control > span strong {
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+  }
+
+  .effect-control output {
+    padding-left: 4px !important;
+    font-size: 9px !important;
+  }
+
+  .effect-control input[type="range"] {
+    width: 100% !important;
+    height: 17px !important;
+    min-height: 17px !important;
+  }
+
+  .effect-control-hint {
+    display: none !important;
+  }
+
+  /* Toolbar is icon-led with tooltips, so every action remains in view with no
+     horizontal scrollbar; ARIA labels and title text stay available. */
+  .timeline-toolbar {
+    justify-content: space-between !important;
+    gap: 5px !important;
+    padding-inline: 8px !important;
+    overflow: hidden !important;
+    scrollbar-width: none !important;
+  }
+
+  .timeline-toolbar::-webkit-scrollbar {
+    display: none !important;
+  }
+
+  .timeline-toolbar .tool-group {
+    gap: 4px !important;
+    min-width: 0 !important;
+  }
+
+  .timeline-toolbar .timeline-edit-tools {
+    flex: 1 1 auto !important;
+  }
+
+  .timeline-toolbar .timeline-view-tools {
+    flex: 0 0 auto !important;
+    margin-left: 8px !important;
+  }
+
+  .timeline-toolbar button {
+    flex: 0 0 32px !important;
+    width: 32px !important;
+    min-width: 32px !important;
+    padding: 4px !important;
+    border-radius: 7px !important;
+    font-size: 0 !important;
+  }
+
+  .timeline-toolbar button svg {
+    width: 16px !important;
+    height: 16px !important;
+  }
+
+  .timeline-toolbar .fit-timeline {
+    flex-basis: 58px !important;
+    width: 58px !important;
+    min-width: 58px !important;
+    font-size: 9px !important;
+  }
+
+  .timeline-toolbar .zoom {
+    flex: 0 1 112px !important;
+    min-width: 76px !important;
+    gap: 5px !important;
+    font-size: 9px !important;
+  }
+
+  .timeline-toolbar .zoom input {
+    min-width: 38px !important;
+    width: 100% !important;
+  }
+
+  .timeline-toolbar .layer-picker {
+    flex: 0 1 100px !important;
+    min-width: 0 !important;
+    font-size: 9px !important;
+  }
+}
+
+@media (min-width: 851px) and (max-width: 1180px) {
+  .timeline-toolbar .timeline-view-tools {
+    margin-left: 4px !important;
+    gap: 3px !important;
+  }
+
+  .timeline-toolbar .timeline-edit-tools {
+    gap: 3px !important;
+  }
+
+  .timeline-toolbar button {
+    flex-basis: 28px !important;
+    width: 28px !important;
+    min-width: 28px !important;
+  }
+
+  .timeline-toolbar .fit-timeline {
+    flex-basis: 50px !important;
+    width: 50px !important;
+    min-width: 50px !important;
+  }
+
+  .timeline-toolbar .zoom {
+    flex-basis: 92px !important;
+    min-width: 68px !important;
+  }
+}
+
+@media (min-width: 851px) {
+  /* Match the reference's split browser: collections on the left, media on the right. */
+  .media-panel {
+    display: flex !important;
+    flex-direction: column !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
+    padding: 10px !important;
+  }
+
+  .library-heading {
+    flex: 0 0 auto !important;
+    min-width: 0 !important;
+    padding-bottom: 9px !important;
+    border-bottom: 1px solid #2a414d !important;
+  }
+
+  .library-browser-layout {
+    display: grid !important;
+    grid-template-columns: minmax(150px, .36fr) minmax(0, .64fr) !important;
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
+    border: 1px solid #2a414d !important;
+    border-top: 0 !important;
+    border-radius: 0 0 8px 8px !important;
+    background: #0c151c !important;
+  }
+
+  .library-folder-rail {
+    min-width: 0 !important;
+    padding: 10px 8px !important;
+    border-right: 1px solid #304954 !important;
+    background: linear-gradient(180deg, #111e26, #0e1920) !important;
+  }
+
+  .library-folder-rail > .eyebrow {
+    display: block !important;
+    padding: 2px 7px 9px !important;
+    color: #79bdc7 !important;
+    font-size: 9px !important;
+    font-weight: 750 !important;
+    letter-spacing: .14em !important;
+  }
+
+  .library-folder-rail .library-sections {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 6px !important;
+    margin: 0 !important;
+  }
+
+  .library-folder-rail .library-sections button {
+    display: flex !important;
+    justify-content: flex-start !important;
+    align-items: center !important;
+    gap: 8px !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    min-height: 35px !important;
+    padding: 6px 8px !important;
+    border: 1px solid transparent !important;
+    border-radius: 7px !important;
+    background: transparent !important;
+    color: #afc2c9 !important;
+    font-size: 10px !important;
+    line-height: 1.2 !important;
+    text-align: left !important;
+    white-space: normal !important;
+  }
+
+  .library-folder-rail .library-sections button:hover {
+    border-color: #294650 !important;
+    background: #15252d !important;
+    color: #e1f0f2 !important;
+  }
+
+  .library-folder-rail .library-sections button.active {
+    border-color: rgba(101, 203, 214, .48) !important;
+    background: linear-gradient(120deg, rgba(42, 110, 121, .35), rgba(22, 46, 54, .82)) !important;
+    color: #e5fbfc !important;
+    box-shadow: inset 2px 0 #67d1d8 !important;
+  }
+
+  .library-browser-content {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 7px !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    padding: 9px 10px !important;
+    overflow: auto !important;
+    scrollbar-color: #38545e transparent !important;
+  }
+
+  .library-browser-content .import-dropzone {
+    flex: 0 0 auto !important;
+    min-height: 66px !important;
+    padding: 7px 10px !important;
+    border-radius: 8px !important;
+  }
+
+  .library-browser-content .import-dropzone span {
+    display: block !important;
+    max-width: 100% !important;
+    font-size: 10px !important;
+    line-height: 1.25 !important;
+    text-align: center !important;
+  }
+
+  .library-browser-content .search {
+    flex: 0 0 auto !important;
+    min-height: 33px !important;
+    margin: 0 !important;
+  }
+
+  .library-browser-content .media-filters {
+    flex: 0 0 auto !important;
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 5px !important;
+  }
+
+  .library-browser-content .media-filters button {
+    min-height: 27px !important;
+    padding: 4px 8px !important;
+    font-size: 10px !important;
+  }
+
+  .library-browser-content .asset-list {
+    flex: 1 1 auto !important;
+    align-content: start !important;
+    min-width: 0 !important;
+    min-height: 100px !important;
+    overflow: auto !important;
+    padding: 2px !important;
+  }
+
+  .library-browser-content .asset-list-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+  }
+
+  .library-browser-content .asset-list-grid .asset-thumbnail {
+    height: clamp(56px, 6vw, 88px) !important;
+  }
+
+  .library-browser-content .asset-list-grid .asset-copy strong {
+    font-size: 10px !important;
+    line-height: 1.3 !important;
+  }
+
+  .library-browser-content .kiro-library-hero,
+  .library-browser-content .library-category-row,
+  .library-browser-content .library-status-card,
+  .library-browser-content .library-empty {
+    flex: 0 0 auto !important;
+    min-width: 0 !important;
+  }
+
+  .library-browser-content .panel-tip {
+    flex: 1 0 auto !important;
+    margin: 0 !important;
+    align-content: end !important;
+    font-size: 10px !important;
+  }
+
+  /* Tool actions use a consistent icon-button system with clear hover/focus states. */
+  .workspace-tools {
+    gap: 5px !important;
+    padding-inline: 10px !important;
+    background: linear-gradient(180deg, #101a22, #0d171d) !important;
+  }
+
+  .workspace-tools button,
+  .workspace-tools .button {
+    min-height: 32px !important;
+    padding: 5px 9px !important;
+    border: 1px solid #2b414c !important;
+    border-radius: 8px !important;
+    background: #121f27 !important;
+    color: #c7d9de !important;
+    font-size: 10px !important;
+    font-weight: 650 !important;
+    letter-spacing: .01em !important;
+    transition: background-color .15s ease, border-color .15s ease, color .15s ease !important;
+  }
+
+  .workspace-tools button:hover,
+  .workspace-tools .button:hover {
+    border-color: #4c8b94 !important;
+    background: #172b34 !important;
+    color: #e8fbfd !important;
+  }
+
+  .workspace-tools button:focus-visible,
+  .workspace-tools .button:focus-visible {
+    outline: 2px solid #69d2d9 !important;
+    outline-offset: 1px !important;
+  }
+
+  .workspace-tools button.active,
+  .workspace-tools button[aria-pressed="true"],
+  .workspace-tools button[aria-checked="true"] {
+    border-color: rgba(101, 203, 214, .66) !important;
+    background: linear-gradient(135deg, rgba(39, 103, 115, .54), rgba(24, 53, 62, .88)) !important;
+    color: #e3fbfc !important;
+    box-shadow: inset 0 1px rgba(170, 244, 248, .08), 0 2px 8px rgba(0,0,0,.18) !important;
+  }
+
+
+  /* Keep project actions grouped at the far right of the desktop header. */
+  .topbar {
+    flex-wrap: nowrap !important;
+  }
+
+  .top-actions {
+    flex: 0 0 auto !important;
+    justify-content: flex-end !important;
+    margin-left: auto !important;
+  }
+}

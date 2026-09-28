@@ -21,7 +21,6 @@ interface Props {
   onTime: (time: number) => void;
   onPlaying: (playing: boolean) => void;
   focus: boolean;
-  onFocus: () => void;
   selectedClip?: Clip;
   onTransform: (patch: Partial<Clip>) => void;
   onBegin: () => void;
@@ -62,7 +61,6 @@ export default function Preview({
   onTime,
   onPlaying,
   focus,
-  onFocus,
   selectedClip,
   onTransform,
   onBegin,
@@ -70,6 +68,7 @@ export default function Preview({
 }: Props) {
   const canvas = useRef<HTMLCanvasElement>(null),
     shell = useRef<HTMLDivElement>(null),
+    monitor = useRef<HTMLDivElement>(null),
     engine = useRef<Composition | undefined>(undefined),
     seekVersion = useRef(0),
     previousVolume = useRef(1),
@@ -82,8 +81,10 @@ export default function Preview({
     [ready, setReady] = useState(false),
     [volume, setVolume] = useState(1),
     [fitView, setFitView] = useState(true),
+    [isFullScreen, setIsFullScreen] = useState(false),
     [editingText, setEditingText] = useState(false);
 
+  const fullScreenIntent = useRef(false);
   const drag = useRef<
     { x: number; y: number; cx: number; cy: number } | undefined
   >(undefined);
@@ -92,7 +93,7 @@ export default function Preview({
   >(undefined);
 
   const duration = projectDuration(project);
-  const previewQuality = focus ? 1080 : 720;
+  const previewQuality = focus || isFullScreen ? 1080 : 720;
   const resourceKey = JSON.stringify(
     project.tracks
       .flatMap((t) => t.clips)
@@ -118,6 +119,36 @@ export default function Preview({
   const selectedVisible =
     movable && !!selectedClip && activeAt(selectedClip, time);
   const selectedBox = selectedVisible && selectedClip ? clipBox(selectedClip) : null;
+
+  useEffect(() => {
+    const syncFullscreen = () => {
+      const active = document.fullscreenElement === monitor.current;
+      setIsFullScreen(active);
+      if (!active && fullScreenIntent.current) {
+        fullScreenIntent.current = false;
+
+      }
+    };
+    document.addEventListener("fullscreenchange", syncFullscreen);
+    return () => document.removeEventListener("fullscreenchange", syncFullscreen);
+  }, []);
+
+  const toggleMonitorFullscreen = () => {
+    const target = monitor.current;
+    if (!target) return;
+    if (document.fullscreenElement === target) {
+      fullScreenIntent.current = false;
+
+      void document.exitFullscreen().catch(() => {});
+      return;
+    }
+    fullScreenIntent.current = true;
+
+    void target.requestFullscreen().catch(() => {
+      fullScreenIntent.current = false;
+
+    });
+  };
 
   useEffect(() => {
     playbackIntent.current = playing;
@@ -434,7 +465,7 @@ export default function Preview({
     >
       <div className="preview-heading canvas-module-heading">
         <div className="canvas-meta">
-          <strong>Canvas</strong>
+          <strong>Programa</strong>
           <i />
           <span>{project.settings.width} × {project.settings.height}</span>
           <i />
@@ -463,16 +494,16 @@ export default function Preview({
             <span>{fitView ? "Ajustar" : "Preencher"}</span>
           </button>
           <button
-            aria-label={focus ? "Sair do foco" : "Expandir canvas"}
-            title={focus ? "Sair do foco" : "Expandir canvas"}
-            onClick={onFocus}
+            aria-label={isFullScreen ? "Sair da tela cheia" : "Expandir canvas"}
+            title={isFullScreen ? "Sair da tela cheia" : "Expandir canvas"}
+            onClick={toggleMonitorFullscreen}
           >
             <Maximize2 size={16} />
           </button>
         </div>
       </div>
 
-      <div className={`preview-stage canvas-monitor ${!duration ? "canvas-monitor-empty" : ""}`}>
+      <div ref={monitor} className={`preview-stage canvas-monitor ${!duration ? "canvas-monitor-empty" : ""}`}>
         <div
           ref={shell}
           className="canvas-shell"

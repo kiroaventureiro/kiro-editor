@@ -7,17 +7,22 @@ import {
   Captions,
   Film,
   Music2,
+  SlidersHorizontal,
   AudioWaveform,
   CircleDot,
   Video,
-  SlidersHorizontal,
   WandSparkles,
   X,
 } from "lucide-react";
 import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 import MediaLibrary from "./components/MediaLibrary";
 import LibraryAdmin from "./components/LibraryAdmin";
+import CreatorHub from "./components/CreatorHub";
 import Preview from "./components/Preview";
+import SourceMonitor from "./components/SourceMonitor";
+import AudioMixer from "./components/AudioMixer";
+import ColorWheelControl from "./components/ColorWheelControl";
+import EffectsControl from "./components/EffectsControl";
 import Inspector from "./components/Inspector";
 import Timeline, { type TimelineMode } from "./components/Timeline";
 import { createEmptyProject, projectPresets } from "./editor/project";
@@ -71,6 +76,7 @@ export default function App() {
     [saveState, setSaveState] = useState("Carregando…"),
     [focus, setFocus] = useState(false),
     [drawer, setDrawer] = useState<"media" | "inspector" | "none">("none");
+  const [workspacePanel, setWorkspacePanel] = useState<"library" | "tools" | "properties">("library");
   const [projects, setProjects] = useState<KiroProject[] | null>(null),
     [exportOpen, setExportOpen] = useState(false),
     [resolution, setResolution] = useState(720),
@@ -78,14 +84,21 @@ export default function App() {
   const [timelineHeight, setTimelineHeight] = useState(() =>
       typeof window === "undefined"
         ? 280
-        : clamp(window.innerHeight * 0.38, 230, 310),
+        : window.innerWidth >= 851
+          ? clamp(window.innerHeight * 0.5, 320, 380)
+          : clamp(window.innerHeight * 0.38, 230, 310),
     ),
     [libraryWidth, setLibraryWidth] = useState(260);
   const [targetTrack, setTargetTrack] = useState("video-1");
+  const [sourceAsset, setSourceAsset] = useState<MediaAsset>();
   const [timelineMode, setTimelineMode] = useState<TimelineMode>(undefined);
   const [libraryAdminOpen, setLibraryAdminOpen] = useState(() => {
     if (typeof window === "undefined") return false;
     return new URLSearchParams(window.location.search).get("admin") === "library";
+  });
+  const [creatorHubOpen, setCreatorHubOpen] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return new URLSearchParams(window.location.search).get("hub") === "creator";
   });
   const abort = useRef<AbortController | null>(null),
     dirty = useRef(false),
@@ -173,6 +186,7 @@ export default function App() {
   const begin = () => dispatch({ type: "begin" }),
     end = () => dispatch({ type: "end" });
   const select = (c: Clip, multiple = false) => {
+    setSourceAsset(undefined);
     setSelected((ids) =>
       multiple
         ? ids.includes(c.id)
@@ -324,6 +338,7 @@ export default function App() {
     return () => window.removeEventListener("keydown", key);
   });
   const add = (asset: MediaAsset) => {
+    setSourceAsset(undefined);
     const type = asset.type === "audio" ? "audio" : "video",
       id = crypto.randomUUID();
     let start = 0;
@@ -399,15 +414,12 @@ export default function App() {
         failures.push(error(e));
       }
     }
-    if (imported.length) {
+    if (imported.length)
       edit((p) => ({ ...p, assets: [...p.assets, ...imported] }));
-      if (imported.length === 1 && !projectDuration(current.current))
-        add(imported[0]);
-    }
     setNotice(
       failures.length
-        ? failures.join(" ")
-        : `${imported.length} arquivo(s) importado(s) e armazenado(s).`,
+        ? `${imported.length} mídia(s) importada(s); ${failures.length} arquivo(s) falharam. ${failures.join(" ")}`
+        : `${imported.length} mídia(s) adicionada(s) ao Acervo. Use “Adicionar à timeline” no cartão para inserir na trilha escolhida.`,
     );
     setBusy(false);
     void navigator.storage?.persist?.().catch(() => {});
@@ -792,6 +804,170 @@ export default function App() {
     window.addEventListener("pointerup", stop, { once: true });
     window.addEventListener("pointercancel", stop, { once: true });
   };
+  const canAnalyzeSelectedMedia = !!selectedClip?.assetId && selectedClip.type !== "text";
+  const hasLockedTracks = project.tracks.some((track) => track.locked);
+  const analysisHint = !canAnalyzeSelectedMedia
+    ? "Selecione um clipe de vídeo ou áudio na timeline para liberar a análise."
+    : hasLockedTracks
+      ? "Desbloqueie as trilhas para remover pausas sem perder a sincronização."
+      : "As ações usam o clipe selecionado e preservam as demais mídias da timeline.";
+  const workspaceToolsPanel = (
+    <nav aria-label="Ferramentas do acervo" className="workspace-tools docked-tools" inert={busy || !!projects || exportOpen}>
+      <section className="tool-library-group" aria-label="Acesso e criação">
+        <h3 className="tool-library-heading">Acesso rápido</h3>
+        <div className="tool-library-actions">
+          <button
+            className={drawer === "media" ? "active" : ""}
+            aria-pressed={drawer === "media"}
+            onClick={() => { setWorkspacePanel("library"); setDrawer("media"); }}
+            title="Abrir o acervo de mídia"
+          >
+            <Film size={16} />
+            Mídia
+          </button>
+          <button
+            className={timelineMode === "video" ? "active" : ""}
+            aria-pressed={timelineMode === "video"}
+            onClick={() => {
+              setTimelineMode("video");
+              const track = project.tracks.find((t) => t.type === "video");
+              if (track) setTargetTrack(track.id);
+            }}
+            title="Mostrar as trilhas e ferramentas de vídeo"
+          >
+            <Video size={16} />
+            Vídeo
+          </button>
+          <button
+            className={timelineMode === "text" ? "active" : ""}
+            aria-pressed={timelineMode === "text"}
+            onClick={() => {
+              setTimelineMode("text");
+              const track = project.tracks.find((t) => t.type === "text");
+              if (track) setTargetTrack(track.id);
+            }}
+            title="Mostrar as trilhas e ferramentas de texto"
+          >
+            <Type size={16} />
+            Texto
+          </button>
+          <button
+            className={timelineMode === "audio" ? "active" : ""}
+            aria-pressed={timelineMode === "audio"}
+            onClick={() => {
+              setTimelineMode("audio");
+              const track = project.tracks.find((t) => t.type === "audio");
+              if (track) setTargetTrack(track.id);
+              setDrawer("media");
+            }}
+            title="Mostrar as trilhas e ferramentas de áudio"
+          >
+            <Music2 size={16} />
+            Áudio
+          </button>
+          <button
+            aria-pressed={drawer === "inspector"}
+            onClick={() => { setWorkspacePanel("properties"); setDrawer("inspector"); }}
+            title="Abrir os ajustes e propriedades do item selecionado"
+          >
+            <SlidersHorizontal size={16} />
+            Propriedades
+          </button>
+        </div>
+        <p className="tool-library-hint">Acesse uma área para ver seus controles no painel de trabalho.</p>
+      </section>
+
+      <section className="tool-library-group" aria-label="Análise de mídia">
+        <h3 className="tool-library-heading">Análise do clipe</h3>
+        <div className="tool-library-actions">
+          <button
+            onClick={() => void removeAutomaticSilence()}
+            disabled={!canAnalyzeSelectedMedia || hasLockedTracks || busy || exporting || captioning}
+            title="Detecta pausas no clipe e remove os trechos silenciosos das trilhas sincronizadas"
+            aria-describedby="tool-analysis-hint"
+          >
+            <AudioWaveform size={16} />
+            Remover pausas
+          </button>
+          <button
+            onClick={() => void markAutomaticBeats()}
+            disabled={!canAnalyzeSelectedMedia || busy || exporting || captioning}
+            title="Analisa o ritmo do clipe e adiciona marcadores de batida à régua"
+            aria-describedby="tool-analysis-hint"
+          >
+            <CircleDot size={16} />
+            Detectar batidas
+          </button>
+        </div>
+        <p className="tool-library-hint" id="tool-analysis-hint">{analysisHint}</p>
+      </section>
+
+      <section className="tool-library-group" aria-label="Legendas">
+        <h3 className="tool-library-heading">Legendas</h3>
+        <div className="tool-library-actions">
+          <button
+            onClick={() => void generateAutomaticCaptions()}
+            disabled={!canAnalyzeSelectedMedia || busy || exporting || captioning}
+            title="Transcreve o clipe selecionado e cria legendas editáveis na timeline"
+          >
+            <WandSparkles size={16} />
+            {captioning ? "Gerando legendas…" : "Gerar legendas com IA"}
+          </button>
+          <label className="button tool-library-file-button" title="Importar um arquivo de legendas SubRip">
+            <Captions size={16} />
+            Importar arquivo .SRT
+            <input
+              aria-label="Importar legendas SRT"
+              hidden
+              type="file"
+              accept=".srt"
+              disabled={busy || exporting || captioning}
+              onChange={(e) => {
+                void importCaptions(e.target.files?.[0]);
+                e.target.value = "";
+              }}
+            />
+          </label>
+        </div>
+        <p className="tool-library-hint">
+          Gere legendas a partir de um clipe ou importe um arquivo .SRT para editar o texto na timeline.
+        </p>
+      </section>
+    </nav>
+  );
+  const inspectorPanel = <Inspector
+          settings={project.settings}
+          clip={selectedClip}
+          locked={locked}
+          selectionCount={selected.length}
+          onAspect={(r) =>
+            edit((p) => ({
+              ...p,
+              settings: { ...p.settings, aspectRatio: r, ...projectPresets[r] },
+            }))
+          }
+          onChange={updateClip}
+          onBegin={begin}
+          onEnd={end}
+        />;
+  if (creatorHubOpen)
+    return (
+      <CreatorHub
+        project={project}
+        currentTime={time}
+        selectedClipId={selectedClip?.id}
+        onApplyProject={(next, message) => {
+          edit(() => next);
+          setNotice(message);
+        }}
+        onClose={() => {
+          setCreatorHubOpen(false);
+          const url = new URL(window.location.href);
+          url.searchParams.delete("hub");
+          window.history.replaceState({}, "", url);
+        }}
+      />
+    );
   if (libraryAdminOpen)
     return (
       <LibraryAdmin
@@ -824,19 +1000,22 @@ export default function App() {
             <small>STUDIO · 0.5</small>
           </div>
         </div>
-        <div className="project-name">
-          <input
-            aria-label="Nome do projeto"
-            value={project.name}
-            onFocus={begin}
-            onBlur={end}
-            onChange={(e) => edit((p) => ({ ...p, name: e.target.value }))}
-          />
-          <small className={saveState === "Falha ao salvar" ? "error" : ""}>
-            {saveState}
-          </small>
-        </div>
         <div className="top-actions">
+          <button
+            type="button"
+            className="top-creator-hub"
+            title="Abrir o Creator Hub"
+            onClick={() => {
+              setPlaying(false);
+              setCreatorHubOpen(true);
+              const url = new URL(window.location.href);
+              url.searchParams.set("hub", "creator");
+              window.history.replaceState({}, "", url);
+            }}
+          >
+            <WandSparkles size={15} />
+            <span>Creator Hub</span>
+          </button>
           <button
             onClick={() => void newProject()}
             disabled={busy || exporting}
@@ -873,117 +1052,28 @@ export default function App() {
             }}
             disabled={busy || !projectDuration(project) || exporting}
           >
-            <Download size={17} />
+            <Download size={16} />
             <span>Exportar</span>
           </button>
         </div>
       </header>
-      <nav className="workspace-tools" inert={busy || !!projects || exportOpen}>
-        <div>
-          <button
-            className={drawer === "media" ? "active" : ""}
-            onClick={() => setDrawer(drawer === "media" ? "none" : "media")}
-          >
-            <Film size={16} />
-            Mídia
-          </button>
-          <button
-            className={timelineMode === "video" ? "active" : ""}
-            onClick={() => {
-              setTimelineMode("video");
-              const track = project.tracks.find((t) => t.type === "video");
-              if (track) setTargetTrack(track.id);
-            }}
-            title="Editar camadas de vídeo"
-          >
-            <Video size={16} />
-            Vídeo
-          </button>
-          <button
-            className={timelineMode === "text" ? "active" : ""}
-            onClick={() => setTimelineMode("text")}
-            title="Editar textos"
-          >
-            <Type size={16} />
-            Texto
-          </button>
-          <button
-            className={timelineMode === "audio" ? "active" : ""}
-            onClick={() => {
-              setTimelineMode("audio");
-              const track = project.tracks.find((t) => t.type === "audio");
-              if (track) setTargetTrack(track.id);
-              setDrawer("media");
-            }}
-            title="Editar áudio"
-          >
-            <Music2 size={16} />
-            Áudio
-          </button>
-          {selectedClip && selectedClip.type !== "text" && (
-            <button
-              onClick={() => void removeAutomaticSilence()}
-              disabled={busy || exporting || captioning}
-              title="Detectar pausas e removê-las de todas as camadas sincronizadas"
-            >
-              <AudioWaveform size={16} />
-              Remover silêncio
-            </button>
-          )}
-          {selectedClip && selectedClip.type !== "text" && (
-            <button
-              onClick={() => void markAutomaticBeats()}
-              disabled={busy || exporting || captioning}
-              title="Detectar batidas e criar marcadores magnéticos na timeline"
-            >
-              <CircleDot size={16} />
-              Marcar batidas
-            </button>
-          )}
-          <button
-            onClick={() => void generateAutomaticCaptions()}
-            disabled={busy || exporting || captioning}
-            title="Gerar legendas automaticamente a partir do vídeo ou áudio selecionado"
-          >
-            <WandSparkles size={16} />
-            {captioning ? "Gerando legendas…" : "Legendas IA"}
-          </button>
-          <label className="button">
-            <Captions size={16} />
-            Legendas SRT
-            <input
-              aria-label="Importar legendas SRT"
-              hidden
-              type="file"
-              accept=".srt"
-              disabled={busy || exporting || captioning}
-              onChange={(e) => {
-                void importCaptions(e.target.files?.[0]);
-                e.target.value = "";
-              }}
-            />
-          </label>
-        </div>
-        <button
-          onClick={() =>
-            setDrawer(drawer === "inspector" ? "none" : "inspector")
-          }
-        >
-          <SlidersHorizontal size={16} />
-          Propriedades
-        </button>
-      </nav>
+      {workspaceToolsPanel}
       <main className="workspace" inert={exportOpen || !!projects || busy}>
         <MediaLibrary
           tracks={project.tracks}
           targetTrack={targetTrack}
           onTargetTrack={setTargetTrack}
           assets={project.assets}
+          onPreviewAsset={setSourceAsset}
           onImport={importFiles}
           onAddToTimeline={add}
           onAddLibraryAsset={addLibraryAsset}
           onRelink={relink}
           busy={busy}
+          activeWorkspace={workspacePanel}
+          onWorkspaceChange={setWorkspacePanel}
+          workspaceTools={workspaceToolsPanel}
+          inspectorPanel={inspectorPanel}
         />
         <div
           role="separator"
@@ -992,33 +1082,69 @@ export default function App() {
           className="library-resizer"
           onPointerDown={(e) => resize(e, "horizontal")}
         />
-        <Preview
-          project={project}
-          time={time}
-          playing={playing}
-          onTime={setTime}
-          onPlaying={setPlaying}
-          focus={focus}
-          onFocus={() => setFocus(!focus)}
-          selectedClip={locked ? undefined : selectedClip}
-          onTransform={updateClip}
-          onBegin={begin}
-          onEnd={end}
-        />
-        <Inspector
-          settings={project.settings}
-          clip={selectedClip}
-          locked={locked}
-          onAspect={(r) =>
-            edit((p) => ({
-              ...p,
-              settings: { ...p.settings, aspectRatio: r, ...projectPresets[r] },
-            }))
-          }
-          onChange={updateClip}
-          onBegin={begin}
-          onEnd={end}
-        />
+        <div className="editor-right-stage">
+          <div className="monitor-deck" aria-label="Monitores de vídeo">
+            <SourceMonitor
+              asset={
+                selectedClip?.assetId
+                  ? project.assets.find((asset) => asset.id === selectedClip.assetId)
+                  : sourceAsset
+              }
+              clip={selectedClip}
+            />
+            <Preview
+              project={project}
+              time={time}
+              playing={playing}
+              onTime={setTime}
+              onPlaying={setPlaying}
+              focus={focus}
+              selectedClip={locked ? undefined : selectedClip}
+              onTransform={updateClip}
+              onBegin={begin}
+              onEnd={end}
+            />
+          </div>
+        </div>
+        <section className="workspace-control-dock" aria-label="Ajustes de imagem e áudio">
+          <section className="workspace-dock-image" aria-label="Ajuste de imagem">
+            <EffectsControl
+              clip={selectedClip}
+              disabled={locked}
+              onChange={updateClip}
+              onBegin={begin}
+              onEnd={end}
+            />
+          </section>
+          <section className="workspace-dock-audio" aria-label="Ajuste de áudio">
+            <AudioMixer
+              tracks={project.tracks}
+              clip={selectedClip}
+              onTrack={(id, patch) =>
+                edit((p) => ({
+                  ...p,
+                  tracks: p.tracks.map((track) =>
+                    track.id === id ? { ...track, ...patch } : track,
+                  ),
+                }))
+              }
+              onClipChange={updateClip}
+              onBegin={begin}
+              onEnd={end}
+            />
+          </section>
+          <section className="workspace-dock-color" aria-label="Ajuste de cores">
+            <ColorWheelControl
+              clip={selectedClip}
+              disabled={locked}
+              onChange={updateClip}
+              onBegin={begin}
+              onEnd={end}
+            />
+          </section>
+        </section>
+        <div className="mobile-inspector">{inspectorPanel}</div>
+
       </main>
       <div
         className="timeline-resizer"
