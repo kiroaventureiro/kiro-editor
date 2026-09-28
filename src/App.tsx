@@ -1082,35 +1082,35 @@ export default function App() {
               onEnd={end}
             />
           </div>
-          <section className="workspace-control-dock" aria-label="Ajustes de imagem e áudio">
-            <section className="workspace-dock-image" aria-label="Ajuste de imagem">
-              <EffectsControl
-                clip={selectedClip}
-                disabled={locked}
-                onChange={updateClip}
-                onBegin={begin}
-                onEnd={end}
-              />
-            </section>
-            <section className="workspace-dock-audio" aria-label="Ajuste de áudio">
-              <AudioMixer
-                tracks={project.tracks}
-                clip={selectedClip}
-                onTrack={(id, patch) =>
-                  edit((p) => ({
-                    ...p,
-                    tracks: p.tracks.map((track) =>
-                      track.id === id ? { ...track, ...patch } : track,
-                    ),
-                  }))
-                }
-                onClipChange={updateClip}
-                onBegin={begin}
-                onEnd={end}
-              />
-            </section>
-          </section>
         </div>
+        <section className="workspace-control-dock" aria-label="Ajustes de imagem e áudio">
+          <section className="workspace-dock-image" aria-label="Ajuste de imagem">
+            <EffectsControl
+              clip={selectedClip}
+              disabled={locked}
+              onChange={updateClip}
+              onBegin={begin}
+              onEnd={end}
+            />
+          </section>
+          <section className="workspace-dock-audio" aria-label="Ajuste de áudio">
+            <AudioMixer
+              tracks={project.tracks}
+              clip={selectedClip}
+              onTrack={(id, patch) =>
+                edit((p) => ({
+                  ...p,
+                  tracks: p.tracks.map((track) =>
+                    track.id === id ? { ...track, ...patch } : track,
+                  ),
+                }))
+              }
+              onClipChange={updateClip}
+              onBegin={begin}
+              onEnd={end}
+            />
+          </section>
+        </section>
         <div className="mobile-inspector">{inspectorPanel}</div>
 
       </main>
