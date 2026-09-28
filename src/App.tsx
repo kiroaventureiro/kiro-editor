@@ -1066,6 +1066,13 @@ export default function App() {
           busy={busy}
           activeWorkspace={workspacePanel}
           onWorkspaceChange={setWorkspacePanel}
+          onOpenCreatorHub={() => {
+            setPlaying(false);
+            setCreatorHubOpen(true);
+            const url = new URL(window.location.href);
+            url.searchParams.set("hub", "creator");
+            window.history.replaceState({}, "", url);
+          }}
           workspaceTools={workspaceToolsPanel}
           inspectorPanel={inspectorPanel}
         />
