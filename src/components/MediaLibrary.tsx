@@ -1,11 +1,9 @@
 import {
   Clock3,
   FolderOpen,
-  Grid2X2,
   Eye,
   Heart,
   Link2,
-  List,
   Plus,
   Search,
   Sparkles,
@@ -34,6 +32,7 @@ interface Props {
   busy: boolean;
   activeWorkspace: "library" | "tools" | "properties";
   onWorkspaceChange: (workspace: "library" | "tools" | "properties") => void;
+  onOpenCreatorHub: () => void;
   workspaceTools: ReactNode;
   inspectorPanel: ReactNode;
 }
@@ -88,13 +87,13 @@ export default function MediaLibrary({
   busy,
   activeWorkspace,
   onWorkspaceChange,
+  onOpenCreatorHub,
   workspaceTools,
   inspectorPanel,
 }: Props) {
   const [section, setSection] = useState<LibrarySection>("mine");
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<Filter>("all");
-  const [view, setView] = useState<"grid" | "list">("grid");
   const [libraryCategory, setLibraryCategory] = useState<
     "all" | LibraryCategory
   >("all");
@@ -244,22 +243,15 @@ export default function MediaLibrary({
             {sectionTitle} <small>{visibleAssets.length}</small>
           </h2>
         </div>
-        <div className="library-view-toggle" role="group" aria-label="Modo de visualização">
-          <button
-            className={view === "grid" ? "active" : ""}
-            aria-label="Visualizar em grade" title="Visualizar em grade"
-            onClick={() => setView("grid")}
-          >
-            <Grid2X2 size={15} />
-          </button>
-          <button
-            className={view === "list" ? "active" : ""}
-            aria-label="Visualizar em lista" title="Visualizar em lista"
-            onClick={() => setView("list")}
-          >
-            <List size={16} />
-          </button>
-        </div>
+        <button
+          type="button"
+          className="library-creator-hub"
+          onClick={onOpenCreatorHub}
+          title="Abrir o Creator Hub"
+        >
+          <Sparkles size={15} />
+          <span>Creator Hub</span>
+        </button>
       </div>
 
       <nav className="workspace-dock-tabs" aria-label="Painel de trabalho" role="tablist">
@@ -440,7 +432,7 @@ export default function MediaLibrary({
         </div>
       )}
 
-      <div className={`asset-list asset-list-${view}`}>
+      <div className="asset-list">
         {visibleAssets.map((item) => {
           const asset = item.asset;
           const key = itemKey(item.source, asset.id);
