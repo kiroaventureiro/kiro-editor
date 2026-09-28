@@ -880,3 +880,14 @@
     overflow: auto !important;
   }
 }
+
+
+@media (min-width: 851px) {
+  .workspace-control-dock > .workspace-dock-image .effects-heading-copy strong {
+    order: 1 !important;
+  }
+
+  .workspace-control-dock > .workspace-dock-image .effects-heading-copy .dock-eyebrow {
+    order: 2 !important;
+  }
+}
