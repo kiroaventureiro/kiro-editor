@@ -104,7 +104,7 @@ try {
     "musica.wav",
   ])
     await page
-      .getByRole("button", { name: `Adicionar ${file}`, exact: true })
+      .getByRole("button", { name: `Adicionar ${file} à timeline`, exact: true })
       .click();
   await page
     .getByRole("button", { name: "Reproduzir montagem", exact: true })
