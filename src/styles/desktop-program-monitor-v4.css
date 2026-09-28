@@ -1764,3 +1764,19 @@
     transform: translateY(-50%) !important;
   }
 }
+
+@media (min-width: 851px) {
+  .workspace-control-dock > .workspace-dock-color .color-wheel-copy {
+    display: grid !important;
+    grid-template-columns: minmax(0,1fr) auto !important;
+    grid-template-rows: auto auto !important;
+    align-items: center !important;
+    gap: 4px 10px !important;
+  }
+  .workspace-control-dock > .workspace-dock-color .color-wheel-copy button {
+    position: static !important;
+    grid-column: 2 !important;
+    grid-row: 1 / 3 !important;
+    transform: none !important;
+  }
+}
