@@ -1444,3 +1444,27 @@
     border-radius: 0 !important;
   }
 }
+
+
+/* Painéis inferiores maiores no desktop e sem linhas divisórias entre imagem e áudio. */
+@media (min-width: 851px) {
+  :root { --ref-dock-height: clamp(320px, 50dvh, 380px); }
+
+  .workspace-control-dock {
+    border-top: 0 !important;
+  }
+
+  .workspace-control-dock > .workspace-dock-image,
+  .workspace-control-dock > .workspace-dock-audio {
+    border-right: 0 !important;
+  }
+
+  .workspace-control-dock > .workspace-dock-image .dock-panel-heading,
+  .workspace-control-dock > .workspace-dock-audio .dock-panel-heading {
+    border-bottom: 0 !important;
+  }
+
+  .workspace-control-dock > .workspace-dock-audio .mixer-master {
+    border-top: 0 !important;
+  }
+}
