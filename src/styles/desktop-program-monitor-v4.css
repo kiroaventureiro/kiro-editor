@@ -1468,3 +1468,64 @@
     border-top: 0 !important;
   }
 }
+
+
+/* Ajustes inferiores: cabeçalhos alinhados e abas apoiadas no fundo do painel,
+   seguindo a linguagem visual do acervo, sem moldura envolvendo os botões. */
+@media (min-width: 851px) {
+  .workspace-control-dock > .workspace-dock-image .dock-panel-heading,
+  .workspace-control-dock > .workspace-dock-audio .dock-panel-heading {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    min-height: 30px !important;
+    padding: 0 3px 5px !important;
+    text-align: left !important;
+  }
+
+  .workspace-control-dock > .workspace-dock-image .effects-heading-copy,
+  .workspace-control-dock > .workspace-dock-audio .mixer-heading-copy {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    gap: 7px !important;
+    width: auto !important;
+    min-width: 0 !important;
+    text-align: left !important;
+  }
+
+  .workspace-control-dock > .workspace-dock-image .dock-tool-tabs,
+  .workspace-control-dock > .workspace-dock-audio .dock-tool-tabs {
+    display: flex !important;
+    align-items: stretch !important;
+    gap: 4px !important;
+    padding: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+  }
+
+  .workspace-control-dock > .workspace-dock-image .dock-tool-tabs button,
+  .workspace-control-dock > .workspace-dock-audio .dock-tool-tabs button {
+    flex: 1 1 0 !important;
+    min-height: 31px !important;
+    padding: 5px 8px !important;
+    border: 1px solid transparent !important;
+    border-radius: 6px !important;
+    background: transparent !important;
+    color: #a9bec5 !important;
+    text-align: center !important;
+  }
+
+  .workspace-control-dock > .workspace-dock-image .dock-tool-tabs button[aria-selected="true"],
+  .workspace-control-dock > .workspace-dock-audio .dock-tool-tabs button[aria-selected="true"] {
+    border-color: #2a414d !important;
+    background: #0e1920 !important;
+    color: #dff8fa !important;
+  }
+
+  .workspace-control-dock > .workspace-dock-image .dock-tool-content,
+  .workspace-control-dock > .workspace-dock-audio .audio-tool-content {
+    padding: 6px 2px 2px !important;
+  }
+}
