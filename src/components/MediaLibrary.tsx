@@ -228,7 +228,7 @@ export default function MediaLibrary({
 
   const sectionTitle = {
     mine: "Meus arquivos",
-    kiro: "Biblioteca KIRO"
+    kiro: "Biblioteca KIRO",
     favorites: "Favoritos",
     recent: "Recentes",
   }[section];
