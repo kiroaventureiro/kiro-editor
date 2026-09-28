@@ -259,6 +259,8 @@
 /* Clear media actions: preview and insertion are explicit, labeled choices. */
 @media (min-width: 851px) {
   .library-browser-content .asset-card {
+    display: grid !important;
+    position: relative !important;
     grid-template-columns: minmax(54px, 64px) minmax(0, 1fr) !important;
     grid-template-areas:
       "thumbnail copy"
@@ -281,6 +283,12 @@
 
   .library-browser-content .asset-actions > button,
   .library-browser-content .asset-actions > .relink {
+    position: static !important;
+    inset: auto !important;
+    z-index: auto !important;
+    opacity: 1 !important;
+    width: 100% !important;
+    height: auto !important;
     display: inline-flex !important;
     align-items: center !important;
     justify-content: center !important;
