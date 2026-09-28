@@ -79,11 +79,12 @@ export default function AudioMixer({
   return (
     <section className="audio-mixer" aria-label="Ajustes de áudio">
       <header className="dock-panel-heading">
-        <div>
-          <span className="dock-eyebrow">MONITORAMENTO</span>
+        <div className="mixer-heading-copy">
           <strong><AudioLines size={15} aria-hidden="true" /> Ajustes de áudio</strong>
+          <span className="dock-eyebrow">
+            MONITORAMENTO · {channels.length} {channels.length === 1 ? "CANAL" : "CANAIS"}
+          </span>
         </div>
-        <span className="mixer-channel-count">{channels.length} canais</span>
       </header>
 
       <nav className="dock-tool-tabs" role="tablist" aria-label="Ferramentas de áudio">
@@ -92,8 +93,13 @@ export default function AudioMixer({
             key={value}
             type="button"
             role="tab"
+            id={`audio-tab-${value}`}
+            aria-controls="audio-tool-panel"
             aria-selected={tool === value}
             disabled={(value === "clip" || value === "fades") && !audioClip}
+            title={(value === "clip" || value === "fades") && !audioClip
+              ? "Selecione um clipe de áudio ou vídeo na timeline para liberar estes ajustes"
+              : undefined}
             onClick={() => setTool(value)}
           >
             {label}
@@ -101,7 +107,12 @@ export default function AudioMixer({
         ))}
       </nav>
 
-      <div className="audio-tool-content" role="tabpanel">
+      <div
+        className="audio-tool-content"
+        id="audio-tool-panel"
+        role="tabpanel"
+        aria-labelledby={`audio-tab-${tool}`}
+      >
         {tool === "mixer" && (
           <div className="mixer-channels">
             {channels.length ? channels.map((track) => {
@@ -164,8 +175,8 @@ export default function AudioMixer({
         {tool === "fades" && audioClip && (
           <div className="audio-clip-controls">
             <span className="dock-tool-kicker">ENTRADAS E SAÍDAS SUAVES · {audioClip.name}</span>
-            {clipRange("Fade de entrada", "fadeIn", 0, Math.min(5, audioClip.duration / 2), 0.05, 0, (v) => `${v.toFixed(2)} s`)}
-            {clipRange("Fade de saída", "fadeOut", 0, Math.min(5, audioClip.duration / 2), 0.05, 0, (v) => `${v.toFixed(2)} s`)}
+            {clipRange("Atenuação de entrada", "fadeIn", 0, Math.min(5, audioClip.duration / 2), 0.05, 0, (v) => `${v.toFixed(2)} s`)}
+            {clipRange("Atenuação de saída", "fadeOut", 0, Math.min(5, audioClip.duration / 2), 0.05, 0, (v) => `${v.toFixed(2)} s`)}
             <p>Os fades são aplicados na prévia e também na exportação.</p>
           </div>
         )}
@@ -173,7 +184,7 @@ export default function AudioMixer({
 
       <footer className="mixer-master">
         <span>SAÍDA DO PROJETO</span>
-        <span>Controles afetam a reprodução e a exportação</span>
+        <span>A mixagem vale para a reprodução e a exportação</span>
       </footer>
     </section>
   );
