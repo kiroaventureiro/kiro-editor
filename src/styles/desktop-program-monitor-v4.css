@@ -1798,3 +1798,62 @@
   .workspace-control-dock { grid-template-rows: minmax(112px,1fr) 120px !important; }
   .workspace-control-dock > .workspace-dock-color .color-wheel { width:76px !important; height:76px !important; margin-top:18px !important; }
 }
+
+
+/* Roda de cores maior e centralizada na faixa inferior do desktop. */
+@media (min-width: 851px) {
+  .workspace-control-dock > .workspace-dock-color {
+    justify-content: center !important;
+  }
+
+  .workspace-control-dock > .workspace-dock-color .color-wheel-control {
+    position: relative !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 20px !important;
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 auto !important;
+  }
+
+  .workspace-control-dock > .workspace-dock-color .color-wheel {
+    position: absolute !important;
+    left: 50% !important;
+    top: 50% !important;
+    width: 118px !important;
+    height: 118px !important;
+    margin: 20px 0 0 !important;
+    transform: translate(-50%, -50%) !important;
+  }
+
+  .workspace-control-dock > .workspace-dock-color .color-wheel-center {
+    top: auto !important;
+    bottom: calc(50% + 63px) !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+  }
+
+  .workspace-control-dock > .workspace-dock-color .color-wheel-copy {
+    position: absolute !important;
+    left: calc(50% + 82px) !important;
+    top: 50% !important;
+    width: min(34vw, 360px) !important;
+    padding: 0 !important;
+    transform: translateY(-50%) !important;
+  }
+
+  .workspace-control-dock > .workspace-dock-color .color-wheel-copy button {
+    position: absolute !important;
+    left: calc(100% + 12px) !important;
+    right: auto !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+  }
+}
+
+@media (min-width: 851px) and (max-height: 760px) {
+  .workspace-control-dock > .workspace-dock-color .color-wheel { width:104px !important; height:104px !important; }
+  .workspace-control-dock > .workspace-dock-color .color-wheel-center { bottom: calc(50% + 56px) !important; }
+  .workspace-control-dock > .workspace-dock-color .color-wheel-copy { left: calc(50% + 72px) !important; width:min(32vw,330px) !important; }
+}
