@@ -68,7 +68,8 @@ try {
   const errors = [];
   page.on("pageerror", (e) => errors.push(e.message));
   await page.goto("http://127.0.0.1:4173");
-  await page.getByText("Salvo neste navegador", { exact: true }).waitFor();
+  await page.getByRole("button", { name: "Exportar", exact: true }).waitFor();
+  assert.equal(await page.getByText("Salvo neste navegador", { exact: true }).count(), 0);
   const workspaceTabs = page.getByRole("tablist", {
     name: "Painel de trabalho",
   });
@@ -83,9 +84,8 @@ try {
   await page.getByRole("heading", { name: "Propriedades", exact: true }).waitFor();
   await page.getByRole("tab", { name: "Acervo", exact: true }).click();
   assert.equal(
-    await page.getByText("Salvo neste navegador", { exact: true })
-      .getAttribute("aria-live"),
-    "polite",
+    await page.getByText("Salvo neste navegador", { exact: true }).count(),
+    0,
   );
   await page
     .getByLabel("Importar mídia", { exact: true })
@@ -189,7 +189,7 @@ try {
   await page.waitForTimeout(800);
   await page.screenshot({ path: `${output}/desktop.png` });
   await page.reload();
-  await page.getByText("Salvo neste navegador", { exact: true }).waitFor();
+  await page.getByRole("button", { name: "Exportar", exact: true }).waitFor();
   assert.equal(await page.locator(".asset-card").count(), 4);
   assert.equal(await page.locator(".missing").count(), 0);
   assert.equal(await page.locator(".clip").count(), 5);
