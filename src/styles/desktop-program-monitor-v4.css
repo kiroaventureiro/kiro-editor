@@ -1622,3 +1622,114 @@
   .workspace-control-dock > .workspace-dock-color .color-wheel { flex-basis: 84px !important; width:84px !important; height:84px !important; }
   .workspace-control-dock > .workspace-dock-color .color-wheel-center { inset:22px !important; }
 }
+
+
+/* Sem divisórias nos ajustes; roda cromática integral com leitura externa do matiz. */
+@media (min-width: 851px) {
+  .workspace-control-dock,
+  .workspace-control-dock > .workspace-dock-image,
+  .workspace-control-dock > .workspace-dock-audio,
+  .workspace-control-dock > .workspace-dock-color,
+  .workspace-control-dock .dock-panel-heading,
+  .workspace-control-dock .mixer-master {
+    border: 0 !important;
+    box-shadow: none !important;
+  }
+
+  .workspace-control-dock > .workspace-dock-image,
+  .workspace-control-dock > .workspace-dock-audio {
+    background: transparent !important;
+  }
+
+  .workspace-control-dock > .workspace-dock-color {
+    grid-template-columns: 120px minmax(0,1fr) auto !important;
+    justify-content: stretch !important;
+    padding: 8px 18px !important;
+    background: transparent !important;
+  }
+
+  .workspace-control-dock > .workspace-dock-color .color-wheel-control {
+    display: contents !important;
+  }
+
+  .workspace-control-dock > .workspace-dock-color .color-wheel {
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+    position: relative !important;
+    justify-self: center !important;
+    align-self: center !important;
+    overflow: visible !important;
+    flex: none !important;
+    width: 96px !important;
+    height: 96px !important;
+    margin: 0 0 20px !important;
+    border: 1px solid rgba(235,250,255,.62) !important;
+    background: conic-gradient(from 0deg, #ff284f 0deg, #ff9c20 48deg, #f5ee27 92deg, #66e548 140deg, #10dbb5 188deg, #1688ff 236deg, #724cff 282deg, #e52bce 326deg, #ff284f 360deg) !important;
+    box-shadow: 0 8px 18px rgba(0,0,0,.42), 0 0 18px rgba(43,180,195,.2), inset 2px 3px 8px rgba(255,255,255,.34), inset -6px -8px 13px rgba(0,0,0,.32) !important;
+  }
+
+  .workspace-control-dock > .workspace-dock-color .color-wheel::before {
+    display: none !important;
+  }
+
+  .workspace-control-dock > .workspace-dock-color .color-wheel-center {
+    inset: auto !important;
+    top: calc(100% + 5px) !important;
+    left: 50% !important;
+    z-index: 3 !important;
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 5px !important;
+    width: max-content !important;
+    padding: 2px 6px !important;
+    transform: translateX(-50%) !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    color: #b5cbd0 !important;
+  }
+
+  .workspace-control-dock > .workspace-dock-color .color-wheel-center small,
+  .workspace-control-dock > .workspace-dock-color .color-wheel-center strong {
+    color: #dff8fa !important;
+    font-size: 10px !important;
+    line-height: 1.2 !important;
+    white-space: nowrap !important;
+  }
+
+  .workspace-control-dock > .workspace-dock-color .color-wheel-copy {
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    justify-content: center !important;
+    gap: 6px !important;
+    padding: 0 14px !important;
+    text-align: left !important;
+  }
+
+  .workspace-control-dock > .workspace-dock-color .color-wheel-title {
+    justify-content: flex-start !important;
+    text-align: left !important;
+  }
+
+  .workspace-control-dock > .workspace-dock-color .color-wheel-copy p {
+    margin: 0 !important;
+    text-align: left !important;
+    line-height: 1.4 !important;
+  }
+
+  .workspace-control-dock > .workspace-dock-color .color-wheel-copy button {
+    grid-column: 3 !important;
+    grid-row: 1 !important;
+    align-self: center !important;
+  }
+}
+
+@media (min-width: 851px) and (max-height: 700px) {
+  .workspace-control-dock > .workspace-dock-color .color-wheel { width: 84px !important; height:84px !important; margin-bottom:18px !important; }
+}
