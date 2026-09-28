@@ -59,10 +59,9 @@ button[aria-disabled="true"],
 }
 
 .brand-mark {
-  border: 1px solid rgba(142, 232, 197, 0.32);
-  background:
-    radial-gradient(circle at 30% 22%, rgba(142, 232, 197, 0.2), transparent 58%),
-    var(--kiro-ui-surface-raised);
+  border: 0;
+  background: transparent;
+  box-shadow: none;
 }
 
 .project-name input {
