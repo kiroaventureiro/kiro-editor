@@ -415,7 +415,7 @@ export default function App() {
       edit((p) => ({ ...p, assets: [...p.assets, ...imported] }));
     setNotice(
       failures.length
-        ? failures.join(" ")
+        ? `${imported.length} mídia(s) importada(s); ${failures.length} arquivo(s) falharam. ${failures.join(" ")}`
         : `${imported.length} mídia(s) adicionada(s) ao Acervo. Use “Adicionar à timeline” no cartão para inserir na trilha escolhida.`,
     );
     setBusy(false);
