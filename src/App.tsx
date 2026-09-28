@@ -75,7 +75,7 @@ export default function App() {
     [saveState, setSaveState] = useState("Carregando…"),
     [focus, setFocus] = useState(false),
     [drawer, setDrawer] = useState<"media" | "inspector" | "none">("none");
-  const [workspacePanel, setWorkspacePanel] = useState<"library" | "image" | "audio" | "tools" | "properties">("library");
+  const [workspacePanel, setWorkspacePanel] = useState<"library" | "tools" | "properties">("library");
   const [projects, setProjects] = useState<KiroProject[] | null>(null),
     [exportOpen, setExportOpen] = useState(false),
     [resolution, setResolution] = useState(720),
@@ -1051,28 +1051,6 @@ export default function App() {
           onWorkspaceChange={setWorkspacePanel}
           workspaceTools={workspaceToolsPanel}
           inspectorPanel={inspectorPanel}
-          imagePanel={<EffectsControl
-            clip={selectedClip}
-            disabled={locked}
-            onChange={updateClip}
-            onBegin={begin}
-            onEnd={end}
-          />}
-          audioPanel={<AudioMixer
-            tracks={project.tracks}
-            clip={selectedClip}
-            onTrack={(id, patch) =>
-              edit((p) => ({
-                ...p,
-                tracks: p.tracks.map((track) =>
-                  track.id === id ? { ...track, ...patch } : track,
-                ),
-              }))
-            }
-            onClipChange={updateClip}
-            onBegin={begin}
-            onEnd={end}
-          />}
         />
         <div
           role="separator"
@@ -1081,27 +1059,57 @@ export default function App() {
           className="library-resizer"
           onPointerDown={(e) => resize(e, "horizontal")}
         />
-        <div className="monitor-deck" aria-label="Monitores de vídeo">
-          <SourceMonitor
-            asset={
-              selectedClip?.assetId
-                ? project.assets.find((asset) => asset.id === selectedClip.assetId)
-                : sourceAsset
-            }
-            clip={selectedClip}
-          />
-          <Preview
-            project={project}
-            time={time}
-            playing={playing}
-            onTime={setTime}
-            onPlaying={setPlaying}
-            focus={focus}
-            selectedClip={locked ? undefined : selectedClip}
-            onTransform={updateClip}
-            onBegin={begin}
-            onEnd={end}
-          />
+        <div className="editor-right-stage">
+          <div className="monitor-deck" aria-label="Monitores de vídeo">
+            <SourceMonitor
+              asset={
+                selectedClip?.assetId
+                  ? project.assets.find((asset) => asset.id === selectedClip.assetId)
+                  : sourceAsset
+              }
+              clip={selectedClip}
+            />
+            <Preview
+              project={project}
+              time={time}
+              playing={playing}
+              onTime={setTime}
+              onPlaying={setPlaying}
+              focus={focus}
+              selectedClip={locked ? undefined : selectedClip}
+              onTransform={updateClip}
+              onBegin={begin}
+              onEnd={end}
+            />
+          </div>
+          <section className="workspace-control-dock" aria-label="Ajustes de imagem e áudio">
+            <section className="workspace-dock-image" aria-label="Ajuste de imagem">
+              <EffectsControl
+                clip={selectedClip}
+                disabled={locked}
+                onChange={updateClip}
+                onBegin={begin}
+                onEnd={end}
+              />
+            </section>
+            <section className="workspace-dock-audio" aria-label="Ajuste de áudio">
+              <AudioMixer
+                tracks={project.tracks}
+                clip={selectedClip}
+                onTrack={(id, patch) =>
+                  edit((p) => ({
+                    ...p,
+                    tracks: p.tracks.map((track) =>
+                      track.id === id ? { ...track, ...patch } : track,
+                    ),
+                  }))
+                }
+                onClipChange={updateClip}
+                onBegin={begin}
+                onEnd={end}
+              />
+            </section>
+          </section>
         </div>
         <div className="mobile-inspector">{inspectorPanel}</div>
 
