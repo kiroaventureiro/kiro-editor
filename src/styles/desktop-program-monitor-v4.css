@@ -499,3 +499,38 @@
     justify-self: center !important;
   }
 }
+
+
+/* A rolagem pertence ao painel inteiro, não ao conteúdo interno das ferramentas. */
+@media (min-width: 851px) {
+  .media-panel > .workspace-dock-tool-panel {
+    display: block !important;
+    flex: 1 1 0% !important;
+    width: 100% !important;
+    height: 0 !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    box-sizing: border-box !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    overscroll-behavior-y: contain !important;
+    scrollbar-width: thin !important;
+    scrollbar-color: #38545e #0c151c !important;
+    touch-action: pan-y !important;
+  }
+
+  .media-panel > .workspace-dock-tool-panel > .workspace-tools.docked-tools {
+    flex: 0 0 auto !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: max-content !important;
+    max-height: none !important;
+    overflow: visible !important;
+    overscroll-behavior: auto !important;
+    touch-action: auto !important;
+  }
+
+  .media-panel .workspace-tools.docked-tools > .tool-library-group {
+    flex: 0 0 auto !important;
+  }
+}
