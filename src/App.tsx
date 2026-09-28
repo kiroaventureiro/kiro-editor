@@ -863,20 +863,6 @@ export default function App() {
             Áudio
           </button>
           <button
-            className="creator-hub-tool"
-            onClick={() => {
-              setPlaying(false);
-              setCreatorHubOpen(true);
-              const url = new URL(window.location.href);
-              url.searchParams.set("hub", "creator");
-              window.history.replaceState({}, "", url);
-            }}
-            title="Abrir o Creator Hub para criação e conexões de IA"
-          >
-            <WandSparkles size={16} />
-            Creator Hub
-          </button>
-          <button
             aria-pressed={drawer === "inspector"}
             onClick={() => { setWorkspacePanel("properties"); setDrawer("inspector"); }}
             title="Abrir os ajustes e propriedades do item selecionado"
