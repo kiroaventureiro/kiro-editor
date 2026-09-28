@@ -1427,3 +1427,20 @@
     border-top: 0 !important;
   }
 }
+
+
+/* Remove apenas as bordas laterais que enquadram o painel esquerdo do acervo. */
+@media (min-width: 851px) {
+  .app-shell .media-panel {
+    border-left: 0 !important;
+    border-right: 0 !important;
+  }
+
+  .app-shell .media-panel > .library-browser-layout,
+  .app-shell .media-panel > .workspace-dock-tool-panel,
+  .app-shell .media-panel > .workspace-dock-properties {
+    border-left: 0 !important;
+    border-right: 0 !important;
+    border-radius: 0 !important;
+  }
+}
