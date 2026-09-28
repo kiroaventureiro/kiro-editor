@@ -116,7 +116,7 @@ export default function EffectsControl({
       </nav>
 
       <div
-        className="dock-tool-content"
+        className={`dock-tool-content dock-tool-content-${tool}`}
         id="image-tool-panel"
         role="tabpanel"
         aria-labelledby={`image-tab-${tool}`}
