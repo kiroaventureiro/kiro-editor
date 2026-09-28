@@ -889,12 +889,13 @@
     text-align: left !important;
   }
 
-  .workspace-control-dock > .workspace-dock-image .effects-heading-copy .dock-eyebrow {
+  .workspace-control-dock > .workspace-dock-image .effects-heading-copy strong {
     order: 1 !important;
-    text-align: left !important;
   }
 
-  .workspace-control-dock > .workspace-dock-image .effects-heading-copy strong {
+  .workspace-control-dock > .workspace-dock-image .effects-heading-copy .dock-eyebrow {
     order: 2 !important;
+    margin-left: auto !important;
+    text-align: right !important;
   }
 }
