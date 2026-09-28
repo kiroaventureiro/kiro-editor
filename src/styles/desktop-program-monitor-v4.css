@@ -1,6 +1,6 @@
 /* Desktop program monitor and docked image/audio tools. */
 @media (min-width: 851px) {
-  .workspace-dock-tabs { grid-template-columns: repeat(5, minmax(0, 1fr)) !important; }
+  .workspace-dock-tabs { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }
   .workspace-dock-tabs button {
     padding-inline: 4px !important; font-size: clamp(8px, .68vw, 10px) !important;
     white-space: nowrap !important;
@@ -186,4 +186,67 @@
   .workspace-dock-image .effect-control-hint {
     margin-top: 4px !important; padding: 5px 7px !important; font-size: 10px !important; line-height: 1.25 !important;
   }
+}
+
+
+/* Desktop composition: monitors above, persistent image/audio controls below. */
+@media (min-width: 851px) {
+  .editor-right-stage {
+    grid-column: 3 / 5 !important;
+    grid-row: 3 !important;
+    display: grid !important;
+    grid-template-rows: minmax(0, 1.35fr) minmax(145px, .75fr) !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
+    background: #091117 !important;
+  }
+
+  .editor-right-stage > .monitor-deck {
+    grid-column: auto !important;
+    grid-row: auto !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+  }
+
+  .workspace-control-dock {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
+    border-top: 1px solid #38505b !important;
+    background: #101a22 !important;
+  }
+
+  .workspace-control-dock > .workspace-dock-image,
+  .workspace-control-dock > .workspace-dock-audio {
+    display: flex !important;
+    flex-direction: column !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
+    padding: 7px 10px !important;
+    border-right: 1px solid #2a414d !important;
+    background: #101a22 !important;
+  }
+
+  .workspace-control-dock > .workspace-dock-audio {
+    border-right: 0 !important;
+  }
+
+  .workspace-dock-image > .effects-control,
+  .workspace-dock-audio > .audio-mixer {
+    flex: 1 1 auto !important;
+    width: 100% !important;
+    height: 100% !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
+  }
+}
+
+@media (max-width: 850px) {
+  .editor-right-stage { display: contents !important; }
+  .workspace-control-dock { display: none !important; }
 }
