@@ -75,26 +75,28 @@ export default function EffectsControl({
 
   const selectionHint = unavailable ? (
     <p className="effect-control-hint">
-      Selecione um vídeo ou uma imagem na timeline para ajustar.
+      Selecione um vídeo ou imagem na timeline para liberar os ajustes abaixo.
     </p>
   ) : null;
 
   return (
     <section className="effects-control" aria-label="Ajustes de imagem">
-      <header className="dock-panel-heading">
+      <header className={`dock-panel-heading ${clip ? "has-selection" : "no-selection"}`}>
         <div className="effects-heading-copy">
           <span className="dock-eyebrow">AJUSTES VISUAIS</span>
           <strong>
             <SlidersHorizontal size={14} aria-hidden="true" /> Imagem e vídeo
           </strong>
         </div>
-        <span
-          className="effects-selection"
-          title={clip?.name ?? "Nenhum clipe selecionado"}
-          aria-label={clip?.name ? `Clipe selecionado: ${clip.name}` : "Nenhum clipe selecionado"}
-        >
-          {clip?.name ?? "Selecione um clipe"}
-        </span>
+        {clip && (
+          <span
+            className="effects-selection"
+            title={clip.name}
+            aria-label={`Clipe selecionado: ${clip.name}`}
+          >
+            {clip.name}
+          </span>
+        )}
       </header>
 
       <nav className="dock-tool-tabs" role="tablist" aria-label="Ferramentas de imagem">
@@ -120,23 +122,27 @@ export default function EffectsControl({
         aria-labelledby={`image-tab-${tool}`}
       >
         {tool === "image" && (
-          <div className="effect-control-grid">
-            {range("Brilho", "brightness", 0, 2, 0.01, 1, (v) => `${Math.round(v * 100)}%`)}
-            {range("Contraste", "contrast", 0, 2, 0.01, 1, (v) => `${Math.round(v * 100)}%`)}
-            {range("Saturação", "saturation", 0, 2, 0.01, 1, (v) => `${Math.round(v * 100)}%`)}
-            {range("Desfoque", "blur", 0, 20, 0.1, 0, (v) => v.toFixed(1))}
+          <div className="image-tool-stack">
             {selectionHint}
+            <div className="effect-control-grid">
+              {range("Brilho", "brightness", 0, 2, 0.01, 1, (v) => `${Math.round(v * 100)}%`)}
+              {range("Contraste", "contrast", 0, 2, 0.01, 1, (v) => `${Math.round(v * 100)}%`)}
+              {range("Saturação", "saturation", 0, 2, 0.01, 1, (v) => `${Math.round(v * 100)}%`)}
+              {range("Desfoque", "blur", 0, 20, 0.1, 0, (v) => v.toFixed(1))}
+            </div>
           </div>
         )}
 
         {tool === "framing" && (
-          <div className="effect-control-grid">
-            {range("Horizontal", "x", -100, 100, 1, 0, (v) => String(Math.round(v)))}
-            {range("Vertical", "y", -100, 100, 1, 0, (v) => String(Math.round(v)))}
-            {range("Escala", "scale", 0.1, 4, 0.05, 1, (v) => `${Math.round(v * 100)}%`)}
-            {range("Rotação", "rotation", -180, 180, 1, 0, (v) => `${Math.round(v)}°`)}
-            {range("Opacidade", "opacity", 0, 1, 0.01, 1, (v) => `${Math.round(v * 100)}%`)}
+          <div className="image-tool-stack">
             {selectionHint}
+            <div className="effect-control-grid">
+              {range("Horizontal", "x", -100, 100, 1, 0, (v) => String(Math.round(v)))}
+              {range("Vertical", "y", -100, 100, 1, 0, (v) => String(Math.round(v)))}
+              {range("Escala", "scale", 0.1, 4, 0.05, 1, (v) => `${Math.round(v * 100)}%`)}
+              {range("Rotação", "rotation", -180, 180, 1, 0, (v) => `${Math.round(v)}°`)}
+              {range("Opacidade", "opacity", 0, 1, 0.01, 1, (v) => `${Math.round(v * 100)}%`)}
+            </div>
           </div>
         )}
 
