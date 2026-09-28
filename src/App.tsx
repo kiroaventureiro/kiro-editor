@@ -997,18 +997,6 @@ export default function App() {
             <small>STUDIO · 0.5</small>
           </div>
         </div>
-        <div className="project-name">
-          <input
-            aria-label="Nome do projeto"
-            value={project.name}
-            onFocus={begin}
-            onBlur={end}
-            onChange={(e) => edit((p) => ({ ...p, name: e.target.value }))}
-          />
-          <small role="status" aria-live="polite" aria-atomic="true" className={saveState === "Falha ao salvar" ? "error" : ""}>
-            {saveState}
-          </small>
-        </div>
         <div className="top-actions">
           <button
             onClick={() => void newProject()}
