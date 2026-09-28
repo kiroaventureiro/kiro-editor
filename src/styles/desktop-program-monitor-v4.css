@@ -430,3 +430,35 @@
     line-height: 1.4 !important;
   }
 }
+
+
+/* Centraliza e melhora a leitura dos nomes nas ferramentas do Acervo. */
+@media (min-width: 851px) {
+  .media-panel .tool-library-heading {
+    text-align: center !important;
+  }
+
+  .media-panel .tool-library-actions > button,
+  .media-panel .tool-library-actions > .tool-library-file-button {
+    flex-direction: column !important;
+    justify-content: center !important;
+    gap: 5px !important;
+    min-height: 64px !important;
+    padding: 8px 7px !important;
+    font-size: 11px !important;
+    line-height: 1.25 !important;
+    text-align: center !important;
+    overflow-wrap: normal !important;
+    word-break: normal !important;
+  }
+
+  .media-panel .tool-library-actions > button > svg,
+  .media-panel .tool-library-actions > .tool-library-file-button > svg {
+    width: 17px !important;
+    height: 17px !important;
+  }
+
+  .media-panel .tool-library-hint {
+    text-align: center !important;
+  }
+}
