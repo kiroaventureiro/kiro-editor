@@ -1311,3 +1311,10 @@
     inset: 16px !important;
   }
 }
+
+
+/* Mais espaço no dock desktop para manter ajustes de imagem e áudio completos,
+   com a roda de cor em uma faixa própria abaixo. O mobile mantém sua composição. */
+@media (min-width: 851px) {
+  :root { --ref-dock-height: clamp(286px, 42dvh, 340px); }
+}

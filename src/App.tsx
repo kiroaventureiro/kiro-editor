@@ -84,7 +84,9 @@ export default function App() {
   const [timelineHeight, setTimelineHeight] = useState(() =>
       typeof window === "undefined"
         ? 280
-        : clamp(window.innerHeight * 0.38, 230, 310),
+        : window.innerWidth >= 851
+          ? clamp(window.innerHeight * 0.44, 286, 340)
+          : clamp(window.innerHeight * 0.38, 230, 310),
     ),
     [libraryWidth, setLibraryWidth] = useState(260);
   const [targetTrack, setTargetTrack] = useState("video-1");
