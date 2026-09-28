@@ -633,3 +633,26 @@
     box-sizing: border-box !important;
   }
 }
+
+
+/* Aviso explícito quando a seleção não admite edição individual. */
+@media (min-width: 851px) {
+  .workspace-dock-properties .inspector-selection-notice {
+    display: grid !important;
+    gap: 4px !important;
+    margin: 0 0 9px !important;
+    padding: 9px 10px !important;
+    border: 1px solid rgba(102, 208, 216, .35) !important;
+    border-radius: 7px !important;
+    background: rgba(37, 102, 114, .14) !important;
+    color: #c8dce1 !important;
+    font-size: 10px !important;
+    line-height: 1.4 !important;
+    overflow-wrap: anywhere !important;
+  }
+
+  .workspace-dock-properties .inspector-selection-notice strong {
+    color: #8ce3e6 !important;
+    font-size: 10px !important;
+  }
+}
