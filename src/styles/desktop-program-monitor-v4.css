@@ -293,7 +293,10 @@
     border-radius: 6px !important;
     background: #14222a !important;
     color: #c8dce1 !important;
-    font: 600 10px/1.1 inherit !important;
+    font-family: inherit !important;
+    font-size: 10px !important;
+    font-weight: 600 !important;
+    line-height: 1.1 !important;
     white-space: nowrap !important;
     cursor: pointer !important;
   }
