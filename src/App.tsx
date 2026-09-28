@@ -85,7 +85,7 @@ export default function App() {
       typeof window === "undefined"
         ? 280
         : window.innerWidth >= 851
-          ? clamp(window.innerHeight * 0.44, 286, 340)
+          ? clamp(window.innerHeight * 0.5, 320, 380)
           : clamp(window.innerHeight * 0.38, 230, 310),
     ),
     [libraryWidth, setLibraryWidth] = useState(260);
