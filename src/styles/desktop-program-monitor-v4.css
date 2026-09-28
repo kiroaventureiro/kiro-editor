@@ -656,3 +656,125 @@
     font-size: 10px !important;
   }
 }
+
+
+/* Legibilidade dos ajustes visuais no dock estreito do desktop. */
+@media (min-width: 851px) {
+  .workspace-control-dock > .workspace-dock-image .effects-control .dock-panel-heading {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+    grid-template-rows: auto auto !important;
+    align-content: start !important;
+    justify-content: stretch !important;
+    gap: 3px !important;
+    min-width: 0 !important;
+    min-height: 44px !important;
+    height: auto !important;
+    padding: 0 2px 5px !important;
+  }
+
+  .workspace-control-dock > .workspace-dock-image .effects-heading-copy {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 2px !important;
+    min-width: 0 !important;
+  }
+
+  .workspace-control-dock > .workspace-dock-image .dock-panel-heading .dock-eyebrow {
+    color: #7da5ae !important;
+    font-size: 8px !important;
+    letter-spacing: .1em !important;
+    line-height: 1.2 !important;
+  }
+
+  .workspace-control-dock > .workspace-dock-image .dock-panel-heading strong {
+    display: flex !important;
+    align-items: center !important;
+    gap: 5px !important;
+    min-width: 0 !important;
+    color: #e6f1f3 !important;
+    font-size: 12px !important;
+    line-height: 1.2 !important;
+    white-space: normal !important;
+  }
+
+  .workspace-control-dock > .workspace-dock-image .effects-selection {
+    display: block !important;
+    justify-self: start !important;
+    width: fit-content !important;
+    max-width: 100% !important;
+    overflow: hidden !important;
+    padding: 2px 6px !important;
+    border: 1px solid #2a414d !important;
+    border-radius: 999px !important;
+    background: #0b151c !important;
+    color: #a9bec5 !important;
+    font-size: 8px !important;
+    line-height: 1.35 !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+  }
+
+  .workspace-control-dock > .workspace-dock-image .dock-tool-tabs {
+    flex: 0 0 auto !important;
+    min-width: 0 !important;
+  }
+
+  .workspace-control-dock > .workspace-dock-image .dock-tool-tabs button {
+    min-width: 0 !important;
+    overflow: hidden !important;
+    padding-inline: 4px !important;
+    font-size: 9px !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+  }
+
+  .workspace-control-dock > .workspace-dock-image .effect-control-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    grid-template-rows: auto !important;
+    grid-auto-rows: minmax(42px, auto) !important;
+    gap: 7px 12px !important;
+    padding: 5px 3px 3px !important;
+  }
+
+  .workspace-control-dock > .workspace-dock-image .effect-control {
+    grid-template-rows: auto 18px !important;
+    gap: 3px !important;
+  }
+
+  .workspace-control-dock > .workspace-dock-image .effect-control > span {
+    gap: 5px !important;
+    font-size: 10px !important;
+    line-height: 1.2 !important;
+  }
+
+  .workspace-control-dock > .workspace-dock-image .effect-control > span strong {
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+  }
+
+  .workspace-control-dock > .workspace-dock-image .effect-control output {
+    flex: 0 0 auto !important;
+    font-variant-numeric: tabular-nums !important;
+  }
+
+  .workspace-control-dock > .workspace-dock-image .effect-control input {
+    min-width: 0 !important;
+    margin: 0 !important;
+  }
+
+  .workspace-control-dock > .workspace-dock-image .effect-control-hint {
+    grid-column: 1 / -1 !important;
+    align-self: stretch !important;
+    margin: 0 !important;
+    padding: 6px 8px !important;
+    border: 1px solid #2a414d !important;
+    border-radius: 6px !important;
+    background: #0b151c !important;
+    color: #a9bec5 !important;
+    font-size: 9px !important;
+    line-height: 1.35 !important;
+    text-align: left !important;
+  }
+}
