@@ -411,15 +411,12 @@ export default function App() {
         failures.push(error(e));
       }
     }
-    if (imported.length) {
+    if (imported.length)
       edit((p) => ({ ...p, assets: [...p.assets, ...imported] }));
-      if (imported.length === 1 && !projectDuration(current.current))
-        add(imported[0]);
-    }
     setNotice(
       failures.length
         ? failures.join(" ")
-        : `${imported.length} arquivo(s) importado(s) e armazenado(s).`,
+        : `${imported.length} mídia(s) adicionada(s) ao Acervo. Use “Adicionar à timeline” no cartão para inserir na trilha escolhida.`,
     );
     setBusy(false);
     void navigator.storage?.persist?.().catch(() => {});
