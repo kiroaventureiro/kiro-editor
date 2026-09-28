@@ -328,3 +328,105 @@
     line-height: 1.35 !important;
   }
 }
+
+
+/* Acervo: ferramentas agrupadas por tarefa, com estados claros e legíveis. */
+@media (min-width: 851px) {
+  .media-panel .workspace-tools.docked-tools {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+    align-content: start !important;
+    gap: 9px !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    overflow: auto !important;
+    padding: 9px !important;
+    scrollbar-color: #38545e transparent !important;
+  }
+
+  .media-panel .workspace-tools.docked-tools > .tool-library-group {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 7px !important;
+    min-width: 0 !important;
+    padding: 10px !important;
+    border: 1px solid #293e49 !important;
+    border-radius: 9px !important;
+    background: linear-gradient(180deg, #12202a, #0d171e) !important;
+  }
+
+  .media-panel .tool-library-heading {
+    margin: 0 !important;
+    color: #82dce0 !important;
+    font-size: 10px !important;
+    font-weight: 750 !important;
+    letter-spacing: .08em !important;
+    line-height: 1.3 !important;
+    text-transform: uppercase !important;
+  }
+
+  .media-panel .tool-library-actions {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 6px !important;
+    min-width: 0 !important;
+  }
+
+  .media-panel .tool-library-actions > button,
+  .media-panel .tool-library-actions > .tool-library-file-button {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    gap: 7px !important;
+    min-width: 0 !important;
+    min-height: 36px !important;
+    padding: 7px 8px !important;
+    border: 1px solid #304b57 !important;
+    border-radius: 7px !important;
+    background: #14232b !important;
+    color: #dbe9ec !important;
+    font-family: inherit !important;
+    font-size: 10px !important;
+    font-weight: 650 !important;
+    line-height: 1.2 !important;
+    text-align: left !important;
+    white-space: normal !important;
+    cursor: pointer !important;
+  }
+
+  .media-panel .tool-library-actions > button:hover:not(:disabled),
+  .media-panel .tool-library-actions > .tool-library-file-button:hover {
+    border-color: rgba(102, 208, 216, .7) !important;
+    background: #1a3039 !important;
+  }
+
+  .media-panel .tool-library-actions > button.active,
+  .media-panel .tool-library-actions > button[aria-pressed="true"] {
+    border-color: rgba(102, 208, 216, .62) !important;
+    background: linear-gradient(135deg, rgba(37, 102, 114, .52), #142d36) !important;
+    color: #e9fcfd !important;
+  }
+
+  .media-panel .tool-library-actions > button:disabled,
+  .media-panel .tool-library-actions > .tool-library-file-button:has(input:disabled) {
+    opacity: .48 !important;
+    cursor: not-allowed !important;
+  }
+
+  .media-panel .tool-library-actions svg {
+    flex: 0 0 auto !important;
+    color: #79dbe0 !important;
+  }
+
+  .media-panel .tool-library-actions > button > span,
+  .media-panel .tool-library-actions > .tool-library-file-button {
+    overflow-wrap: anywhere !important;
+  }
+
+  .media-panel .tool-library-hint {
+    margin: 0 !important;
+    color: #9fb3bb !important;
+    font-size: 10px !important;
+    line-height: 1.4 !important;
+  }
+}
