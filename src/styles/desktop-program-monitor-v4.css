@@ -899,3 +899,101 @@
     text-align: right !important;
   }
 }
+
+
+/* Mixagem de áudio: título à esquerda, categoria e canais à direita. */
+@media (min-width: 851px) {
+  .workspace-control-dock > .workspace-dock-audio .audio-mixer .dock-panel-heading {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: stretch !important;
+    min-width: 0 !important;
+    min-height: 34px !important;
+    padding: 0 2px 5px !important;
+  }
+
+  .workspace-control-dock > .workspace-dock-audio .mixer-heading-copy {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    gap: 8px !important;
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  .workspace-control-dock > .workspace-dock-audio .mixer-heading-copy strong {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 5px !important;
+    flex: 0 0 auto !important;
+    color: #e6f1f3 !important;
+    font-size: 11px !important;
+    line-height: 1.2 !important;
+    white-space: nowrap !important;
+  }
+
+  .workspace-control-dock > .workspace-dock-audio .mixer-heading-copy .dock-eyebrow {
+    display: inline-block !important;
+    flex: 0 1 auto !important;
+    min-width: 0 !important;
+    margin-left: auto !important;
+    overflow: hidden !important;
+    color: #7da5ae !important;
+    font-size: 8px !important;
+    letter-spacing: .08em !important;
+    line-height: 1.2 !important;
+    text-align: right !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+  }
+
+  .workspace-control-dock > .workspace-dock-audio .mixer-channels {
+    align-items: stretch !important;
+    align-content: flex-start !important;
+    gap: 6px !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    padding: 3px 2px !important;
+    overflow-x: auto !important;
+    overflow-y: auto !important;
+  }
+
+  .workspace-control-dock > .workspace-dock-audio .mixer-channel {
+    display: grid !important;
+    grid-template-rows: 18px minmax(0, 1fr) 22px !important;
+    flex: 1 1 112px !important;
+    min-width: 96px !important;
+    max-width: none !important;
+    min-height: 0 !important;
+    height: 100% !important;
+    box-sizing: border-box !important;
+    gap: 2px !important;
+    padding: 4px 6px !important;
+  }
+
+  .workspace-control-dock > .workspace-dock-audio .mixer-channel > strong {
+    max-width: 100% !important;
+    font-size: 9px !important;
+    line-height: 1.2 !important;
+  }
+
+  .workspace-control-dock > .workspace-dock-audio .mixer-fader-wrap {
+    grid-template-rows: 11px minmax(0, 1fr) 11px !important;
+    min-height: 0 !important;
+  }
+
+  .workspace-control-dock > .workspace-dock-audio .mixer-fader-wrap input[type="range"] {
+    width: clamp(48px, 7dvh, 76px) !important;
+    height: 16px !important;
+  }
+
+  .workspace-control-dock > .workspace-dock-audio .mixer-db,
+  .workspace-control-dock > .workspace-dock-audio .mixer-percent {
+    font-size: 8px !important;
+  }
+
+  .workspace-control-dock > .workspace-dock-audio .mixer-mute {
+    min-height: 20px !important;
+    font-size: 8px !important;
+  }
+}
