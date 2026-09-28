@@ -254,3 +254,66 @@
   .editor-right-stage { display: contents !important; }
   .workspace-control-dock { display: none !important; }
 }
+
+
+/* Clear media actions: preview and insertion are explicit, labeled choices. */
+@media (min-width: 851px) {
+  .library-browser-content .asset-card {
+    grid-template-columns: minmax(54px, 64px) minmax(0, 1fr) !important;
+    grid-template-areas:
+      "thumbnail copy"
+      "actions actions" !important;
+    gap: 7px 9px !important;
+    align-content: start !important;
+    min-width: 0 !important;
+    padding: 7px !important;
+  }
+
+  .library-browser-content .asset-card > .asset-thumbnail { grid-area: thumbnail !important; }
+  .library-browser-content .asset-card > .asset-copy { grid-area: copy !important; min-width: 0 !important; }
+  .library-browser-content .asset-card > .asset-actions {
+    grid-area: actions !important;
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 6px !important;
+    min-width: 0 !important;
+  }
+
+  .library-browser-content .asset-actions > button,
+  .library-browser-content .asset-actions > .relink {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 5px !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    min-height: 29px !important;
+    padding: 4px 6px !important;
+    border: 1px solid #304651 !important;
+    border-radius: 6px !important;
+    background: #14222a !important;
+    color: #c8dce1 !important;
+    font: 600 10px/1.1 inherit !important;
+    white-space: nowrap !important;
+    cursor: pointer !important;
+  }
+
+  .library-browser-content .asset-actions > .asset-add {
+    border-color: rgba(103, 209, 216, .42) !important;
+    background: rgba(44, 113, 122, .18) !important;
+    color: #c8fbfb !important;
+  }
+
+  .library-browser-content .asset-actions svg {
+    flex: 0 0 auto !important;
+    color: #79dbe0 !important;
+  }
+
+  .library-browser-content .target-track-hint {
+    display: block !important;
+    margin: -4px 1px 2px !important;
+    color: #879ca5 !important;
+    font-size: 9px !important;
+    line-height: 1.35 !important;
+  }
+}
