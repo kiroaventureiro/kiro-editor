@@ -778,3 +778,45 @@
     text-align: left !important;
   }
 }
+
+
+/* Estado vazio sem chip duplicado; a orientação usa toda a largura disponível. */
+@media (min-width: 851px) {
+  .workspace-control-dock > .workspace-dock-image .dock-panel-heading.no-selection {
+    grid-template-rows: auto !important;
+    min-height: 34px !important;
+    padding-bottom: 3px !important;
+  }
+
+  .workspace-control-dock > .workspace-dock-image .dock-panel-heading.has-selection {
+    min-height: 44px !important;
+  }
+
+  .workspace-control-dock > .workspace-dock-image .image-tool-stack {
+    display: grid !important;
+    align-content: start !important;
+    gap: 7px !important;
+    min-width: 0 !important;
+  }
+
+  .workspace-control-dock > .workspace-dock-image .image-tool-stack .effect-control-hint {
+    display: block !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    margin: 0 !important;
+    padding: 8px 10px !important;
+    border: 1px solid #2a414d !important;
+    border-radius: 7px !important;
+    background: linear-gradient(135deg, #0d1a21, #101e26) !important;
+    color: #bed0d5 !important;
+    font-size: 10px !important;
+    line-height: 1.4 !important;
+    text-align: left !important;
+    overflow-wrap: anywhere !important;
+  }
+
+  .workspace-control-dock > .workspace-dock-image .image-tool-stack .effect-control-grid {
+    min-width: 0 !important;
+    padding-top: 2px !important;
+  }
+}
