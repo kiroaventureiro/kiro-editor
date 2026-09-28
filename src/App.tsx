@@ -21,6 +21,7 @@ import CreatorHub from "./components/CreatorHub";
 import Preview from "./components/Preview";
 import SourceMonitor from "./components/SourceMonitor";
 import AudioMixer from "./components/AudioMixer";
+import ColorWheelControl from "./components/ColorWheelControl";
 import EffectsControl from "./components/EffectsControl";
 import Inspector from "./components/Inspector";
 import Timeline, { type TimelineMode } from "./components/Timeline";
@@ -999,6 +1000,21 @@ export default function App() {
         </div>
         <div className="top-actions">
           <button
+            type="button"
+            className="top-creator-hub"
+            title="Abrir o Creator Hub"
+            onClick={() => {
+              setPlaying(false);
+              setCreatorHubOpen(true);
+              const url = new URL(window.location.href);
+              url.searchParams.set("hub", "creator");
+              window.history.replaceState({}, "", url);
+            }}
+          >
+            <WandSparkles size={15} />
+            <span>Creator Hub</span>
+          </button>
+          <button
             onClick={() => void newProject()}
             disabled={busy || exporting}
           >
@@ -1054,13 +1070,6 @@ export default function App() {
           busy={busy}
           activeWorkspace={workspacePanel}
           onWorkspaceChange={setWorkspacePanel}
-          onOpenCreatorHub={() => {
-            setPlaying(false);
-            setCreatorHubOpen(true);
-            const url = new URL(window.location.href);
-            url.searchParams.set("hub", "creator");
-            window.history.replaceState({}, "", url);
-          }}
           workspaceTools={workspaceToolsPanel}
           inspectorPanel={inspectorPanel}
         />
@@ -1118,6 +1127,15 @@ export default function App() {
                 }))
               }
               onClipChange={updateClip}
+              onBegin={begin}
+              onEnd={end}
+            />
+          </section>
+          <section className="workspace-dock-color" aria-label="Ajuste de cores">
+            <ColorWheelControl
+              clip={selectedClip}
+              disabled={locked}
+              onChange={updateClip}
               onBegin={begin}
               onEnd={end}
             />

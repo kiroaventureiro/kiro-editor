@@ -32,7 +32,6 @@ interface Props {
   busy: boolean;
   activeWorkspace: "library" | "tools" | "properties";
   onWorkspaceChange: (workspace: "library" | "tools" | "properties") => void;
-  onOpenCreatorHub: () => void;
   workspaceTools: ReactNode;
   inspectorPanel: ReactNode;
 }
@@ -87,7 +86,6 @@ export default function MediaLibrary({
   busy,
   activeWorkspace,
   onWorkspaceChange,
-  onOpenCreatorHub,
   workspaceTools,
   inspectorPanel,
 }: Props) {
@@ -243,15 +241,6 @@ export default function MediaLibrary({
             {sectionTitle} <small>{visibleAssets.length}</small>
           </h2>
         </div>
-        <button
-          type="button"
-          className="library-creator-hub"
-          onClick={onOpenCreatorHub}
-          title="Abrir o Creator Hub"
-        >
-          <Sparkles size={15} />
-          <span>Creator Hub</span>
-        </button>
       </div>
 
       <nav className="workspace-dock-tabs" aria-label="Painel de trabalho" role="tablist">

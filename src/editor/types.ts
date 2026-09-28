@@ -54,6 +54,8 @@ export interface Clip {
   brightness?: number;
   contrast?: number;
   saturation?: number;
+  /** Hue rotation in degrees, from -180 to 180. */
+  hueRotate?: number;
   blur?: number;
   notes?: string;
 }

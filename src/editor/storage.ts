@@ -165,6 +165,7 @@ export function validateProject(value: unknown): KiroProject {
         "brightness",
         "contrast",
         "saturation",
+        "hueRotate",
         "blur",
       ] as const) {
         if (c[key] !== undefined && !finite(c[key]))
