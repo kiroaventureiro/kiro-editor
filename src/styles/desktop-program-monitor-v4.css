@@ -1318,3 +1318,91 @@
 @media (min-width: 851px) {
   :root { --ref-dock-height: clamp(286px, 42dvh, 340px); }
 }
+
+
+/* Acervo unificado no topo: identidade e título centralizados, com divisões internas. */
+@media (min-width: 851px) {
+  .app-shell {
+    grid-template-rows: 48px 34px minmax(145px, 1fr) 6px min(var(--timeline-height), var(--ref-dock-height)) !important;
+  }
+
+  .app-shell .brand {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 9px !important;
+    padding: 3px 10px !important;
+    border-left: 1px solid #2a414d !important;
+    border-right: 1px solid #2a414d !important;
+    border-top: 1px solid #2a414d !important;
+    border-radius: 8px 0 0 0 !important;
+    background: linear-gradient(135deg, #111e26, #0d171e) !important;
+  }
+
+  .app-shell .brand > div {
+    text-align: center !important;
+  }
+
+  .app-shell .brand strong {
+    font-size: 15px !important;
+    line-height: 1.05 !important;
+  }
+
+  .app-shell .brand small {
+    display: block !important;
+    margin-top: 3px !important;
+    font-size: 8px !important;
+    letter-spacing: .18em !important;
+  }
+
+  .app-shell .media-panel > .library-heading {
+    justify-content: center !important;
+    padding: 2px 8px !important;
+    border-top: 1px solid #2a414d !important;
+    border-right: 1px solid #2a414d !important;
+    border-radius: 0 8px 0 0 !important;
+    background: linear-gradient(135deg, #111e26, #0d171e) !important;
+    text-align: center !important;
+  }
+
+  .app-shell .media-panel > .library-heading > div {
+    display: grid !important;
+    justify-items: center !important;
+    gap: 1px !important;
+  }
+
+  .app-shell .media-panel > .library-heading .eyebrow {
+    font-size: 8px !important;
+    letter-spacing: .12em !important;
+  }
+
+  .app-shell .media-panel > .library-heading h2 {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 7px !important;
+    margin: 1px 0 0 !important;
+    font-size: 12px !important;
+  }
+
+  .app-shell .media-panel > .workspace-dock-tabs {
+    grid-row: 2 !important;
+    height: 34px !important;
+    padding: 2px 6px !important;
+    border-left: 1px solid #2a414d !important;
+    border-right: 1px solid #2a414d !important;
+    background: #0e1920 !important;
+  }
+
+  .app-shell .media-panel > .workspace-dock-tabs button {
+    min-height: 28px !important;
+  }
+
+  .app-shell .media-panel > .library-browser-layout {
+    border-left: 1px solid #2a414d !important;
+    border-right: 1px solid #2a414d !important;
+    border-bottom: 1px solid #2a414d !important;
+    border-radius: 0 0 8px 8px !important;
+    background: linear-gradient(180deg, #0e1920, #0b151b) !important;
+  }
+}
