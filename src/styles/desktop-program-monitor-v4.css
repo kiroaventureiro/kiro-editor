@@ -2062,3 +2062,10 @@
   }
   .workspace-control-dock > .workspace-dock-color .color-wheel { width:96px !important; height:96px !important; }
 }
+
+@media (min-width: 851px) {
+  .workspace-control-dock > .workspace-dock-color .color-wheel-center {
+    top: auto !important;
+    bottom: calc(100% + 4px) !important;
+  }
+}
