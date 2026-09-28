@@ -950,6 +950,7 @@ export default function App() {
           settings={project.settings}
           clip={selectedClip}
           locked={locked}
+          selectionCount={selected.length}
           onAspect={(r) =>
             edit((p) => ({
               ...p,
