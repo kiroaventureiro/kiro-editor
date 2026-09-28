@@ -462,3 +462,40 @@
     text-align: center !important;
   }
 }
+
+
+/* Fixa altura mínima da grade: evita que o texto seja cortado pela linha do dock. */
+@media (min-width: 851px) {
+  .media-panel .tool-library-actions {
+    grid-auto-rows: minmax(68px, auto) !important;
+    align-items: stretch !important;
+    overflow: visible !important;
+  }
+
+  .media-panel .tool-library-actions > button,
+  .media-panel .tool-library-actions > .tool-library-file-button {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+    grid-template-rows: 19px minmax(0, 1fr) !important;
+    place-items: center !important;
+    align-content: center !important;
+    align-self: stretch !important;
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 68px !important;
+    max-height: none !important;
+    box-sizing: border-box !important;
+    overflow: visible !important;
+    padding: 7px 6px !important;
+    gap: 4px !important;
+  }
+
+  .media-panel .tool-library-actions > button > svg,
+  .media-panel .tool-library-actions > .tool-library-file-button > svg {
+    display: block !important;
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+    align-self: center !important;
+    justify-self: center !important;
+  }
+}
