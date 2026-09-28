@@ -1406,3 +1406,24 @@
     background: linear-gradient(180deg, #0e1920, #0b151b) !important;
   }
 }
+
+
+/* Cabeçalho do acervo sem linhas separando as faixas: títulos repousam no fundo contínuo. */
+@media (min-width: 851px) {
+  .app-shell .brand,
+  .app-shell .media-panel > .library-heading {
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: #0e1920 !important;
+  }
+
+  .app-shell .media-panel > .workspace-dock-tabs {
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: #0e1920 !important;
+  }
+
+  .app-shell .media-panel > .library-browser-layout {
+    border-top: 0 !important;
+  }
+}
