@@ -1897,3 +1897,10 @@
   .workspace-control-dock > .workspace-dock-color .color-wheel { width:100px !important; height:100px !important; }
   .workspace-control-dock > .workspace-dock-color .color-wheel-copy { left: calc(50% + 68px) !important; }
 }
+
+@media (min-width: 851px) {
+  .workspace-control-dock > .workspace-dock-color .color-wheel-center {
+    top: auto !important;
+    bottom: calc(100% + 4px) !important;
+  }
+}
