@@ -802,9 +802,10 @@ export default function App() {
     window.addEventListener("pointercancel", stop, { once: true });
   };
   const canAnalyzeSelectedMedia = !!selectedClip?.assetId && selectedClip.type !== "text";
+  const hasLockedTracks = project.tracks.some((track) => track.locked);
   const analysisHint = !canAnalyzeSelectedMedia
     ? "Selecione um clipe de vídeo ou áudio na timeline para liberar a análise."
-    : locked
+    : hasLockedTracks
       ? "Desbloqueie as trilhas para remover pausas sem perder a sincronização."
       : "As ações usam o clipe selecionado e preservam as demais mídias da timeline.";
   const workspaceToolsPanel = (
@@ -892,7 +893,7 @@ export default function App() {
         <div className="tool-library-actions">
           <button
             onClick={() => void removeAutomaticSilence()}
-            disabled={!canAnalyzeSelectedMedia || locked || busy || exporting || captioning}
+            disabled={!canAnalyzeSelectedMedia || hasLockedTracks || busy || exporting || captioning}
             title="Detecta pausas no clipe e remove os trechos silenciosos das trilhas sincronizadas"
             aria-describedby="tool-analysis-hint"
           >
