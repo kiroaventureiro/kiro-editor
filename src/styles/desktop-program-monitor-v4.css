@@ -534,3 +534,102 @@
     flex: 0 0 auto !important;
   }
 }
+
+
+/* Propriedades do Acervo: cabeçalho, categorias e controles em fluxo vertical. */
+@media (min-width: 851px) {
+  .media-panel > .workspace-dock-properties {
+    display: flex !important;
+    flex: 1 1 0% !important;
+    flex-direction: column !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
+  }
+
+  .media-panel > .workspace-dock-properties > .inspector {
+    display: flex !important;
+    flex: 1 1 auto !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    width: 100% !important;
+    height: 100% !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    gap: 8px !important;
+    overflow: hidden !important;
+    padding: 10px !important;
+  }
+
+  .workspace-dock-properties > .inspector > .panel-heading {
+    flex: 0 0 auto !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    padding: 0 2px 7px !important;
+    border-bottom: 1px solid #2a414d !important;
+  }
+
+  .workspace-dock-properties .inspector-tabs {
+    display: grid !important;
+    flex: 0 0 auto !important;
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    grid-auto-flow: row !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    min-height: 38px !important;
+    gap: 5px !important;
+    margin: 0 !important;
+    padding: 4px !important;
+    border: 1px solid #2c424d !important;
+    border-radius: 8px !important;
+    background: #0b151c !important;
+  }
+
+  .workspace-dock-properties .inspector-tabs button {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    min-height: 30px !important;
+    padding: 5px 3px !important;
+    font-size: 10px !important;
+    line-height: 1.2 !important;
+    text-align: center !important;
+    white-space: normal !important;
+  }
+
+  .workspace-dock-properties .inspector-tab-content {
+    display: block !important;
+    flex: 1 1 auto !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    overscroll-behavior-y: contain !important;
+    padding: 2px 2px 8px !important;
+    scrollbar-width: thin !important;
+    scrollbar-color: #38545e transparent !important;
+  }
+
+  .workspace-dock-properties .inspector-tab-content > *,
+  .workspace-dock-properties .inspector-tab-content .inspector-section,
+  .workspace-dock-properties .inspector-tab-content .clip-inspector {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .workspace-dock-properties .inspector-tab-content label,
+  .workspace-dock-properties .inspector-tab-content select,
+  .workspace-dock-properties .inspector-tab-content input,
+  .workspace-dock-properties .inspector-tab-content textarea {
+    min-width: 0 !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+}
