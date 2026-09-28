@@ -1733,3 +1733,34 @@
 @media (min-width: 851px) and (max-height: 700px) {
   .workspace-control-dock > .workspace-dock-color .color-wheel { width: 84px !important; height:84px !important; margin-bottom:18px !important; }
 }
+
+
+@media (min-width: 851px) {
+  .workspace-control-dock > .workspace-dock-color { display: flex !important; }
+  .workspace-control-dock > .workspace-dock-color .color-wheel-control {
+    display: grid !important;
+    grid-template-columns: 120px minmax(0,1fr) auto !important;
+    grid-template-rows: 1fr !important;
+    align-items: center !important;
+    justify-content: stretch !important;
+    gap: 0 !important;
+    width: 100% !important;
+    max-width: 760px !important;
+    height: 100% !important;
+    margin-inline: auto !important;
+  }
+  .workspace-control-dock > .workspace-dock-color .color-wheel-copy {
+    display: flex !important;
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    justify-content: center !important;
+  }
+  .workspace-control-dock > .workspace-dock-color .color-wheel-copy button {
+    position: absolute !important;
+    right: 0 !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+  }
+}
