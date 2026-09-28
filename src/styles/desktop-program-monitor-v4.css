@@ -883,11 +883,18 @@
 
 
 @media (min-width: 851px) {
-  .workspace-control-dock > .workspace-dock-image .effects-heading-copy strong {
-    order: 1 !important;
+  .workspace-control-dock > .workspace-dock-image .effects-heading-copy {
+    justify-content: flex-start !important;
+    align-items: center !important;
+    text-align: left !important;
   }
 
   .workspace-control-dock > .workspace-dock-image .effects-heading-copy .dock-eyebrow {
+    order: 1 !important;
+    text-align: left !important;
+  }
+
+  .workspace-control-dock > .workspace-dock-image .effects-heading-copy strong {
     order: 2 !important;
   }
 }
