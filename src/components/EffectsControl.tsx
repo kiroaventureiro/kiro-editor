@@ -67,6 +67,12 @@ export default function EffectsControl({
     );
   };
 
+  const applyPatch = (patch: Partial<Clip>) => {
+    onBegin();
+    onChange(patch);
+    onEnd();
+  };
+
   const selectionHint = unavailable ? (
     <p className="effect-control-hint">
       Selecione um vídeo ou uma imagem na timeline para ajustar.
@@ -76,14 +82,18 @@ export default function EffectsControl({
   return (
     <section className="effects-control" aria-label="Ajustes de imagem">
       <header className="dock-panel-heading">
-        <div>
-          <span className="dock-eyebrow">IMAGEM E VÍDEO</span>
+        <div className="effects-heading-copy">
+          <span className="dock-eyebrow">AJUSTES VISUAIS</span>
           <strong>
-            <SlidersHorizontal size={14} aria-hidden="true" /> Ajustes de imagem
+            <SlidersHorizontal size={14} aria-hidden="true" /> Imagem e vídeo
           </strong>
         </div>
-        <span className="effects-selection" title={clip?.name}>
-          {clip?.name ?? "SEM SELEÇÃO"}
+        <span
+          className="effects-selection"
+          title={clip?.name ?? "Nenhum clipe selecionado"}
+          aria-label={clip?.name ? `Clipe selecionado: ${clip.name}` : "Nenhum clipe selecionado"}
+        >
+          {clip?.name ?? "Selecione um clipe"}
         </span>
       </header>
 
@@ -93,6 +103,8 @@ export default function EffectsControl({
             key={value}
             type="button"
             role="tab"
+            id={`image-tab-${value}`}
+            aria-controls="image-tool-panel"
             aria-selected={tool === value}
             onClick={() => setTool(value)}
           >
@@ -101,7 +113,12 @@ export default function EffectsControl({
         ))}
       </nav>
 
-      <div className="dock-tool-content" role="tabpanel">
+      <div
+        className="dock-tool-content"
+        id="image-tool-panel"
+        role="tabpanel"
+        aria-labelledby={`image-tab-${tool}`}
+      >
         {tool === "image" && (
           <div className="effect-control-grid">
             {range("Brilho", "brightness", 0, 2, 0.01, 1, (v) => `${Math.round(v * 100)}%`)}
@@ -128,10 +145,10 @@ export default function EffectsControl({
             <section className="dock-effect-group">
               <span className="dock-tool-kicker">COR</span>
               <div className="effect-preset-row">
-                <button type="button" disabled={unavailable} onClick={() => onChange({ brightness: 1.08, contrast: 1.12, saturation: 1.14, blur: 0 })}>Vivo</button>
-                <button type="button" disabled={unavailable} onClick={() => onChange({ brightness: 0.9, contrast: 1.22, saturation: 0.72, blur: 0 })}>Cinema</button>
-                <button type="button" disabled={unavailable} onClick={() => onChange({ brightness: 1, contrast: 1, saturation: 0, blur: 0 })}>P&amp;B</button>
-                <button type="button" disabled={unavailable} onClick={() => onChange({ brightness: 1, contrast: 1, saturation: 1, blur: 0 })}>Limpar</button>
+                <button type="button" disabled={unavailable} title="Realça as cores e o contraste" onClick={() => applyPatch({ brightness: 1.08, contrast: 1.12, saturation: 1.14, blur: 0 })}>Vivo</button>
+                <button type="button" disabled={unavailable} title="Aplica cores mais suaves e contraste cinematográfico" onClick={() => applyPatch({ brightness: 0.9, contrast: 1.22, saturation: 0.72, blur: 0 })}>Cinema</button>
+                <button type="button" disabled={unavailable} title="Converte a imagem para preto e branco" onClick={() => applyPatch({ brightness: 1, contrast: 1, saturation: 0, blur: 0 })}>Preto e branco</button>
+                <button type="button" disabled={unavailable} title="Restaura brilho, contraste, saturação e desfoque" onClick={() => applyPatch({ brightness: 1, contrast: 1, saturation: 1, blur: 0 })}>Restaurar cor</button>
               </div>
             </section>
             <section className="dock-effect-group">
@@ -143,7 +160,7 @@ export default function EffectsControl({
                   disabled={unavailable}
                   value={clip.transitionIn ?? "none"}
                   onChange={(event) =>
-                    onChange({
+                    applyPatch({
                       transitionIn:
                         event.target.value === "none"
                           ? undefined
@@ -153,7 +170,7 @@ export default function EffectsControl({
                 >
                   <option value="none">Sem transição</option>
                   <option value="dissolve">Dissolver</option>
-                  <option value="fade">Fade</option>
+                  <option value="fade">Esmaecer</option>
                   <option value="zoom">Zoom</option>
                   <option value="slide-left">Deslizar da direita</option>
                   <option value="slide-right">Deslizar da esquerda</option>
